@@ -4,7 +4,7 @@
 //
 // Talk point at the photo display: a talk within 160 units shows a message picked by the tag number,
 // params bits 0-7, an index into the 7 entries of l_msg_talk. There is no range check on it. The first
-// talk runs PHOTO_TALK if the Po actor is not on its date, and PHOTO_TALK2 otherwise. Either one sets
+// talk runs PHOTO_TALK if the Po actor, Lenzo, is not isDate, and PHOTO_TALK2 otherwise. Either one sets
 // bit 0x1601 when it ends. [asm]
 // field_0x310 is never set to a list in this unit, so l_msg_talk2 is unused and next_msgStatus always
 // ends the message. [asm]
