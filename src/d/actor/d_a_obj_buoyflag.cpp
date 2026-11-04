@@ -412,9 +412,13 @@ inline void daObjBuoyflag::Packet_c::calc_pos_wave(int i, int j) {
     f32 s0 = cM_ssin(dist + mWave[11]);
     f32 s1 = cM_ssin(dist + mWave[9]);
     f32 s2 = cM_ssin(dist + mWave[10]);
-    f32 wave = 1.0f + 0.33333334f * (s0 + (s1 + s2));
+    // Compound form keeps wave computed before the inprod call, as in the target. Not the
+    // original spelling: the target multiplies by m14 after that call. Same value either way.
+    f32 wave = 1.0f;
+    wave += 0.33333334f * (s0 + (s1 + s2));
+    wave *= L_attr.m14;
     f32 dot = nrm.inprod(mWind);
-    mForce += nrm * (dot * (wave * L_attr.m14 * (1.0f / L_attr.m08)));
+    mForce += nrm * (dot * (wave * (1.0f / L_attr.m08)));
 }
 
 inline void daObjBuoyflag::Packet_c::calc_pos_spd(int i, int j) {

@@ -213,15 +213,19 @@ void dMsg3_value_init(sub_msg3_class* i_Msg, u8 i_no) {
     char rubySdw[0x20];
 
     u32 color = colorTable[i_Msg->colorNo];
-    int c0 = i_Msg->msgDataProc[i_no].getCharAlpha();
-    int c1 = i_Msg->msgDataProc[i_no].getGradAlpha();
-    int c2 = i_Msg->msgDataProc[i_no].getRCharAlpha();
-    int c3 = i_Msg->msgDataProc[i_no].getRGradAlpha();
+    u32 t0 = color | i_Msg->msgDataProc[i_no].getCharAlpha();
+    u32 t1 = color | i_Msg->msgDataProc[i_no].getGradAlpha();
+    u32 t2 = color | i_Msg->msgDataProc[i_no].getRCharAlpha();
+    u32 t3 = color | i_Msg->msgDataProc[i_no].getRGradAlpha();
+    u32 a0 = i_Msg->msgDataProc[i_no].getCharAlpha();
+    u32 a1 = i_Msg->msgDataProc[i_no].getGradAlpha();
+    u32 a2 = i_Msg->msgDataProc[i_no].getRCharAlpha();
+    u32 a3 = i_Msg->msgDataProc[i_no].getRGradAlpha();
 
-    sprintf(text, "CC[%08x]GC[%08x]", color | c0, color | c1);
-    sprintf(ruby, "CC[%08x]GC[%08x]", color | c2, color | c3);
-    sprintf(textSdw, "CC[%08x]GC[%08x]", c0, c1);
-    sprintf(rubySdw, "CC[%08x]GC[%08x]", c2, c3);
+    sprintf(text, "CC[%08x]GC[%08x]", t0, t1);
+    sprintf(ruby, "CC[%08x]GC[%08x]", t2, t3);
+    sprintf(textSdw, "CC[%08x]GC[%08x]", a0, a1);
+    sprintf(rubySdw, "CC[%08x]GC[%08x]", a2, a3);
 
     strcpy(i_Msg->output_text[i_no], text);
     strcpy(i_Msg->output_ruby[i_no], ruby);

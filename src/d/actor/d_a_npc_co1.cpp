@@ -519,7 +519,8 @@ void daNpc_Co1_c::set_target(int i_target) {
         f32 dist = fopAcM_searchActorDistance(this, dComIfGp_getPlayer(0));
         s16 angle = fopAcM_searchActorAngleY(this, dComIfGp_getPlayer(0));
         mDoMtx_stack_c::transS(current.pos.x, eye.y, current.pos.z);
-        mDoMtx_stack_c::YrotM(angle - 0x2000);
+        angle -= 0x2000;
+        mDoMtx_stack_c::YrotM(angle);
         eye.set(0.0f, 0.0f, dist);
         mDoMtx_stack_c::multVec(&eye, &field_0x7BC);
         field_0x85F = 2;

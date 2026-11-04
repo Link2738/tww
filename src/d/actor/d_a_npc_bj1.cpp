@@ -1064,7 +1064,9 @@ void daNpc_Bj1_c::setReg(u16 i_reg) {
     u8 mask;
     if (getMaskInf(&mask)) {
         dSv_event_c& event = g_dComIfG_gameInfo.save.getEvent();
-        event.setEventReg(i_reg, event.getEventReg(i_reg) | mask);
+        u8 val = event.getEventReg(i_reg);
+        val |= mask;
+        event.setEventReg(i_reg, val);
     }
 }
 

@@ -69,6 +69,9 @@ GXFifoObj* GXInit(void* base, u32 size) {
     u32 i;
     u32 reg;
     u32 freqBase;
+    // Unused: gives the target's 0x50 frame. Original locals unknown.
+    u32 pad[2];
+    (void)pad;
 
     OSRegisterVersion(__GXVersion);
     gx->inDispList = GX_FALSE;
@@ -79,8 +82,9 @@ GXFifoObj* GXInit(void* base, u32 size) {
 
     GXSetMisc(GX_MT_XF_FLUSH, 0);
 
-    __cpReg = (void*)OSPhysicalToUncached(GX_CP_ADDR);
+    // pi before cp reproduces the target's register choice; the writes are independent.
     __piReg = (void*)OSPhysicalToUncached(GX_PI_ADDR);
+    __cpReg = (void*)OSPhysicalToUncached(GX_CP_ADDR);
     __peReg = (void*)OSPhysicalToUncached(GX_PE_ADDR);
     __memReg = (void*)OSPhysicalToUncached(GX_MEM_ADDR);
 
@@ -118,11 +122,14 @@ GXFifoObj* GXInit(void* base, u32 size) {
     SET_REG_FIELD(gx->iref, 8, 24, 0x27);
 
     for (i = 0; i < GX_MAXCOORD; i++) {
+        // These locals stop full unrolling and give the target's partial unroll. Spelling unknown.
+        u32 a = 0x30 + i * 2;
+        u32 b = 0x31 + i * 2;
         gx->suTs0[i] = 0;
         gx->suTs1[i] = 0;
 
-        SET_REG_FIELD(gx->suTs0[i], 8, 24, 0x30 + i * 2);
-        SET_REG_FIELD(gx->suTs1[i], 8, 24, 0x31 + i * 2);
+        SET_REG_FIELD(gx->suTs0[i], 8, 24, a);
+        SET_REG_FIELD(gx->suTs1[i], 8, 24, b);
     }
 
     SET_REG_FIELD(gx->suScis0, 8, 24, 0x20);
@@ -150,11 +157,14 @@ GXFifoObj* GXInit(void* base, u32 size) {
     GX_WRITE_RAS_REG(reg);
 
     for (i = 0; i < GX_MAX_VTXFMT; i++) {
-        SET_REG_FIELD(gx->vatA[i], 1, 30, 1);
-        SET_REG_FIELD(gx->vatB[i], 1, 31, 1);
+        // These locals stop full unrolling and give the target's partial unroll. Spelling unknown.
+        u32 addr = i | 0x80;
+        u32 a = 1, b = 1;
+        SET_REG_FIELD(gx->vatA[i], 1, 30, a);
+        SET_REG_FIELD(gx->vatB[i], 1, 31, b);
 
         GXFIFO.u8 = 0x8;
-        GXFIFO.u8 = i | 0x80;
+        GXFIFO.u8 = addr;
         GXFIFO.u32 = gx->vatB[i];
     }
 

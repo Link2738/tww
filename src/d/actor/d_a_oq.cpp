@@ -1046,6 +1046,10 @@ static void action_itai(oq_class* i_this) {
 //     does give 1308, but by fusing float ops throughout and breaking the rest of
 //     the function, which currently matches.
 //
+// The same missing narrowing was solved elsewhere by a compound assignment to a narrow
+// local, then passing the local (d_a_npc_co1 set_target, d_a_npc_bj1 setReg). Here
+// `sVar2 += (int)cM_rndFX(...)` scores one line worse, so that form is not the answer yet.
+//
 // Do not "simplify" the call site: the (int) cast there is deliberate and is worth
 // one instruction.
 static void action_wakidasi(oq_class* i_this) {
@@ -1111,9 +1115,9 @@ static void action_wakidasi(oq_class* i_this) {
                 s16 sVar2 = player->shape_angle.y;
                 // (int), not (s16), on the cM_rndFX result: the cast to s16 emits its own
                 // extsh that the target does not have. The target has NO narrowing here at
-                // all - it does `add r4, r28, r0` straight into the argument register - and
-                // nothing reachable from source reproduces that; see the note above the
-                // function. This form leaves one extsh instead of two.
+                // all - it does `add r4, r28, r0` straight into the argument register. Not
+                // solved here; see the note above the function. This form leaves one extsh
+                // instead of two.
                 cMtx_YrotS(*calc_mtx, sVar2 + (int)cM_rndFX(REG12_F(1) + 7000.0f));
                 local_58.x = 0.0f;
                 local_58.y = 0.0f;

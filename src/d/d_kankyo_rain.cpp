@@ -394,7 +394,8 @@ void dKyr_wind_move() {
         case 1:
         case 2:
             {
-                f32 temp_f1_3 = var_f26 - ((0.2f * var_f26) * (1.0f - windPow));
+                f32 temp_f1_3 = var_f26;
+                temp_f1_3 -= ((0.2f * var_f26) * (1.0f - windPow));
                 windEff.field_0x2c += var_f17 * windPow; // mSwerveAnimCounter
                 if (i & 1) {
                     windEff.mAngleY += temp_f1_3 * cM_ssin(windEff.field_0x2c);
@@ -423,7 +424,8 @@ void dKyr_wind_move() {
                 move.y = cM_ssin(windEff.mAngleY);
                 move.z = cM_scos(windEff.mAngleY) * cM_scos(windEff.mAngleXZ);
 
-                f32 temp_f0_7 = var_f29 - ((var_f29 * 0.2f) * (1.0f - windPow));
+                f32 temp_f0_7 = var_f29;
+                temp_f0_7 -= ((var_f29 * 0.2f) * (1.0f - windPow));
                 f32 var_f2 = windEff.field_0x2c / (f32)0xFFFF;
                 if (var_f2 > 1.0f) {
                     var_f2 = 1.0f;

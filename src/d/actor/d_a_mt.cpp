@@ -282,9 +282,11 @@ static void body_control2(mt_class* i_this) {
     csXyz* angle_i = &i_this->mAngle[0];
     cXyz* m590_i = &i_this->m590[0];
     dBgS_LinChk linChk;
-    cXyz diff, end2, end1, offset, out, start, local_184;
+    cXyz end2, end1, offset, out, start, local_184;
 
     local_184.set(0.0f, 0.0f, 0.0f);
+    // Reproduces the target keeping &end2 in a saved register. Original spelling unknown.
+    cXyz* end2_p = &end2;
     for (int i = 0; i < 8; i++, pos_i++, old_pos_i++, angle_i++, m590_i++) {
         if (i > 0) {
             u8 num_crossed = 0;
@@ -301,24 +303,24 @@ static void body_control2(mt_class* i_this) {
                 num_crossed = 1;
             }
             offset.x *= -1.0f;
-            MtxPosition(&offset, &end2);
-            end2 += *pos_i;
-            linChk.Set(&start, &end2, i_this);
+            MtxPosition(&offset, end2_p);
+            *end2_p += *pos_i;
+            linChk.Set(&start, end2_p, i_this);
             if (dComIfG_Bgsp()->LineCross(&linChk)) {
                 end2 = linChk.GetCross();
                 num_crossed++;
             }
 
-            int target = 0;
+            s16 target = 0;
             f32 f30;
             if (num_crossed == 2) {
                 f30 = pos_i->y - 10.0f;
                 f32 fVar2 = end1.y + l_HIO.m18;
                 if (f30 < fVar2) {
                     f30 = fVar2;
-                    diff = end1 - end2;
-                    f32 xzmag = std::sqrtf(diff.x * diff.x + diff.z * diff.z);
-                    target = cM_atan2s(diff.y, xzmag);
+                    offset = end1 - *end2_p;
+                    f32 xzmag = std::sqrtf(offset.x * offset.x + offset.z * offset.z);
+                    target = (int)cM_atan2s(offset.y, xzmag);
                 }
             }
 
@@ -1954,7 +1956,8 @@ static BOOL daMt_Execute(mt_class* i_this) {
         dBgS_ObjLinChk linChk;
         cXyz start = i_this->old.pos;
         cXyz end = start;
-        end.y += h;
+        // start.y rather than end.y: `end.y += h` adds an frsp the target does not have. Same value, end is a copy of start.
+        end.y = start.y + h;
         linChk.Set(&start, &end, i_this);
 
         cXyz end2;
@@ -2054,8 +2057,8 @@ static BOOL daMt_Execute(mt_class* i_this) {
 
             iVar4 = (REG6_F(11) + 5000.0f) * -cM_ssin(sVar2 + i * (REG6_S(2) + 13000));
             i_this->m640[i].x = iVar4;
-            iVar4 = l_HIO.m0C + (REG6_F(12) + 5000.0f) * cM_scos(sVar2 + i * (REG6_S(3) + 13000));
-            cLib_addCalcAngleS2(&i_this->m640[i].z, iVar4, 1, i_this->m334);
+            s16 z = l_HIO.m0C + (REG6_F(12) + 5000.0f) * cM_scos(sVar2 + i * (REG6_S(3) + 13000));
+            cLib_addCalcAngleS2(&i_this->m640[i].z, z, 1, i_this->m334);
         }
 
         cLib_addCalcAngleS2(&i_this->m334, 0x2000, 1, 0x100);

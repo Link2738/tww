@@ -163,8 +163,7 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
     cXyz* pos = j_p->mPos;
     cXyz* vel = j_p->mVel;
     dBgS_GndChk gnd_chk;
-    cXyz gnd_pos(pos->x, pos->y + 50.0f, pos->z);
-    gnd_chk.SetPos(&gnd_pos);
+    gnd_chk.GetPointP()->set(pos->x, pos->y + 50.0f, pos->z);
     f32 ground_y = dComIfG_Bgsp()->GroundCross(&gnd_chk) + 1.5f;
     if (ground_y - pos->y > 50.0f) {
         ground_y = pos->y;
@@ -186,7 +185,7 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
     f32 behind;
     s16 wind_diff = wind_angle - j_p->mAngle.y;
     if (wind_diff < 0) {
-        wind_diff = wind_diff * -1;
+        wind_diff *= -1;
     }
     if ((u16)wind_diff < 0x4000) {
         unit.z *= 0.05f;
@@ -201,7 +200,6 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
     unit.z = i_this->m1BF8 + cM_ssin(idx * 23000);
     unit.z *= i_this->scale.y;
 
-    int odd = idx & 1;
     for (int i = 0; i < 9; i++, pos++, vel++) {
         if (i > 0) {
             cXyz gravity = back * d_p[i - 1];
@@ -225,7 +223,7 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
             }
             y -= pos[-1].y;
             s16 angle_x = -cM_atan2s(y, z);
-            s16 angle_y = cM_atan2s(x, std::sqrtf(y * y + z * z));
+            s16 angle_y = (int)cM_atan2s(x, std::sqrtf(y * y + z * z));
             cMtx_XrotS(*calc_mtx, angle_x);
             cMtx_YrotM(*calc_mtx, angle_y);
             cXyz offset;
@@ -243,7 +241,7 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
         v_pos++;
         v_count++;
 
-        if (i_this->mType == 0 && (i & 1) == 0 && odd == 0 && i != 0 && i != 8 && idx != 0 && idx != 8) {
+        if (i_this->mType == 0 && (i & 1) == 0 && (idx & 1) == 0 && i != 0 && i != 8 && idx != 0 && idx != 8) {
             if (i_this->m2834 != 0) {
                 i_this->mMeshSph[mesh_cc_ct].SetR(30.0f);
                 i_this->mMeshSph[mesh_cc_ct].SetC(*pos);
@@ -277,7 +275,7 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
                     csXyz angle = i_this->current.angle;
                     angle.y += 0x8000;
                     dComIfGp_particle_set(0x81B6, pos, &angle, NULL, 0xFF, NULL, i_this->current.roomNo, &i_this->tevStr.mColorK0, &i_this->tevStr.mColorK0);
-                    fopAcM_seStartCurrent(i_this, JA_SE_CM_TN_BREAK_MANTLE, 0);
+                    mDoAud_seStart(JA_SE_CM_TN_BREAK_MANTLE, &i_this->current.pos, 0, dComIfGp_getReverb(fopAcM_GetRoomNo(i_this)));
                 }
                 i_this->m1C0E = 2;
                 i_this->m1C0C = player->shape_angle.y;

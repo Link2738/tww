@@ -1397,41 +1397,59 @@ void dPa_stripesEcallBack::draw(JPABaseEmitter* emitter) {
                 for (JSULink<JPABaseParticle>* link = emitter->getChildParticleList()->getFirst(); link != NULL; link = link->getNext()) {
                     if (idx % 5 == row) {
                         JPABaseParticle* ptcl = link->getObject();
+                        JGeometry::TVec3<f32> pos;
+                        ptcl->getGlobalPosition(pos);
                         JGeometry::TVec3<f32> ptclScale;
                         emitter->getGlobalParticleScale(ptclScale);
-                        f32 width = widthScale * (25.0f * ptcl->getDrawParamPPtr()->mScaleX * ptclScale.x);
                         f32 sinR = JMASSin(ptcl->getDrawParamPPtr()->mRotateAngle);
                         f32 cosR = JMASCos(ptcl->getDrawParamPPtr()->mRotateAngle);
+                        f32 width = widthScale * (25.0f * ptcl->getDrawParamPPtr()->mScaleX * ptclScale.x);
                         f32 ax0 = -width * sinR;
                         f32 sx0 = -width * cosR;
                         f32 ax1 = width * sinR;
                         f32 sx1 = width * cosR;
 
-                        JGeometry::TVec3<f32> vel(ptcl->mVelocity);
-                        if (!vel.isZero()) {
-                            vel.normalize();
-                        } else {
+                        JGeometry::TVec3<f32> vel;
+                        ptcl->getVelVec(vel);
+                        if (vel.isZero()) {
                             vel.set(0.0f, 1.0f, 0.0f);
+                        } else {
+                            vel.normalize();
                         }
 
                         JGeometry::TVec3<f32>& axis = ptcl->getDrawParamPPtr()->mAxis;
                         JGeometry::TVec3<f32> side;
                         side.cross(axis, vel);
-                        if (!side.isZero()) {
-                            side.normalize();
-                        } else {
+                        if (side.isZero()) {
                             side.set(1.0f, 0.0f, 0.0f);
+                        } else {
+                            side.normalize();
                         }
                         axis.cross(vel, side);
                         axis.normalize();
 
-                        GXPosition3f32(ax0 * axis.x + sx0 * side.x + vel.x * 0.0f + ptcl->mGlobalPosition.x,
-                                       ax0 * axis.y + sx0 * side.y + vel.y * 0.0f + ptcl->mGlobalPosition.y,
-                                       ax0 * axis.z + sx0 * side.z + vel.z * 0.0f + ptcl->mGlobalPosition.z);
+                        JGeometry::TMatrix33<JGeometry::SMatrix33R<f32> > mtx;
+                        // Writes through a pointer: the target keeps these stack stores and frsp's the
+                        // later reads. Original spelling of the fill is unknown.
+                        f32* m = mtx.mMtx[0];
+                        m[0] = side.x;
+                        m[1] = side.y;
+                        m[2] = side.z;
+                        m[3] = vel.x;
+                        m[4] = vel.y;
+                        m[5] = vel.z;
+                        m[6] = axis.x;
+                        m[7] = axis.y;
+                        m[8] = axis.z;
+                        JGeometry::TVec3<f32> pt0;
+                        pt0.set(sx0, 0.0f, ax0);
+                        mtx.mult(pt0);
+                        JGeometry::TVec3<f32> pt1;
+                        pt1.set(sx1, 0.0f, ax1);
+                        mtx.mult(pt1);
+                        GXPosition3f32(pt0.x + pos.x, pt0.y + pos.y, pt0.z + pos.z);
                         GXTexCoord2f32(0.0f, texT);
-                        GXPosition3f32(ax1 * axis.x + sx1 * side.x + vel.x * 0.0f + ptcl->mGlobalPosition.x,
-                                       ax1 * axis.y + sx1 * side.y + vel.y * 0.0f + ptcl->mGlobalPosition.y,
-                                       ax1 * axis.z + sx1 * side.z + vel.z * 0.0f + ptcl->mGlobalPosition.z);
+                        GXPosition3f32(pt1.x + pos.x, pt1.y + pos.y, pt1.z + pos.z);
                         GXTexCoord2f32(1.0f, texT);
                         texT += texStep;
                     }

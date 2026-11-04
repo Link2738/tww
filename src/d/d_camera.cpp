@@ -4695,8 +4695,9 @@ bool dCamera_c::subjectCamera(s32 param_1) {
         g.Val(p10, angX, baseYaw + angY);
 
         mViewCache.mDirection.R(mViewCache.mDirection.R() + (g.R() - mViewCache.mDirection.R()) * p20);
-        mViewCache.mDirection.V(mViewCache.mDirection.V() + (g.V() - mViewCache.mDirection.V()) * p20);
-        mViewCache.mDirection.U(mViewCache.mDirection.U() + (g.U() - mViewCache.mDirection.U()) * p20);
+        cSGlobe& dir = mViewCache.mDirection;
+        dir.V(dir.V() + (g.V() - dir.V()) * p20);
+        dir.U(dir.U() + (g.U() - dir.U()) * p20);
 
         if (w.m3A8 < 10) {
             w.m3A8++;
@@ -5271,7 +5272,7 @@ bool dCamera_c::hookshotCamera(s32 param_1) {
             cXyz ppos = positionOf(mpPlayerActor);
             cXyz diff = positionOf(hookActor) - ppos;
             if (diff.abs() > f29) {
-                bool flag = (m07C >> 4) & 1;
+                bool flag = (m07C & 0x10) != 0;
                 for (int i = 0; i < 8; i++) {
                     int idx = (m07C + i) & 3;
                     cXyz pos = p[idx];
@@ -6277,12 +6278,13 @@ bool dCamera_c::shieldCamera(s32 param_1) {
         cSAngle baseU = directionOf(mpPlayerActor).Inv();
         cSAngle rotX;
         cSAngle rotY;
-        if (fopAcM_GetName(mpPlayerActor) == fpcNm_PLAYER_e) {
-            rotX.Val(((daPy_py_c*)mpPlayerActor)->mBodyAngle.x);
-            rotY.Val(((daPy_py_c*)mpPlayerActor)->mBodyAngle.y);
-        } else if (fopAcM_GetName(mpPlayerActor) == fpcNm_NPC_MD_e) {
-            rotX.Val(((daNpc_Md_c*)mpPlayerActor)->getWaistRotX());
-            rotY.Val(((daNpc_Md_c*)mpPlayerActor)->getWaistRotY());
+        player = mpPlayerActor;
+        if (fopAcM_GetName(player) == fpcNm_PLAYER_e) {
+            rotX.Val(((daPy_py_c*)player)->mBodyAngle.x);
+            rotY.Val(((daPy_py_c*)player)->mBodyAngle.y);
+        } else if (fopAcM_GetName(player) == fpcNm_NPC_MD_e) {
+            rotX.Val(((daNpc_Md_c*)player)->getWaistRotX());
+            rotY.Val(((daNpc_Md_c*)player)->getWaistRotY());
         } else {
             rotX.Val((s16)0);
             rotY.Val((s16)0);
@@ -7595,7 +7597,10 @@ static void store(camera_process_class* i_this) {
     camera_class* camera = (camera_class*)i_this;
     dCamera_c* body = &((camera_process_class*)i_this)->mCamera;
 
-    int camera_id = get_camera_id(camera);
+    // Reproduces the target computing id * sizeof(dComIfG_camera_info_class) at the top and
+    // holding the game info base in a register. Original spelling unknown.
+    int camera_ofs = get_camera_id(camera) * 0x34;
+    dComIfG_inf_c& gi = g_dComIfG_gameInfo;
 
     cXyz oldCenter = *fopCamM_GetCenter_p(camera);
     cXyz oldEye = *fopCamM_GetEye_p(camera);
@@ -7642,8 +7647,8 @@ static void store(camera_process_class* i_this) {
     fopCamM_SetBank(camera, bank);
     fopCamM_SetFovy(camera, fovy);
 
-    dStage_dt_c* stage = &dComIfGp_getStage();
-    if (dComIfGp_checkCameraAttentionStatus(camera_id, dCamAttnStts_TELESCOPE_LOOK_e)) {
+    dStage_dt_c* stage = &gi.play.getStage();
+    if (((dComIfG_camera_info_class*)((u8*)g_dComIfG_gameInfo.play.mCameraInfo + camera_ofs))->mCameraAttentionStatus & dCamAttnStts_TELESCOPE_LOOK_e) {
         fopCamM_SetNear(camera, 30.0f);
     } else if (stage) {
         fopCamM_SetNear(camera, stage->getStagInfo()->mNearPlane);

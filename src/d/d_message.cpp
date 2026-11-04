@@ -61,20 +61,19 @@ void dMsg2_value_init(sub_msg2_class* i_Msg, u8 i_index) {
     const u32 color = colorTable[i_Msg->colorNo];
     int i = i_index;
 
-    int temp_r5 = i_Msg->msgDataProc[i].getCharAlpha();
-    int temp_r6 = i_Msg->msgDataProc[i].getGradAlpha();
-    int var_r30 = i_Msg->msgDataProc[i].getRCharAlpha();
-    int var_r29 = i_Msg->msgDataProc[i].getRGradAlpha();
+    u32 t0 = color | i_Msg->msgDataProc[i].getCharAlpha();
+    u32 t1 = color | i_Msg->msgDataProc[i].getGradAlpha();
+    u32 t2 = color | i_Msg->msgDataProc[i].getRCharAlpha();
+    u32 t3 = color | i_Msg->msgDataProc[i].getRGradAlpha();
+    u32 a0 = i_Msg->msgDataProc[i].getCharAlpha();
+    u32 a1 = i_Msg->msgDataProc[i].getGradAlpha();
+    u32 a2 = i_Msg->msgDataProc[i].getRCharAlpha();
+    u32 a3 = i_Msg->msgDataProc[i].getRGradAlpha();
 
-    u32 temp_a = color | temp_r5;
-    u32 temp_b = color | temp_r6;
-    u32 temp_c = color | var_r30;
-    u32 temp_d = color | var_r29;
-
-    sprintf(text_buf, "\x1b""CC[%08x]\x1bGC[%08x]", temp_a, temp_b);
-    sprintf(ruby_buf, "\x1b""CC[%08x]\x1bGC[%08x]", temp_c, temp_d);
-    sprintf(textSdw_buf, "\x1b""CC[%08x]\x1bGC[%08x]", temp_r5, temp_r6);
-    sprintf(rubySdw_buf, "\x1b""CC[%08x]\x1bGC[%08x]", var_r30, var_r29);
+    sprintf(text_buf, "\x1b""CC[%08x]\x1bGC[%08x]", t0, t1);
+    sprintf(ruby_buf, "\x1b""CC[%08x]\x1bGC[%08x]", t2, t3);
+    sprintf(textSdw_buf, "\x1b""CC[%08x]\x1bGC[%08x]", a0, a1);
+    sprintf(rubySdw_buf, "\x1b""CC[%08x]\x1bGC[%08x]", a2, a3);
 
     JKRHeap* heap = mDoExt_setCurrentHeap(i_Msg->Heap);
 
@@ -269,7 +268,8 @@ void dMsg2_screenDataInit(sub_msg2_class* i_Msg, u8 i_index) {
     ((J2DTextBox*)i_Msg->text_pane[i_index].pane)->setFont(i_Msg->mx);
     ((J2DTextBox*)i_Msg->ruby_pane[i_index].pane)->setFont(i_Msg->rx);
     ((J2DTextBox*)i_Msg->textSdw_pane[i_index].pane)->setFont(i_Msg->mx);
-    ((J2DTextBox*)i_Msg->rubySdw_pane[i_index].pane)->setFont(i_Msg->rx);
+    fopMsgM_pane_class* rubySdw = &i_Msg->rubySdw_pane[i_index];
+    ((J2DTextBox*)rubySdw->pane)->setFont(i_Msg->rx);
 
     f32 var_f31;
     J2DTextBox::TFontSize fontSize;
@@ -304,7 +304,7 @@ void dMsg2_screenDataInit(sub_msg2_class* i_Msg, u8 i_index) {
     ((J2DTextBox*)i_Msg->text_pane[i_index].pane)->setCharSpace(0.0f);
     ((J2DTextBox*)i_Msg->ruby_pane[i_index].pane)->setCharSpace(0.0f);
     ((J2DTextBox*)i_Msg->textSdw_pane[i_index].pane)->setCharSpace(0.0f);
-    ((J2DTextBox*)i_Msg->rubySdw_pane[i_index].pane)->setCharSpace(0.0f);
+    ((J2DTextBox*)rubySdw->pane)->setCharSpace(0.0f);
 
 #if VERSION <= VERSION_JPN
     if (!g_msgDHIO.field_0x08) {
@@ -541,10 +541,9 @@ void dMsg2_setCharAlpha(sub_msg2_class* i_Msg, u8 i_index) {
     f32 temp_f2 = temp_f1 + i_Msg->text_pane[var_r31].mPosTopLeft.y + (i_Msg->field_0xeb0 * (2 - i_Msg->field_0xecc[i_index]));
 
     int temp_r27 = (int)temp_f2;
-    int lineOfs = temp_r6 * i_Msg->field_0xecc[i_index];
-    int var_r26 = temp_r27 + lineOfs;
+    int var_r26 = temp_r27 + temp_r6 * i_Msg->field_0xecc[i_index];
     int var_r30 = (int)(temp_f2 - g_messageHIO.field_0x38);
-    int var_r29 = var_r30 + lineOfs;
+    int var_r29 = var_r30 + temp_r6 * i_Msg->field_0xecc[i_index];
 
     if (var_r26 < 58) {
         int temp_r3 = var_r26 + i_Msg->mx->getHeight();
