@@ -505,6 +505,9 @@ void dBgS::MoveBgMatrixCrrPos(cBgS_PolyInfo& polyInfo, bool accept, cXyz* pos, c
     }
 }
 
+// Rider functions, set with SetCrrFunc. Typical moves the rider by the change in the mesh's matrix,
+// taken through the inverse of the old matrix, and does not turn it. RotY only turns it by the mesh's
+// Y change, TypicalRotY does both, and Trans only adds the translation. [asm]
 /* 800A1C98-800A1D18       .text dBgS_MoveBGProc_Typical__FP4dBgWPvR13cBgS_PolyInfobP4cXyzP5csXyzP5csXyz */
 void dBgS_MoveBGProc_Typical(dBgW* pbgw, void* user, cBgS_PolyInfo& polyInfo, bool accept, cXyz* pos, csXyz* angle, csXyz* shape_angle) {
     Mtx inv;
@@ -541,6 +544,8 @@ void dBgS_MoveBGProc_Trans(dBgW* pbgw, void*, cBgS_PolyInfo& polyInfo, bool, cXy
     VECAdd(pos, &trans, pos);
 }
 
+// The mesh's ride callback, called with its actor and the actor standing on it. The hook for
+// pressure switches and similar. [inferred]
 /* 800A1DF8-800A1ED0       .text RideCallBack__4dBgSFR13cBgS_PolyInfoP10fopAc_ac_c */
 void dBgS::RideCallBack(cBgS_PolyInfo& polyInfo, fopAc_ac_c* ac) {
     s32 bg_index = polyInfo.GetBgIndex();

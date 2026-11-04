@@ -132,6 +132,7 @@ dBgW::dBgW() {
     ClrGrpRoomInf();
 }
 
+// Sets the move flag that MoveBgCrrPos needs. A mesh that never calls this carries no riders. [asm]
 /* 800A5CA8-800A5CD4       .text Move__4dBgWFv */
 void dBgW::Move() {
     OnMoveFlag();
@@ -985,6 +986,8 @@ void dBgW::TransPos(cBgS_PolyInfo& poly, void* user, bool accept, cXyz* pos, csX
         m_crr_func(this, user, poly, accept, pos, angle, shape_angle);
 }
 
+// A polygon can be set to pass through objects, the camera, the player, arrows, bombs, boomerangs or
+// the rope. Each query's PolyPassChk says what it counts as. TRUE skips the polygon. [asm]
 /* 800A8D2C-800A9474       .text ChkPolyThrough__4dBgWFiP16cBgS_PolyPassChk */
 bool dBgW::ChkPolyThrough(int poly_index, cBgS_PolyPassChk* ppass_chk) {
     if (ppass_chk == NULL)
