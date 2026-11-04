@@ -1076,7 +1076,7 @@ static void jyunkai(tn_class* i_this) {
     s32 r3 = fopAcM_otoCheck(actor, 1000.0f);
     if (i_this->mMantPcId != 0xFFFF) {
         mant_class* mant_actor = (mant_class*)fopAcM_SearchByID(i_this->mMantPcId);
-        if (mant_actor != NULL && mant_actor->m1C0E != 0) {
+        if (mant_actor != NULL && mant_actor->mGustTimer != 0) {
             r3 |= 2;
         }
     }
@@ -1673,8 +1673,8 @@ static void fight(tn_class* i_this) {
             if (i_this->mMantPcId != 0xFFFF) {
                 mant_class* mant_actor = (mant_class*)fopAcM_SearchByID(i_this->mMantPcId);
                 if (mant_actor != NULL) {
-                    cLib_addCalc2(&mant_actor->m1BF8, REG0_F(6) + 50.0f, 1.0f, 20.0f);
-                    cLib_addCalc2(&mant_actor->m1BFC, REG0_F(7) + 0.9f, 1.0f, 0.2f);
+                    cLib_addCalc2(&mant_actor->mSegmentLen, REG0_F(6) + 50.0f, 1.0f, 20.0f);
+                    cLib_addCalc2(&mant_actor->mDamping, REG0_F(7) + 0.9f, 1.0f, 0.2f);
                 }
             }
             break;
@@ -2191,7 +2191,7 @@ static void stand(tn_class* i_this) {
     s32 r30 = fopAcM_otoCheck(actor, 1000.0f);
     if (i_this->mMantPcId != 0xFFFF) {
         mant_class* mant_actor = (mant_class*)fopAcM_SearchByID(i_this->mMantPcId);
-        if (mant_actor != NULL && mant_actor->m1C0E != 0) {
+        if (mant_actor != NULL && mant_actor->mGustTimer != 0) {
             r30 |= 2;
         }
     }
@@ -2949,7 +2949,7 @@ static u8 damage_check(tn_class* i_this) {
                     r26_2 = false;
                     if (i_this->mMantPcId != 0xFFFF) {
                         mant_actor = (mant_class*)fopAcM_SearchByID(i_this->mMantPcId);
-                        if (mant_actor != NULL && (mant_actor->m2834 != 0 || mant_actor->m2836 != 0)) {
+                        if (mant_actor != NULL && (mant_actor->mMeshCcActive != 0 || mant_actor->mHitCooldown != 0)) {
                             r26_2 = true;
                         }
                     }
@@ -3320,12 +3320,12 @@ static void part_move(tn_class* i_this, int partIndex) {
                 local_134.x = DEMO_SELECT(REG13_F(0), REG0_F(0)) + 2.0f;
                 local_134.y = DEMO_SELECT(REG13_F(1), REG0_F(1)) + 15.0f;
                 local_134.z = DEMO_SELECT(REG13_F(2), REG0_F(2)) + -43.0f;
-                MtxPosition(&local_134, &mant_actor->m1BE0[0]);
+                MtxPosition(&local_134, &mant_actor->mTopCorners[0]);
                 MTXCopy(i_this->mpArmorMorf->getModel()->getAnmMtx(REG6_S(6) + (s16)TN_YOROI1_JNT_J_YOROI_KATA_L1_e), *calc_mtx);
                 local_134.x = DEMO_SELECT(REG13_F(3), REG0_F(3)) + 2.0f;
                 local_134.y = DEMO_SELECT(REG13_F(4), REG0_F(4)) + 15.0f;
                 local_134.z = DEMO_SELECT(REG13_F(5), REG0_F(5)) + 43.0f;
-                MtxPosition(&local_134, &mant_actor->m1BE0[1]);
+                MtxPosition(&local_134, &mant_actor->mTopCorners[1]);
                 mant_actor->current.pos = actor->eyePos;
                 mant_actor->current.angle = actor->current.angle;
             }
@@ -3509,12 +3509,12 @@ static BOOL daTn_Execute(tn_class* i_this) {
                 if (i_this->mMantPcId != 0xFFFF) {
                     mant_actor = (mant_class*)fopAcM_SearchByID(i_this->mMantPcId);
                     if (mant_actor != NULL) {
-                        mant_actor->m1BE0[0].x = -10000.0f;
-                        mant_actor->m1BE0[0].y = 20000.0f;
-                        mant_actor->m1BE0[0].z = -21000.0f;
-                        mant_actor->m1BE0[1].x = -10000.0f;
-                        mant_actor->m1BE0[1].y = 20000.0f;
-                        mant_actor->m1BE0[1].z = -21000.0f;
+                        mant_actor->mTopCorners[0].x = -10000.0f;
+                        mant_actor->mTopCorners[0].y = 20000.0f;
+                        mant_actor->mTopCorners[0].z = -21000.0f;
+                        mant_actor->mTopCorners[1].x = -10000.0f;
+                        mant_actor->mTopCorners[1].y = 20000.0f;
+                        mant_actor->mTopCorners[1].z = -21000.0f;
                     }
                 }
                 return TRUE;

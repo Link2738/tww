@@ -4,7 +4,7 @@
  *
  * Cloth simulation on a 9 x 9 grid, 81 vertices. mJ[idx] is one hanging column of 9
  * points, top first. The owner (d_a_tn or d_a_fganon) writes the two top corners into
- * m1BE0 each frame from its bone matrices; everything below is simulated here. [asm]
+ * mTopCorners each frame from its bone matrices; everything below is simulated here. [asm]
  *
  * mType 0, Darknut: takes hits, tears and burns. mType 1, Phantom Ganon: no collision,
  * adds a slow wave, and draws one pass with the LIGHTOFF material. [asm]
@@ -175,15 +175,15 @@ static int mesh_cc_ct;
 static cXyz non_pos(-20000.0f, -200000.0f, -100000.0f);
 
 // Simulates column idx and handles its collision. Each point after the first is pushed
-// backward by a per-point amount from d_p, by wind and drag, down by m1C08 and, for
+// backward by a per-point amount from d_p, by wind and drag, down by mGravity and, for
 // mType 1, by a wave. It is then placed at a fixed distance from its parent,
-// (m1BF8 + a per-column offset) * scale.y. Velocity comes from the change in position,
+// (mSegmentLen + a per-column offset) * scale.y. Velocity comes from the change in position,
 // as in Verlet integration. [asm]
 //
 // The 9 mMeshSph spheres sit on points where i and idx are both 2, 4 or 6. mWindSph sits
 // on the center point, i == 4, idx == 4. [asm]
 //
-// Bug: the fire path returns from the middle of the column, after setting m2838. The rest
+// Bug: the fire path returns from the middle of the column, after setting mBurnTimer. The rest
 // of the column is never copied through v_pos, so later columns land too early in the
 // vertex buffer and the tail keeps old data for that frame. In-game effect not tested.
 // [asm]
@@ -209,11 +209,11 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
     cXyz back;
     MtxPosition(&unit, &back);
     cXyz wind_wave(0.0f, 0.0f, 0.0f);
-    s16 wind_angle = i_this->m1C0C + (s16)((idx - 4) * 3000);
+    s16 wind_angle = i_this->mWindAngle + (s16)((idx - 4) * 3000);
     cMtx_YrotS(*calc_mtx, wind_angle);
     unit.x = 0.0f;
     unit.y = 0.0f;
-    unit.z = i_this->m1C00;
+    unit.z = i_this->mWindPower;
     f32 behind;
     s16 wind_diff = wind_angle - j_p->mAngle.y;
     if (wind_diff < 0) {
@@ -229,18 +229,18 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
     MtxPosition(&unit, &wind);
     unit.x = 0.0f;
     unit.y = 0.0f;
-    unit.z = i_this->m1BF8 + cM_ssin(idx * 23000);
+    unit.z = i_this->mSegmentLen + cM_ssin(idx * 23000);
     unit.z *= i_this->scale.y;
 
     for (int i = 0; i < 9; i++, pos++, vel++) {
         if (i > 0) {
             cXyz gravity = back * d_p[i - 1];
-            if (std::fabsf(i_this->m1C00) > 0.1f) {
+            if (std::fabsf(i_this->mWindPower) > 0.1f) {
                 wind_wave = wind;
-                wind_wave.y = i_this->m1C00 * 0.5f * cM_ssin(i_this->mFrame * 0x1000 + i * 10000 + idx * 10000);
+                wind_wave.y = i_this->mWindPower * 0.5f * cM_ssin(i_this->mFrame * 0x1000 + i * 10000 + idx * 10000);
             }
-            if (i_this->m1C04 > 0.01f) {
-                drag = back * d_p2[i - 1] * i_this->m1C04 * behind;
+            if (i_this->mDragPower > 0.01f) {
+                drag = back * d_p2[i - 1] * i_this->mDragPower * behind;
             }
             if (i_this->mType == 1) {
                 wave.z = cM_ssin(i_this->mFrame * 0x800 + i * 10000 + idx * 10000) * 2.0f;
@@ -249,7 +249,7 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
             }
             f32 x = wave_pos.x + (drag.x + (wind_wave.x + (gravity.x + (vel->x + (pos->x - pos[-1].x)))));
             f32 z = wave_pos.z + (drag.z + (wind_wave.z + (gravity.z + (vel->z + (pos->z - pos[-1].z)))));
-            f32 y = wind_wave.y + (i_this->m1C08 + (pos->y + vel->y));
+            f32 y = wind_wave.y + (i_this->mGravity + (pos->y + vel->y));
             if (y < ground_y) {
                 y = ground_y;
             }
@@ -264,9 +264,9 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
             pos->x = pos[-1].x + offset.x;
             pos->y = pos[-1].y + offset.y;
             pos->z = pos[-1].z + offset.z;
-            vel->x = i_this->m1BFC * (pos->x - vel->x);
-            vel->y = i_this->m1BFC * (pos->y - vel->y);
-            vel->z = i_this->m1BFC * (pos->z - vel->z);
+            vel->x = i_this->mDamping * (pos->x - vel->x);
+            vel->y = i_this->mDamping * (pos->y - vel->y);
+            vel->z = i_this->mDamping * (pos->z - vel->z);
         }
 
         *v_pos = *pos;
@@ -274,7 +274,7 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
         v_count++;
 
         if (i_this->mType == 0 && (i & 1) == 0 && (idx & 1) == 0 && i != 0 && i != 8 && idx != 0 && idx != 8) {
-            if (i_this->m2834 != 0) {
+            if (i_this->mMeshCcActive != 0) {
                 i_this->mMeshSph[mesh_cc_ct].SetR(30.0f);
                 i_this->mMeshSph[mesh_cc_ct].SetC(*pos);
             } else {
@@ -282,8 +282,8 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
                 i_this->mMeshSph[mesh_cc_ct].SetC(non_pos);
             }
             dComIfG_Ccsp()->Set(&i_this->mMeshSph[mesh_cc_ct]);
-            if (i_this->m2836 == 0 && i_this->m2838 == 0 && i_this->mMeshSph[mesh_cc_ct].ChkTgHit()) {
-                i_this->m2836 = 10;
+            if (i_this->mHitCooldown == 0 && i_this->mBurnTimer == 0 && i_this->mMeshSph[mesh_cc_ct].ChkTgHit()) {
+                i_this->mHitCooldown = 10;
                 CcAtInfo at_info;
                 at_info.mpObj = i_this->mMeshSph[mesh_cc_ct].GetTgHitObj();
                 // From at_power_check: 1 is any player hit except the Skull Hammer, 2 is a
@@ -297,12 +297,12 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
                     if (at_info.mResultingAttackType == 2) {
                         if (i_this->mPacket.getTexNo() == 0) {
                             i_this->mPacket.setTexNo(2);
-                            i_this->m2834 = 0;
+                            i_this->mMeshCcActive = 0;
                             hit = true;
                         }
                     } else if (at_info.mResultingAttackType == 1 && i_this->mPacket.getTexNo() == 0) {
                         i_this->mPacket.setTexNo(4);
-                        i_this->m2834 = 0;
+                        i_this->mMeshCcActive = 0;
                         hit = true;
                     }
                 }
@@ -312,12 +312,12 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
                     dComIfGp_particle_set(0x81B6, pos, &angle, NULL, 0xFF, NULL, i_this->current.roomNo, &i_this->tevStr.mColorK0, &i_this->tevStr.mColorK0);
                     mDoAud_seStart(JA_SE_CM_TN_BREAK_MANTLE, &i_this->current.pos, 0, dComIfGp_getReverb(fopAcM_GetRoomNo(i_this)));
                 }
-                i_this->m1C0E = 2;
-                i_this->m1C0C = player->shape_angle.y;
-                i_this->m1C00 = 10.0f;
+                i_this->mGustTimer = 2;
+                i_this->mWindAngle = player->shape_angle.y;
+                i_this->mWindPower = 10.0f;
                 if (at_info.mResultingAttackType == 5) {
-                    i_this->m2838 = 26;
-                    i_this->m1C0E = 6;
+                    i_this->mBurnTimer = 26;
+                    i_this->mGustTimer = 6;
                     return;
                 }
             }
@@ -331,21 +331,21 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
     }
 }
 
-// Spaces the top row evenly between the two corners in m1BE0, bowed back by a half sine,
+// Spaces the top row evenly between the two corners in mTopCorners, bowed back by a half sine,
 // then runs joint_control on each column. Columns fan out by 3000 angle units each. [asm]
 /* 0000137C-000015F0       .text mant_v_calc__FP10mant_class */
 static void mant_v_calc(mant_class* i_this) {
     csXyz angle(0, 0, 0);
     cXyz offset;
     cXyz o;
-    cXyz delta = i_this->m1BE0[0] - i_this->m1BE0[1];
+    cXyz delta = i_this->mTopCorners[0] - i_this->mTopCorners[1];
     angle.y = cM_atan2s(delta.x, delta.z) + 0x4000;
     offset.x = 0.0f;
     mant_j_s* j_p = i_this->mJ;
     for (int i = 0; i < 9; i++, j_p++) {
-        i_this->mJ[i].mPos[0].x = i_this->m1BE0[1].x + delta.x * 0.125f * i;
-        i_this->mJ[i].mPos[0].y = i_this->m1BE0[1].y + delta.y * 0.125f * i;
-        i_this->mJ[i].mPos[0].z = i_this->m1BE0[1].z + delta.z * 0.125f * i;
+        i_this->mJ[i].mPos[0].x = i_this->mTopCorners[1].x + delta.x * 0.125f * i;
+        i_this->mJ[i].mPos[0].y = i_this->mTopCorners[1].y + delta.y * 0.125f * i;
+        i_this->mJ[i].mPos[0].z = i_this->mTopCorners[1].z + delta.z * 0.125f * i;
         cMtx_YrotS(*calc_mtx, angle.y);
         s16 bend = cM_rad2s(i * 0.3926991f);
         f32 sin = cM_ssin(bend);
@@ -393,43 +393,43 @@ static void mant_move(mant_class* i_this) {
     // Only positions are flushed; this unit never flushes the normals it just wrote, and
     // the GPU reads those as an array too. Possible bug, in-game effect not tested. [asm]
     DCStoreRangeNoSync(i_this->mPacket.getPos(), sizeof(cXyz) * 81);
-    if (i_this->m2838 != 0) {
-        i_this->m2838--;
+    if (i_this->mBurnTimer != 0) {
+        i_this->mBurnTimer--;
         cXyz* pos = i_this->mPacket.getPos();
         for (int i = 0; i < 81; i++, pos++) {
             if ((i & 3) == 0) {
                 dComIfGp_particle_setSimple(0x8069, pos, 0xFF, g_whiteColor, g_whiteColor, 0);
             }
         }
-        if (i_this->m2838 <= 2) {
+        if (i_this->mBurnTimer <= 2) {
             fopAcM_delete(i_this);
             return;
         }
     }
-    cLib_addCalc2(&i_this->m1BF8, 30.0f, 0.1f, 1.0f);
-    cLib_addCalc2(&i_this->m1BFC, 0.7f, 0.1f, 0.05f);
+    cLib_addCalc2(&i_this->mSegmentLen, 30.0f, 0.1f, 1.0f);
+    cLib_addCalc2(&i_this->mDamping, 0.7f, 0.1f, 0.05f);
     if (i_this->mWindSph.ChkTgHit()) {
-        i_this->m1C0E = 10;
-        i_this->m1C0C = dComIfGp_getPlayer(0)->shape_angle.y;
+        i_this->mGustTimer = 10;
+        i_this->mWindAngle = dComIfGp_getPlayer(0)->shape_angle.y;
     }
-    if (i_this->m1C0E != 0) {
-        i_this->m1C0E--;
-        cLib_addCalc2(&i_this->m1C00, 50.0f, 0.2f, 1.5f);
+    if (i_this->mGustTimer != 0) {
+        i_this->mGustTimer--;
+        cLib_addCalc2(&i_this->mWindPower, 50.0f, 0.2f, 1.5f);
     } else {
-        cLib_addCalc0(&i_this->m1C00, 0.1f, 1.0f);
+        cLib_addCalc0(&i_this->mWindPower, 0.1f, 1.0f);
     }
-    if (i_this->m1C0E > 4) {
-        cLib_addCalc2(&i_this->m1C04, 1.0f, 1.0f, 1.0f);
+    if (i_this->mGustTimer > 4) {
+        cLib_addCalc2(&i_this->mDragPower, 1.0f, 1.0f, 1.0f);
     } else {
-        cLib_addCalc0(&i_this->m1C04, 0.1f, 0.1f);
+        cLib_addCalc0(&i_this->mDragPower, 0.1f, 0.1f);
     }
 }
 
 /* 000019C0-00001A3C       .text daMant_Execute__FP10mant_class */
 static BOOL daMant_Execute(mant_class* i_this) {
     i_this->mFrame++;
-    if (i_this->m2836 != 0) {
-        i_this->m2836--;
+    if (i_this->mHitCooldown != 0) {
+        i_this->mHitCooldown--;
     }
     mant_move(i_this);
     MtxTrans(i_this->current.pos.x, i_this->current.pos.y, i_this->current.pos.z, 0);
@@ -514,14 +514,14 @@ static cPhs_State daMant_Create(fopAc_ac_c* a_this) {
     fopAcM_SetMtx(i_this, i_this->mMtx);
     i_this->mPacket.setarg0(i_this->mType);
     if (i_this->mType == 1) {
-        i_this->m1BF8 = 40.0f;
-        i_this->m1BFC = 0.8f;
-        i_this->m1C08 = -5.0f;
+        i_this->mSegmentLen = 40.0f;
+        i_this->mDamping = 0.8f;
+        i_this->mGravity = -5.0f;
         i_this->mPacket.setTexNo(6);
     } else {
-        i_this->m1BF8 = 30.0f;
-        i_this->m1BFC = 0.7f;
-        i_this->m1C08 = -10.0f;
+        i_this->mSegmentLen = 30.0f;
+        i_this->mDamping = 0.7f;
+        i_this->mGravity = -10.0f;
         i_this->mStts.Init(200, 0xFF, i_this);
         i_this->mWindSph.Set(wind_cc_sph_src);
         i_this->mWindSph.SetStts(&i_this->mStts);
@@ -529,7 +529,7 @@ static cPhs_State daMant_Create(fopAc_ac_c* a_this) {
             i_this->mMeshSph[i].Set(mesh_cc_sph_src);
             i_this->mMeshSph[i].SetStts(&i_this->mStts);
         }
-        i_this->m2834 = 10;
+        i_this->mMeshCcActive = 10;
     }
     i_this->scale.setall(1.0f);
     // Runs 10 simulation steps during create. Presumably settles the cloth. [inferred]
