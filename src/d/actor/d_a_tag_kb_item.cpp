@@ -2,6 +2,11 @@
  * d_a_tag_kb_item.cpp
  *
  */
+// Marks an item for d_a_kb to find, through a search on this tag's process name. The tag itself does
+// nothing in Execute after JPN. [asm]
+// Placement: params bits 0-7 item, bits 8-15 item bit, bits 16-23 enemy kind, bits 24-31 switch. It
+// does not spawn if the item bit is collected or the switch is set. An item bit of 0x1F and a switch of
+// 0xFF mean none. After JPN, deleting the tag clears its switch when an item is set. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_tag_kb_item.h"
