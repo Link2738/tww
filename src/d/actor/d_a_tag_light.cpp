@@ -5,9 +5,10 @@
 // Areas of light. Three types, from params bits 0-1: [asm]
 //   0  invisible box, read through chk_inside
 //   1  visible spotlight cone using the Mspot model, read through chk_inside, projected onto the ground
-//   2  light sensor: turns its switch on after being lit, with no visible part
+//   2  light sensor: turns its switch on after being lit, with no visible part, by a hit on its sphere or by sitting inside an active type 0 or 1 tag
 // Placement, params: bits 2-9 second switch, bits 8-9 sensor radius index, bits 10-13 cone ratio,
 // bits 14-15 fade speed index, bits 16-23 switch, bits 24-31 schedule mask. [asm]
+// Bits 8-9 overlap: only type 2 reads the radius index, and it never checks the second switch. [asm]
 // Types 0 and 1 are on while the switch is set (0xFF counts as set), the second switch is clear (0xFF
 // counts as clear), and the mask overlaps the schedule bit (a mask of 0 always passes). [asm]
 
