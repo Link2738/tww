@@ -497,6 +497,12 @@ GXRenderModeObj g_ntscZeldaProg = {
 };
 #endif
 
+// Divides memory and starts the helper threads. Heaps for USA and PAL: [asm]
+//   game     0x2CE800   actor solid heaps, see fopAcM_entrySolidHeap
+//   archive  0xA51400   mounted archives, see mDoDvdThd_mountArchive_c
+//   command  0x1000     DVD thread command objects
+//   zelda    all of the system heap except 64 KiB; cMl and so all process blocks come from here
+// ARAM is 0xA00000 for audio and 0x5CE000 for graphics. [asm]
 /* 8000C70C-8000CB48       .text mDoMch_Create__Fv */
 bool mDoMch_Create() {
 #if VERSION == VERSION_DEMO

@@ -990,6 +990,9 @@ static void dummy() {
     DEAD_STRING("heap == situationHeap");
 }
 
+// A size of 0 or -1 takes all free space in the parent, to be shrunk later by
+// mDoExt_adjustSolidHeap. Otherwise the size is rounded up to 0x10 and room for the heap header
+// is added. [asm]
 /* 80011ABC-80011B54       .text mDoExt_createSolidHeap__FUlP7JKRHeapUl */
 JKRSolidHeap* mDoExt_createSolidHeap(u32 i_size, JKRHeap* i_heap, u32 i_alignment) {
     if (i_heap == NULL) {
@@ -1055,6 +1058,9 @@ JKRSolidHeap* mDoExt_createSolidHeapFromSystem(u32 i_size, u32 i_alignment) {
     return mDoExt_createSolidHeap(i_size, mDoExt_getZeldaHeap(), i_alignment);
 }
 
+// Also makes the new heap current until mDoExt_restoreCurrentHeap. There is one save slot, and
+// it asserts the slot is empty and that this is the main thread, so these calls cannot nest. A
+// createHeap callback must not start another one. [asm]
 /* 80011BE4-80011CC0       .text mDoExt_createSolidHeapToCurrent__FUlP7JKRHeapUl */
 JKRSolidHeap* mDoExt_createSolidHeapToCurrent(u32 i_size, JKRHeap* i_parent, u32 i_alignment) {
     JKRSolidHeap* resultHeap = mDoExt_createSolidHeap(i_size, i_parent, i_alignment);

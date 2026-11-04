@@ -34,6 +34,8 @@ int mDoRst::m3ButtonResetPort = -1;
 mDoRstData* mDoRst::mResetData;
 #endif
 
+// Shuts down the threads and graphics, then calls OSResetSystem. On a fatal drive error it hangs
+// here instead. The reset data block is kept across the reset with OSSetSaveRegion. [asm]
 /* 80017D7C-80017E40       .text mDoRst_reset__FiUli */
 void mDoRst_reset(int param_0, u32 param_1, int param_2) {
     if (DVDGetDriveStatus() == DVD_STATE_FATAL_ERROR) {
@@ -82,6 +84,8 @@ void mDoRst_reset(int param_0, u32 param_1, int param_2) {
 #endif
 }
 
+// Pad reset combination or reset button. Only sets a flag unless the disc check fails, and the
+// actual reset happens later. See checkDvdCondition for one of the places that acts on it. [asm]
 /* 80017E40-80017EF0       .text mDoRst_resetCallBack__FiPv */
 void mDoRst_resetCallBack(int port, void*) {
     if (mDoRst::isReset()) {

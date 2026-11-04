@@ -21,6 +21,8 @@ bool mDoDvdErr_initialized;
 void mDoDvdErr_Watch(void*);
 void AlarmHandler(OSAlarm*, OSContext*);
 
+// Starts a watchdog woken by a periodic alarm. The period, OS_BUS_CLOCK / 4 ticks, is one second
+// because the timer runs at a quarter of the bus clock. [asm]
 /* 80018BE0-80018CA0       .text mDoDvdErr_ThdInit__Fv */
 void mDoDvdErr_ThdInit() {
     if (!mDoDvdErr_initialized) {
@@ -47,6 +49,7 @@ void mDoDvdErr_ThdCleanup() {
     }
 }
 
+// On a fatal drive error, suspends the DVD thread so it stops issuing reads. [asm]
 /* 80018CE8-80018D44       .text mDoDvdErr_Watch__FPv */
 void mDoDvdErr_Watch(void*) {
 #if VERSION > VERSION_DEMO

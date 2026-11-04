@@ -400,6 +400,8 @@ void debug() {
 }
 #endif
 
+// Main thread body. After setup, each frame: memory card update if SyncWidthSound is set,
+// controller read, audio, then fapGm_Execute, which runs the process system. [asm]
 /* 80006338-80006464       .text main01__Fv */
 void main01() {
     // Setup heaps, setup exception manager, set RNG seed, setup DVDError Thread, setup Memory card
@@ -545,6 +547,10 @@ void parse_args(int argc, const char* argv[]) {
 OSThread mainThread;
 #endif
 
+// Runs the game on a second thread, main01, with a 0xF000-byte stack, then suspends this one.
+// The stack is a local of main, so main must never return, and it does not while suspended. [asm]
+// developmentMode comes from the disc's version byte: above 0x90 on, above 0x80 depends on the
+// console type, otherwise off. [asm]
 /* 80006464-800065DC       .text main */
 int main(int argc, const char* argv[]) {
 #if VERSION == VERSION_DEMO
