@@ -2,6 +2,9 @@
  * d_com_inf_game.cpp
  * Game - Shared Runtime Data ("Common Info Game")
  */
+// g_dComIfG_gameInfo holds the global game state: save data in .save and per-play state in .play.
+// The dComIfGs_ prefix means save, dComIfGp play and dComIfGd draw. Most of these are inlines in
+// the header; this unit has the larger ones. [asm]
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/d_com_inf_game.h"
@@ -562,6 +565,9 @@ static cPhs_State phase_3(char* i_arcName) {
     return cPhs_COMPLEATE_e;
 }
 
+// The usual way to load an archive from a Create method: call it each frame with the same phase
+// object until it returns COMPLEATE, and pair it with dComIfG_resDelete. The phase struct needs
+// no setup if the actor's memory is zeroed, since process blocks are cleared. [asm]
 /* 80053390-800533D0       .text dComIfG_resLoad__FP30request_of_phase_process_classPCc */
 cPhs_State dComIfG_resLoad(request_of_phase_process_class* i_phase, const char* i_arcName) {
     static cPhs__Handler l_method[] = {
@@ -577,6 +583,7 @@ cPhs_State dComIfG_resLoad(request_of_phase_process_class* i_phase, const char* 
     return dComLbG_PhaseHandler(i_phase, l_method, (void*)i_arcName);
 }
 
+// Releases the archive only if the load finished, and asserts if it is called mid-load. [asm]
 /* 800533D0-8005347C       .text dComIfG_resDelete__FP30request_of_phase_process_classPCc */
 int dComIfG_resDelete(request_of_phase_process_class* i_phase, const char* i_resName) {
     JUT_ASSERT(VERSION_SELECT(1033, 1045, 1048, 1048), i_phase->id != 1);
@@ -678,6 +685,8 @@ stage_arrow_class* dComIfGp_getRoomArrow(int i_roomNo) {
     return status->getArrow();
 }
 
+// Requests a stage change. The player's state that must survive is packed into i_lastMode:
+// 0x8000 Dragon Shield, 0x4000 soup power-up, and the Tinkle shield from bit 16 up. [asm]
 /* 800537C8-8005388C       .text dComIfGp_setNextStage__FPCcsScScfUliSc */
 void dComIfGp_setNextStage(const char* i_stageName, s16 i_point, s8 i_roomNo, s8 i_layer,
                            f32 i_lastSpeed, u32 i_lastMode, BOOL i_setPoint, s8 i_wipe) {
@@ -1277,6 +1286,7 @@ stage_scls_info_class* dComIfGd_getMeshSceneList(Vec& vec) {
     return getSceneList((x & 1) + ((x >> 1) + (z >> 1) * 7) * 4 + (z & 1) * 2);
 }
 
+// Six islands need a story flag before the ship can land. All other rooms return TRUE. [asm]
 /* 80054870-800548FC       .text dComIfGs_checkSeaLandingEvent__FSc */
 BOOL dComIfGs_checkSeaLandingEvent(s8 i_roomNo) {
     struct landing_event {
