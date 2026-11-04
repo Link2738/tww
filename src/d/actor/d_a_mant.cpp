@@ -1,6 +1,16 @@
 /**
  * d_a_mant.cpp
  * Object - Phantom Ganon's cape/Darknut cape
+ *
+ * Cloth simulation on a 9 x 9 grid, 81 vertices. mJ[idx] is one hanging column of 9
+ * points, top first. The owner (d_a_tn or d_a_fganon) writes the two top corners into
+ * m1BE0 each frame from its bone matrices; everything below is simulated here. [asm]
+ *
+ * mType 0, Darknut: takes hits, tears and burns. mType 1, Phantom Ganon: no collision,
+ * adds a slow wave, and draws one pass with the LIGHTOFF material. [asm]
+ *
+ * Unit status: NonMatching. joint_control is not byte-exact; the claims made about it
+ * below were checked in the target asm.
  */
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -38,6 +48,9 @@
 #include "assets/l_matDL2__d_a_mant.h"
 #include "assets/l_matDL_LIGHTOFF__d_a_mant.h"
 
+// Indexed by mTexNo. 0 is the intact Darknut cape. An explosive hit sets 2 and a hit from
+// the player sets 4, so "boro_b" and "boro_k" are the two torn looks. 6 is Phantom Ganon.
+// The NULL slots are never selected by this unit. [asm]
 static u8* tex_d[] = {
     l_tn_mantle1TEX,
     l_tn_boro1TEX,
@@ -58,6 +71,12 @@ static u8* pal_d[] = {
     l_pg_mantle1_palettePAL,
 };
 
+// Reads vertex data from the mPos/mNrm buffer that mCurr selects, then flips mCurr, so
+// Execute fills the other buffer next frame. [asm] Presumably this keeps the buffer the
+// GPU may still be reading safe from the simulation. [inferred]
+//
+// Non-LIGHTOFF capes draw twice. The second pass uses mMtx2, moved 3 units down, with
+// l_matDL2 and darker colors. [asm]
 /* 000000EC-000003EC       .text draw__15daMant_packet_cFv */
 void daMant_packet_c::draw() {
     static GXVtxDescList l_vtxDescList[] = {
@@ -155,6 +174,19 @@ static int v_count;
 static int mesh_cc_ct;
 static cXyz non_pos(-20000.0f, -200000.0f, -100000.0f);
 
+// Simulates column idx and handles its collision. Each point after the first is pushed
+// backward by a per-point amount from d_p, by wind and drag, down by m1C08 and, for
+// mType 1, by a wave. It is then placed at a fixed distance from its parent,
+// (m1BF8 + a per-column offset) * scale.y. Velocity comes from the change in position,
+// as in Verlet integration. [asm]
+//
+// The 9 mMeshSph spheres sit on points where i and idx are both 2, 4 or 6. mWindSph sits
+// on the center point, i == 4, idx == 4. [asm]
+//
+// Bug: the fire path returns from the middle of the column, after setting m2838. The rest
+// of the column is never copied through v_pos, so later columns land too early in the
+// vertex buffer and the tail keeps old data for that frame. In-game effect not tested.
+// [asm]
 /* 000004E8-00000FC0       .text joint_control__FP10mant_classP8mant_j_si */
 static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
     static f32 d_p[] = {0.6f, 0.4f, 0.3f, 0.3f, 0.2f, 0.2f, 0.2f, 0.1f};
@@ -254,6 +286,9 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
                 i_this->m2836 = 10;
                 CcAtInfo at_info;
                 at_info.mpObj = i_this->mMeshSph[mesh_cc_ct].GetTgHitObj();
+                // From at_power_check: 1 is any player hit except the Skull Hammer, 2 is a
+                // bomb, 5 is fire when the attacker does not override it, as with a fire
+                // arrow. [asm]
                 at_power_check(&at_info);
                 fopAc_ac_c* player = dComIfGp_getPlayer(0);
                 // s8: the target tests this with extsb.
@@ -296,6 +331,8 @@ static void joint_control(mant_class* i_this, mant_j_s* j_p, int idx) {
     }
 }
 
+// Spaces the top row evenly between the two corners in m1BE0, bowed back by a half sine,
+// then runs joint_control on each column. Columns fan out by 3000 angle units each. [asm]
 /* 0000137C-000015F0       .text mant_v_calc__FP10mant_class */
 static void mant_v_calc(mant_class* i_this) {
     csXyz angle(0, 0, 0);
@@ -322,6 +359,8 @@ static void mant_v_calc(mant_class* i_this) {
     }
 }
 
+// One normal per vertex, from the direction to the diagonal neighbor pos[10]. The last
+// point of each column and the last column have no such neighbor and copy theirs. [asm]
 /* 000015F0-000017EC       .text mant_n_calc__FP10mant_class */
 static void mant_n_calc(mant_class* i_this) {
     cXyz base(0.0f, 0.0f, 1.0f);
@@ -351,6 +390,8 @@ static void mant_move(mant_class* i_this) {
     mesh_cc_ct = 0;
     mant_v_calc(i_this);
     mant_n_calc(i_this);
+    // Only positions are flushed; this unit never flushes the normals it just wrote, and
+    // the GPU reads those as an array too. Possible bug, in-game effect not tested. [asm]
     DCStoreRangeNoSync(i_this->mPacket.getPos(), sizeof(cXyz) * 81);
     if (i_this->m2838 != 0) {
         i_this->m2838--;
@@ -491,6 +532,7 @@ static cPhs_State daMant_Create(fopAc_ac_c* a_this) {
         i_this->m2834 = 10;
     }
     i_this->scale.setall(1.0f);
+    // Runs 10 simulation steps during create. Presumably settles the cloth. [inferred]
     for (int i = 0; i < 10; i++) {
         daMant_Execute(i_this);
     }

@@ -6,6 +6,8 @@
 #include "f_pc/f_pc_layer_tag.h"
 #include "f_pc/f_pc_layer.h"
 
+// With a layer of NONE or CURRENT the process is appended to the list. With a specific layer
+// it is inserted at i_listPriority. [asm]
 /* 8003DF4C-8003E044       .text fpcLyTg_ToQueue__FP26layer_management_tag_classUiUsUs */
 BOOL fpcLyTg_ToQueue(layer_management_tag_class* i_lyTag, uint i_layerID, u16 i_listID,
                     u16 i_listPriority) {

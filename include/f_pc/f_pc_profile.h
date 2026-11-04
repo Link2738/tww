@@ -8,11 +8,11 @@
 typedef struct process_profile_definition {
     /* 0x00 */ uint mLayerID;
     /* 0x04 */ u16 mListID;
-    /* 0x06 */ u16 mListPrio;
+    /* 0x06 */ u16 mListPrio;  // Position in the layer list when a specific layer is used. [asm]
     /* 0x08 */ s16 mProcName;
     /* 0x0C */ process_method_class* sub_method; // Subclass methods
     /* 0x10 */ s32 mSize;
-    /* 0x14 */ s32 mSizeOther;
+    /* 0x14 */ s32 mSizeOther;  // Added to mSize when the process is allocated. [asm]
     /* 0x18 */ u32 mParameters;
 } process_profile_definition;
 

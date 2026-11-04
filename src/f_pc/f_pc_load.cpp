@@ -7,6 +7,7 @@
 #include "c/c_dylink.h"
 #include "SSystem/SComponent/c_phase.h"
 
+// Only reports a module that is already linked; it never starts a load. [asm]
 /* 8003E230-8003E280       .text fpcLd_Use__Fs */
 BOOL fpcLd_Use(s16 i_procName) {
     if (fpcLd_IsLoaded(i_procName) == TRUE && fpcLd_Load(i_procName) == cPhs_COMPLEATE_e)
@@ -14,6 +15,7 @@ BOOL fpcLd_Use(s16 i_procName) {
     return FALSE;
 }
 
+// Profiles with no REL, because their code is in the DOL, count as linked. See cDyl_IsLinked. [asm]
 /* 8003E280-8003E2A4       .text fpcLd_IsLoaded__Fs */
 BOOL fpcLd_IsLoaded(s16 i_procName) {
     return cDyl_IsLinked((int)i_procName);

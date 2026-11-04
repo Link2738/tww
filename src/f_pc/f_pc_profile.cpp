@@ -7,6 +7,8 @@
 
 process_profile_definition** g_fpcPf_ProfileList_p;
 
+// Index into g_fpcPfLst_ProfileList, which the f_pc_profile_lst REL installs when it loads.
+// Called before that, this reads through a NULL pointer. [asm]
 /* 8004003C-80040050       .text fpcPf_Get__Fs */
 process_profile_definition* fpcPf_Get(s16 i_profName) {
     int profName = i_profName;

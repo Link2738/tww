@@ -14,9 +14,9 @@ typedef struct base_process_class {
     /* 0x00 */ int mBsType;
     /* 0x04 */ fpc_ProcID mBsPcId;
     /* 0x08 */ s16 mProcName;
-    /* 0x0A */ s8 mUnk0;
-    /* 0x0B */ u8 mPauseFlag;
-    /* 0x0C */ s8 mInitState;
+    /* 0x0A */ s8 mUnk0;  // Deletion is refused if this is 1. No source sets it to 1 by name. [asm]
+    /* 0x0B */ u8 mPauseFlag;  // Bit 1 stops execute, bit 2 stops draw. [asm]
+    /* 0x0C */ s8 mInitState;  // Lifecycle state; table at the top of f_pc_base.cpp. [asm]
     /* 0x0D */ s8 mCreateResult;
     /* 0x0E */ s16 mProfName;
     /* 0x10 */ process_profile_definition* mpProf;
@@ -26,9 +26,9 @@ typedef struct base_process_class {
     /* 0x4C */ delete_tag_class mDtTg;
     /* 0x68 */ process_priority_class mPi;
     /* 0xA8 */ process_method_class* mpPcMtd;
-    /* 0xAC */ void* mpUserData;
+    /* 0xAC */ void* mpUserData;  // Append data; freed once create succeeds. [asm]
     /* 0xB0 */ u32 mParameters;
-    /* 0xB4 */ int mSubType;
+    /* 0xB4 */ int mSubType;  // Node or leaf tag from fpcBs_MakeOfType. [asm]
 } base_process_class;  // Size: 0xB8
 
 BOOL fpcBs_Is_JustOfType(int pType1, int pType2);

@@ -9,6 +9,7 @@
 #include "f_pc/f_pc_node.h"
 #include "f_pc/f_pc_pause.h"
 
+// Skipped while pause bit 2 is set. Leaf and node method tables differ, hence the type test. [asm]
 /* 8004042C-800404CC       .text fpcDw_Execute__FP18base_process_class */
 BOOL fpcDw_Execute(base_process_class* i_proc) {
     if (!fpcPause_IsEnable(i_proc, 2)) {

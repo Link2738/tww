@@ -54,22 +54,23 @@ public:
     /* 0x1248 */ int mFrame;
     /* 0x124C */ u8 m124C[0x1250 - 0x124C];
     /* 0x1250 */ mant_j_s mJ[9];
-    /* 0x1BE0 */ cXyz m1BE0[2];
-    /* 0x1BF8 */ f32 m1BF8;
-    /* 0x1BFC */ f32 m1BFC;
-    /* 0x1C00 */ f32 m1C00;
-    /* 0x1C04 */ f32 m1C04;
-    /* 0x1C08 */ f32 m1C08;
-    /* 0x1C0C */ s16 m1C0C;
-    /* 0x1C0E */ s16 m1C0E;
+    // These names describe how the code uses each field. The original names are not known.
+    /* 0x1BE0 */ cXyz m1BE0[2];  // Written by the owner each frame from its bones. [asm]
+    /* 0x1BF8 */ f32 m1BF8;  // Eases to 30, from 40 on Phantom Ganon. [asm]
+    /* 0x1BFC */ f32 m1BFC;  // Eases to 0.7, from 0.8 on Phantom Ganon. [asm]
+    /* 0x1C00 */ f32 m1C00;  // 10 on a hit; eases to 50 during a gust, then to 0. [asm]
+    /* 0x1C04 */ f32 m1C04;  // Eases to 1 while m1C0E > 4, otherwise to 0. [asm]
+    /* 0x1C08 */ f32 m1C08;  // Added to Y each step: -10 Darknut, -5 Phantom Ganon. [asm]
+    /* 0x1C0C */ s16 m1C0C;  // Set from the player's facing on a hit. [asm]
+    /* 0x1C0E */ s16 m1C0E;  // Nonzero sets bit 2 in d_a_tn's otoCheck result. [asm]
     /* 0x1C10 */ dCcD_Stts mStts;
     /* 0x1C4C */ dCcD_Sph mWindSph;
     /* 0x1D78 */ dCcD_Sph mMeshSph[9];
     /* 0x2804 */ Mtx mMtx;
-    /* 0x2834 */ s8 m2834;
+    /* 0x2834 */ s8 m2834;  // Nonzero: mesh spheres live. 0 parks them at non_pos. [asm]
     /* 0x2835 */ s8 m2835[0x2836 - 0x2835];
-    /* 0x2836 */ s16 m2836;
-    /* 0x2838 */ s16 m2838;
+    /* 0x2836 */ s16 m2836;  // Frames until another hit can register. [asm]
+    /* 0x2838 */ s16 m2838;  // Burn timer: starts at 26, actor deletes itself at 2. [asm]
     /* 0x283A */ u8 m283A[0x283C - 0x283A];
 };  // Size: 0x283C
 

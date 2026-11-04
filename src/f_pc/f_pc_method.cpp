@@ -5,6 +5,8 @@
 
 #include "f_pc/f_pc_method.h"
 
+// A NULL method returns TRUE. That is success for every method except create, where 1 is
+// cPhs_LOADING_e, so a NULL create method never finishes. [asm]
 /* 8003EF00-8003EF38       .text fpcMtd_Method__FPFPv_iPv */
 int fpcMtd_Method(process_method_func i_methodFunc, void* i_data) {
     if (i_methodFunc != NULL)

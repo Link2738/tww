@@ -16,7 +16,7 @@ typedef struct leafdraw_method_class {
 typedef struct leafdraw_class {
     /* 0x00 */ base_process_class base;
     /* 0xB8 */ leafdraw_method_class* mpDrawMtd;
-    /* 0xBC */ s8 mbUnk0;
+    /* 0xBC */ s8 mbUnk0;  // Nonzero skips draw. No source sets it nonzero by name. [asm]
     /* 0xBD */ u8 mbUnk1;
     /* 0xBE */ draw_priority_class mDwPi;
 } leafdraw_class;

@@ -17,7 +17,7 @@ typedef struct process_node_class {
     /* 0xB8 */ nodedraw_method_class* mpNodeMtd;
     /* 0xBC */ layer_class mLayer;
     /* 0xE8 */ node_list_class mLayerNodeLists[16];
-    /* 0x1A8 */ s8 mUnk0;
+    /* 0x1A8 */ s8 mUnk0;  // Nonzero skips draw. No source sets it nonzero by name. [asm]
 } process_node_class;
 
 typedef struct node_process_profile_definition {

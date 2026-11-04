@@ -18,6 +18,8 @@ BOOL fpcDtTg_IsEmpty() {
     }
 }
 
+// mTimer = 1 makes fpcDtTg_Do skip one pass, and a failed delete is requeued the same way. A
+// process queued during execute has its delete method run two frames later. [asm]
 /* 8003D188-8003D1BC       .text fpcDtTg_ToDeleteQ__FP16delete_tag_class */
 void fpcDtTg_ToDeleteQ(delete_tag_class* i_deleteTag) {
     i_deleteTag->mTimer = 1;
