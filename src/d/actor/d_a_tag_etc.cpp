@@ -3,10 +3,12 @@
 // Translation Unit: d_a_tag_etc.cpp
 //
 // Area tied to Medli. Type 0 finds the actor named Md1, and while she is flying inside the area it
-// turns on her CamTagIn bit. Inside the tag, range is a cylinder of radius scale.x * 100 from the base
-// up to scale.y * 100. [asm]
+// turns on her CamTagIn bit. Range is a cylinder of radius scale.x * 100, from the base up to
+// scale.y * 100. [asm]
 // Placement: params bits 8-11 type, bits 24-31 stage event number. A bad event number or a type other
 // than 0 leaves the tag idle. [asm]
+// Nothing sets ACT_READY, in this unit or elsewhere, so the ready and event actions, and the event
+// they would run, are unreachable. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_tag_etc.h"

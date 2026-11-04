@@ -4,6 +4,7 @@
 //
 // Start tag for Mila's chase, per its HIO name. mTagSet is true while the player is close, below
 // the height limit, and facing within 0x1000 angle units of the tag's own Y angle. [asm]
+// No other source refers to this class or reads mTagSet, so the result appears to go unused. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_tag_kk1.h"
