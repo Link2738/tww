@@ -69,9 +69,9 @@ namespace daStone {
         /* 0x98 */ u32 m98;
         /* 0x9C */ u32 m9C;
         /* 0xA0 */ s16 mA0;
-        /* 0xA0 */ s16 mA2;
-        /* 0xA0 */ s16 mA4;
-        /* 0xA0 */ s16 mA6;
+        /* 0x0A2 */ s16 mA2;
+        /* 0x0A4 */ s16 mA4;
+        /* 0x0A6 */ s16 mA6;
         /* 0xA8 */ s16 mA8;
         /* 0xAA */ s16 mAA;
         /* 0xAC */ s16 mAC;

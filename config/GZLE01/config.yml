@@ -1474,6 +1474,65 @@ modules:
   hash: a565cdff34a1346c7db964d795179b81ece22ef8
   splits: config/GZLE01/rels/d_a_mant/splits.txt
   symbols: config/GZLE01/rels/d_a_mant/symbols.txt
+  extract:
+  - symbol: l_pg_mantle1TEX
+    binary: assets/l_pg_mantle1TEX.bin
+    header: assets/l_pg_mantle1TEX.h
+  - symbol: l_pg_mantle1_palettePAL
+    binary: assets/l_pg_mantle1_palettePAL.bin
+    header: assets/l_pg_mantle1_palettePAL.h
+  - symbol: l_tn_boro_b1TEX
+    binary: assets/l_tn_boro_b1TEX.bin
+    header: assets/l_tn_boro_b1TEX.h
+  - symbol: l_tn_boro_b1_palettePAL
+    binary: assets/l_tn_boro_b1_palettePAL.bin
+    header: assets/l_tn_boro_b1_palettePAL.h
+  - symbol: l_tn_boro_k1TEX
+    binary: assets/l_tn_boro_k1TEX.bin
+    header: assets/l_tn_boro_k1TEX.h
+  - symbol: l_tn_boro_k1_palettePAL
+    binary: assets/l_tn_boro_k1_palettePAL.bin
+    header: assets/l_tn_boro_k1_palettePAL.h
+  - symbol: l_tn_boro1TEX
+    binary: assets/l_tn_boro1TEX.bin
+    header: assets/l_tn_boro1TEX.h
+  - symbol: l_tn_boro1_palettePAL
+    binary: assets/l_tn_boro1_palettePAL.bin
+    header: assets/l_tn_boro1_palettePAL.h
+  - symbol: l_tn_mantle1TEX
+    binary: assets/l_tn_mantle1TEX.bin
+    header: assets/l_tn_mantle1TEX.h
+  - symbol: l_tn_mantle1_palettePAL
+    binary: assets/l_tn_mantle1_palettePAL.bin
+    header: assets/l_tn_mantle1_palettePAL.h
+  - symbol: l_pos
+    binary: assets/l_pos__d_a_mant.bin
+    header: assets/l_pos__d_a_mant.h
+    rename: l_pos
+    header_type: none
+    custom_type: Vec
+  - symbol: l_texCoord
+    binary: assets/l_texCoord__d_a_mant.bin
+    header: assets/l_texCoord__d_a_mant.h
+    rename: l_texCoord
+    header_type: none
+    custom_type: cXy
+  - symbol: l_DL
+    binary: assets/l_DL__d_a_mant.bin
+    header: assets/l_DL__d_a_mant.h
+    rename: l_DL
+  - symbol: l_matDL
+    binary: assets/l_matDL__d_a_mant.bin
+    header: assets/l_matDL__d_a_mant.h
+    rename: l_matDL
+  - symbol: l_matDL2
+    binary: assets/l_matDL2__d_a_mant.bin
+    header: assets/l_matDL2__d_a_mant.h
+    rename: l_matDL2
+  - symbol: l_matDL_LIGHTOFF
+    binary: assets/l_matDL_LIGHTOFF__d_a_mant.bin
+    header: assets/l_matDL_LIGHTOFF__d_a_mant.h
+    rename: l_matDL_LIGHTOFF
   ldscript_template: config/GZLE01/rels/ldscript.tpl
 
 - object: files/rels/d_a_mbdoor.rel
@@ -1913,6 +1972,51 @@ modules:
   hash: a4db26857f985f6a3c963e183e6be28bf37e46c3
   splits: config/GZLE01/rels/d_a_obj_buoyflag/splits.txt
   symbols: config/GZLE01/rels/d_a_obj_buoyflag/symbols.txt
+  extract:
+  - symbol: l_k_taru02TEX__Q313daObjBuoyflag30@unnamed@d_a_obj_buoyflag_cpp@5Khasi
+    binary: assets/l_k_taru02TEX.bin
+    header: assets/l_k_taru02TEX.h
+    rename: l_k_taru02TEX
+  - symbol: l_pos__Q313daObjBuoyflag30@unnamed@d_a_obj_buoyflag_cpp@5Khasi
+    binary: assets/l_pos__d_a_obj_buoyflag_Khasi.bin
+    header: assets/l_pos__d_a_obj_buoyflag_Khasi.h
+    rename: l_pos
+    header_type: none
+    custom_type: Vec
+  - symbol: l_texCoord__Q313daObjBuoyflag30@unnamed@d_a_obj_buoyflag_cpp@5Khasi
+    binary: assets/l_texCoord__d_a_obj_buoyflag_Khasi.bin
+    header: assets/l_texCoord__d_a_obj_buoyflag_Khasi.h
+    rename: l_texCoord
+    header_type: none
+    custom_type: cXy
+  - symbol: l_Khasi_00DL__Q313daObjBuoyflag30@unnamed@d_a_obj_buoyflag_cpp@5Khasi
+    binary: assets/l_Khasi_00DL.bin
+    header: assets/l_Khasi_00DL.h
+    rename: l_Khasi_00DL
+  - symbol: l_k_hata01TEX__Q313daObjBuoyflag30@unnamed@d_a_obj_buoyflag_cpp@5Khata
+    binary: assets/l_k_hata01TEX.bin
+    header: assets/l_k_hata01TEX.h
+    rename: l_k_hata01TEX
+  - symbol: l_pos__Q313daObjBuoyflag30@unnamed@d_a_obj_buoyflag_cpp@5Khata
+    binary: assets/l_pos__d_a_obj_buoyflag_Khata.bin
+    header: assets/l_pos__d_a_obj_buoyflag_Khata.h
+    rename: l_pos
+    header_type: none
+    custom_type: Vec
+  - symbol: l_texCoord__Q313daObjBuoyflag30@unnamed@d_a_obj_buoyflag_cpp@5Khata
+    binary: assets/l_texCoord__d_a_obj_buoyflag_Khata.bin
+    header: assets/l_texCoord__d_a_obj_buoyflag_Khata.h
+    rename: l_texCoord
+    header_type: none
+    custom_type: cXy
+  - symbol: l_Khata_00DL__Q313daObjBuoyflag30@unnamed@d_a_obj_buoyflag_cpp@5Khata
+    binary: assets/l_Khata_00DL.bin
+    header: assets/l_Khata_00DL.h
+    rename: l_Khata_00DL
+  - symbol: l_matDL__Q313daObjBuoyflag30@unnamed@d_a_obj_buoyflag_cpp@5Khata
+    binary: assets/l_matDL__d_a_obj_buoyflag.bin
+    header: assets/l_matDL__d_a_obj_buoyflag.h
+    rename: l_matDL
   ldscript_template: config/GZLE01/rels/ldscript.tpl
 
 - object: files/rels/d_a_obj_buoyrace.rel
@@ -2267,6 +2371,17 @@ modules:
   hash: 43cc17f0e803e418a1dba775eaa2af517f3509f6
   splits: config/GZLE01/rels/d_a_obj_tapestry/splits.txt
   symbols: config/GZLE01/rels/d_a_obj_tapestry/symbols.txt
+  extract:
+  - symbol: l_Txm_curtainTEX__30@unnamed@d_a_obj_tapestry_cpp@
+    binary: assets/l_Txm_curtainTEX.bin
+    header: assets/l_Txm_curtainTEX.h
+    rename: l_Txm_curtainTEX
+  - symbol: l_matDL__30@unnamed@d_a_obj_tapestry_cpp@
+    binary: assets/l_matDL__d_a_obj_tapestry.bin
+    header: assets/l_matDL__d_a_obj_tapestry.h
+    rename: l_matDL
+    header_type: none
+    custom_type: matDL
   ldscript_template: config/GZLE01/rels/ldscript.tpl
 
 - object: files/rels/d_a_obj_tntrap.rel

@@ -75,7 +75,7 @@ namespace daTagAttention {
     public:
         /* 0x290 */ bool m_b0x290;
         /* padding */ s8 mPad[8];
-        /* 0x2B8 */ dCcD_Stts mStts;
+        /* 0x29C */ dCcD_Stts mStts;
         /* 0x2D8 */ dCcD_Sph mSph;
     };
 };

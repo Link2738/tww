@@ -20,7 +20,7 @@
 #include "m_Do/m_Do_lib.h"
 #include "SSystem/SComponent/c_counter.h"
 
-static int now_room = -1;
+int now_room = -1;
 
 /* 8008AA30-8008AB3C       .text vectle_calc__FP10DOUBLE_POSP4cXyz */
 void vectle_calc(DOUBLE_POS* i_pos, cXyz* o_out) {
@@ -332,10 +332,10 @@ void dKyr_wind_move() {
                 windEff.mAlpha = 0.0f;
                 windEff.field_0x2c = 0;
 
-                if (pWind->mbHasCustomWindPower) {
-                    windEff.mBasePos.set(pPlayer->current.pos);
-                } else {
+                if (pWind->mbHasCustomWindPower != TRUE) {
                     windEff.mBasePos.set(pos);
+                } else {
+                    windEff.mBasePos.set(pPlayer->current.pos);
                 }
 
                 windEff.mBasePos.y += offsetY;
@@ -755,7 +755,8 @@ BOOL overhead_bg_chk() {
     pos.y += 50.0f;
     roofChk.SetPos(pos);
 
-    if (dComIfG_Bgsp()->RoofChk(&roofChk) != G_CM3D_F_INF)
+    f32 tmp7 = dComIfG_Bgsp()->RoofChk(&roofChk);
+    if (tmp7 != G_CM3D_F_INF)
         ret = TRUE;
     pos.y += 10000.0f;
     gndChk.SetPos(&pos);
@@ -784,7 +785,8 @@ BOOL forward_overhead_bg_chk(cXyz* pPos, f32 dist) {
     *pPos = pos;
     roofChk.SetPos(pos);
 
-    if (dComIfG_Bgsp()->RoofChk(&roofChk) != G_CM3D_F_INF)
+    f32 tmp37 = dComIfG_Bgsp()->RoofChk(&roofChk);
+    if (tmp37 != G_CM3D_F_INF)
         ret = TRUE;
     pos.y += 10000.0f;
     gndChk.SetPos(&pos);
@@ -832,7 +834,7 @@ void dKyr_rain_move() {
     sp28 = dStage_stagInfo_GetSTType(dComIfGp_getStageStagInfo());
 
     spA8.x = 0.0f;
-    spA8.y = -2.5f;
+    spA8.y = -2.0f;
     spA8.z = 0.0f;
 
     if (rain_packet->mRainCount <= g_env_light.mRainCount) {
@@ -1435,10 +1437,10 @@ void dKyr_kazanbai_move() {
     DOUBLE_POS sp78;
     cXyz sp6C;
     cXyz sp68;
+    cXyz sp18 = dKyw_get_wind_vecpow();
     cXyz sp48;
     cXyz sp3C;
     cXyz sp30;
-    cXyz sp18 = dKyw_get_wind_vecpow();
 
     dBgS_ObjGndChk_All sp90;
     int var_r16 = 0;
@@ -1492,9 +1494,9 @@ void dKyr_kazanbai_move() {
             snow_packet->mEff[i].mWindSpeed = speed;
             snow_packet->mEff[i].mGravity = gravity;
             snow_packet->mEff[i].mTimer = 0;
-            snow_packet->mEff[i].mBasePos.x = sp24.x;
-            snow_packet->mEff[i].mBasePos.y = sp24.y;
-            snow_packet->mEff[i].mBasePos.z = sp24.z;
+            snow_packet->mEff[i].mBasePos.x = sp6C.x;
+            snow_packet->mEff[i].mBasePos.y = sp6C.y;
+            snow_packet->mEff[i].mBasePos.z = sp6C.z;
             snow_packet->mEff[i].mPos.x = cM_rndFX(800.0f);
             snow_packet->mEff[i].mPos.y = 800.0f;
             snow_packet->mEff[i].mPos.z = cM_rndFX(800.0f);
@@ -1585,7 +1587,7 @@ void dKyr_kazanbai_move() {
         sp48.z = snow_packet->mEff[i].mBasePos.z + snow_packet->mEff[i].mPos.z;
 
         f32 var_f26;
-        f32 var_f1_11 = sp48.abs(camera->view.mLookat.mEye);
+        f32 var_f1_11 = sp48.abs(sp6C);
         var_f26 = var_f1_11 + 30.0f;
         if (var_f26 < 0.0f) {
             var_f26 = 0.0f;
@@ -1843,7 +1845,7 @@ void wave_move() {
     pPkt->mSkewWidth *= 0.6f * std::fabsf(pPkt->mSkewDir);
 
     for (s32 i = 0; i < g_env_light.mWaveChan.mWaveCount; i++) {
-        if (g_env_light.mWaveChan.mWaveReset)
+        if ((int)g_env_light.mWaveChan.mWaveReset != 0)
             pPkt->mEff[i].mStatus = 0;
 
         switch (pPkt->mEff[i].mStatus) {
@@ -2219,9 +2221,12 @@ void poison_init() {
 /* 8009258C-800937BC       .text poison_move__Fv */
 // NONMATCHING - reg alloc
 void poison_move() {
+    f32 var_f18_3;
+    f32 var_f31;
     dKankyo_poison_Packet* poison_packet = g_env_light.mpPoisonPacket;
     camera_process_class* camera = (camera_process_class*)dComIfGp_getCamera(0);
-    daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
+    fopAc_ac_c * tmp5 = dComIfGp_getPlayer(0);
+    daPy_py_c* player = (daPy_py_c*)tmp5;
 
     cXyz spD0;
     cXyz spC4;
@@ -2407,7 +2412,7 @@ void poison_move() {
     poison_packet->mBasePos = spD0;
     poison_packet->mBasePos.y += var_f17;
 
-    f32 var_f31 = G_CM3D_F_INF;
+    var_f31 = G_CM3D_F_INF;
     for (int i = 0; i < g_env_light.mPoisonCount; i++) {
         spAC = spA0;
 
@@ -2419,9 +2424,9 @@ void poison_move() {
                 int x = cM_rndFX(0x7FFF);
                 int z = cM_rndFX(0x7FFF);
 
-                poison_packet->mEff[i].mPos.x = spA0.x * cM_ssin(x);
-                poison_packet->mEff[i].mPos.z = spA0.x * cM_scos(z);
-                poison_packet->mEff[i].mPos.y = cM_rndF(spAC.x);
+                poison_packet->mEff[i].mPos.x = spAC.x * cM_ssin(x);
+                poison_packet->mEff[i].mPos.z = spAC.x * cM_scos(z);
+                poison_packet->mEff[i].mPos.y = cM_rndF(spAC.y);
             } else {
                 poison_packet->mEff[i].mPos.x = cM_rndFX(spAC.x);
                 poison_packet->mEff[i].mPos.y = cM_rndF(spAC.y);
@@ -2609,7 +2614,7 @@ void poison_move() {
                         poison_packet->mEff[i].mPos.z = -spAC.z;
                         var_r18 = 1;
                     } else if (poison_packet->mEff[i].mPos.z < -spAC.z) {
-                        poison_packet->mEff[i].mPos.x = spAC.z;
+                        poison_packet->mEff[i].mPos.z = spAC.z;
                         var_r18 = 1;
                     }
                 }
@@ -2669,7 +2674,6 @@ void poison_move() {
             var_f14 = 1.0f;
         }
 
-        f32 var_f18_3;
         if (pattern == 2) {
             sp40 = sp94;
             sp40.y = poison_packet->mBasePos.y;
@@ -2751,7 +2755,6 @@ void poison_move() {
 }
 
 /* 800937BC-800940D4       .text vrkumo_move__Fv */
-// NONMATCHING - float literal load order
 void vrkumo_move() {
     cXyz wind_vecpow = dKyw_get_wind_vecpow();
     dKankyo_vrkumo_Packet* vrkumo_packet = g_env_light.mpVrkumoPacket;
@@ -2824,7 +2827,7 @@ void vrkumo_move() {
     }
 
     if (dComIfGd_getView() != NULL) {
-        f32 sp2C = 0.0f;
+        _8_3 = 0.0f;
 
         dStage_FileList_dt_c* filelist = NULL;
         if (dComIfGp_roomControl_getStayNo() >= 0) {
@@ -2832,16 +2835,16 @@ void vrkumo_move() {
         }
 
         if (filelist != NULL) {
-            sp2C = dStage_FileList_dt_SeaLevel(filelist);
+            _8_3 = dStage_FileList_dt_SeaLevel(filelist);
         }
 
 #if VERSION > VERSION_DEMO
         if (strcmp(dComIfGp_getStartStageName(), "Siren") == 0 && dComIfGp_roomControl_getStayNo() == 17) {
-            sp2C = -14101.0f;
+            _8_3 = -14101.0f;
         }
 #endif
 
-        var_f30 -= 0.09f * (camera->view.mLookat.mEye.y - sp2C);
+        var_f30 -= 0.09f * (camera->view.mLookat.mEye.y - _8_3);
     }
 
     for (int i = 0; i < 100; i++) {
@@ -2895,12 +2898,12 @@ void vrkumo_move() {
         sp74.y = 0.0f;
 
         f32 sp24 = sp74.abs();
-        f32 f2 = sp24 / 15000.0f;
-        f32 sp20 = 1.0f - f2;
+        f32 sp20 = 1.0f - sp24 / 15000.0f;
         if (sp20 < 0.0f) {
             sp20 = 0.0f;
         }
 
+        f32 f2 = sp24 / 15000.0f;
         f32 sp1C = i / 100.0f;
         f32 sp44 = 1.0f - sp20;
         sp44 = 1.0f - (sp44 * sp44 * sp44);
@@ -3061,7 +3064,8 @@ void dKyr_drawSun(Mtx drawMtx, cXyz* pPos, GXColor& reg0, u8** pImg) {
     case 3: texidx = 3; flipX = 1.0f; break;
     case 4: texidx = 3; flipX = -1.0f; break;
     case 5: texidx = 2; flipX = -1.0f; break;
-    case 6: texidx = 1; flipX = -1.0f; break;
+    case 6:
+    default: texidx = 1; flipX = -1.0f; break;
     }
 
     reg0.r = dKy_getEnvlight().mFogColor.r;
@@ -3123,8 +3127,9 @@ void dKyr_drawSun(Mtx drawMtx, cXyz* pPos, GXColor& reg0, u8** pImg) {
         f32 moon_theta = std::atan2f(moonPos.x, moonPos.z);
         f32 moon_phi = std::atan2f(moonPos.y, moon_distXZ);
 
-        f32 angle = 45.0f + (((moon_theta - cam_theta) / -8.0f) * moon_phi) * 360.0f;
-        MTXRotDeg(rotMtx, 'Z', angle);
+        f32 angle_deg = 45.0f + (((moon_theta - cam_theta) / -8.0f) * moon_phi) * 360.0f;
+        f32 angle_rad = angle_deg * 0.01745329252f;
+        MTXRotRad(rotMtx, 'Z', angle_rad);
         MTXConcat(camMtx, rotMtx, camMtx);
         GXLoadPosMtxImm(drawMtx, GX_PNMTX0);
         GXSetCurrentMtx(GX_PNMTX0);
@@ -3250,7 +3255,7 @@ void dKyr_drawSun(Mtx drawMtx, cXyz* pPos, GXColor& reg0, u8** pImg) {
                 GXInitTexObjLOD(&texObj, GX_LINEAR, GX_LINEAR, 0.0f, 0.0f, 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
                 GXLoadTexObj(&texObj, GX_TEXMAP0);
                 size *= 1.6f;
-                reg0.a = pSunPkt->mSunAlpha * 76.0f;
+                reg0.a = 255.0f * pSunPkt->mSunAlpha;
             }
 
             GXSetTevColor(GX_TEVREG0, reg0);
@@ -3327,6 +3332,7 @@ void dKyr_drawLenzflare(Mtx drawMtx, cXyz* pPos, GXColor& color, u8** pImg) {
     f32 sun_visibility = sun_packet->mVisibility;
     f32 spAC = 1.0f - lenz_packet->mDistFalloff;
     f32 spA8 = sun_packet->mVisibility * sun_packet->mVisibility;
+    f32 spC4;
 
     if (sun_visibility < 0.1f) {
         return;
@@ -3401,7 +3407,7 @@ void dKyr_drawLenzflare(Mtx drawMtx, cXyz* pPos, GXColor& color, u8** pImg) {
 
     for (int i = 0; i < 8; i++) {
         if (!g_env_light.mpSunlenzPacket->mbDrawLenzInSky || i == 0) {
-            f32 spC4 = spA8;
+            spC4 = spA8;
             if (i < 2) {
                 color_reg0.a = spC4 * col_dat[i];
             } else {
@@ -3598,7 +3604,6 @@ void dKyr_drawLenzflare(Mtx drawMtx, cXyz* pPos, GXColor& color, u8** pImg) {
                 break;
             }
 
-            f32 spC4 = spA8;
             sp98 *= sun_visibility * (spC4 + sp80);
             sp94 *= sun_visibility * (spC4 + sp80);
 
@@ -4093,7 +4098,7 @@ void dKyr_drawHousi(Mtx drawMtx, u8** pImg) {
         return;
     }
 
-    f32 var_f25 = 120.0f;
+    f32 var_f25 = 255.0f;
 
     GXColor color_reg0;
     color_reg0.r = 0xE5;
@@ -4113,8 +4118,6 @@ void dKyr_drawHousi(Mtx drawMtx, u8** pImg) {
         return;
     }
 
-    f32 temp_f26 = 1.2f;
-    f32 temp_f24 = 6.5f;
 
     for (int i = 0; i < 2; i++) {
         dKyr_set_btitex(&spDC, (ResTIMG*)pImg[0]);
@@ -4186,16 +4189,16 @@ void dKyr_drawHousi(Mtx drawMtx, u8** pImg) {
                                 (1.0f - ((spD0.y - player->current.pos.y) / 100.0f));
                 spD0.y = player->current.pos.y - 20.0f;
             } else {
-                color_reg0.a = housi_packet->mEffect[j].mAlpha * var_f25;
+                color_reg0.a = housi_packet->mEffect[j].mAlpha * 255.0f;
             }
 
             GXLoadTexObj(&spDC, GX_TEXMAP0);
             GXSetTevColor(GX_TEVREG0, color_reg0);
 
-            f32 var_f27 = housi_packet->mEffect[j].field_0x48 * 9.0f;
+            f32 var_f27 = 3.0f;
 
-            f32 temp_f28 = (var_f27 * 0.2f) * cM_fsin(housi_packet->mEffect[j].mScale.x * 5.0f);
-            f32 temp_f30 = (var_f27 * 0.2f) * cM_fsin(housi_packet->mEffect[j].mScale.y * 6.0f);
+            f32 temp_f28 = cM_fsin(housi_packet->mEffect[j].mScale.x * 10.0f) * 0.22f;
+            f32 temp_f30 = cM_fsin(housi_packet->mEffect[j].mScale.y * 10.0f) * 0.22f;
 
             spC4.x = var_f27 - temp_f30;
             spC4.y = var_f27 - temp_f28;
@@ -4206,7 +4209,7 @@ void dKyr_drawHousi(Mtx drawMtx, u8** pImg) {
             pos[0].z = spD0.z + spB8.z;
 
             spC4.x = -var_f27 + temp_f30;
-            spC4.y = var_f27 - temp_f28;
+            spC4.y = var_f27 + temp_f28;
             spC4.z = 0.0f;
             MTXMultVec(camMtx, &spC4, &spB8);
             pos[1].x = spD0.x + spB8.x;
@@ -4222,7 +4225,7 @@ void dKyr_drawHousi(Mtx drawMtx, u8** pImg) {
             pos[2].z = spD0.z + spB8.z;
 
             spC4.x = var_f27 - temp_f30;
-            spC4.y = -var_f27 + temp_f28;
+            spC4.y = -var_f27 - temp_f28;
             spC4.z = 0.0f;
             MTXMultVec(camMtx, &spC4, &spB8);
             pos[3].x = spD0.x + spB8.x;
@@ -4350,14 +4353,14 @@ void dKyr_drawKazanbai(Mtx drawMtx, u8** pImg) {
                     sp1D8 = snow_packet->mTamariStart + 200;
                 }
 
-                for (; temp_r4 < sp1D8; temp_r4++) {
+                for (int idx = temp_r4; idx < sp1D8; idx++) {
                     f32 sp44 = -1.0f;
-                    if (i != 1 || snow_packet->mEff[temp_r4].mStatus != 2) {
+                    if (i != 1 || snow_packet->mEff[idx].mStatus != 2) {
                         u8 var_r24 = 8;
 
-                        sp88.x = snow_packet->mEff[temp_r4].mBasePos.x + snow_packet->mEff[temp_r4].mPos.x;
-                        sp88.y = snow_packet->mEff[temp_r4].mBasePos.y + snow_packet->mEff[temp_r4].mPos.y;
-                        sp88.z = snow_packet->mEff[temp_r4].mBasePos.z + snow_packet->mEff[temp_r4].mPos.z;
+                        sp88.x = snow_packet->mEff[idx].mBasePos.x + snow_packet->mEff[idx].mPos.x;
+                        sp88.y = snow_packet->mEff[idx].mBasePos.y + snow_packet->mEff[idx].mPos.y;
+                        sp88.z = snow_packet->mEff[idx].mBasePos.z + snow_packet->mEff[idx].mPos.z;
 
                         f32 f22 = 0.0f;
                         color0.a = 0xFF;
@@ -4380,8 +4383,8 @@ void dKyr_drawKazanbai(Mtx drawMtx, u8** pImg) {
                             color1.r = 0;
                             color1.g = 0;
                             color1.b = 0;
-                        } else if (temp_r4 < (int)(snow_packet->mEffCount * 0.4f)) {
-                            f32 temp_f2 = std::fabsf(cM_scos((f32)(temp_r4 * 4000) + (f32)(g_Counter.mCounter0 * 500.0f)));
+                        } else if (idx < (int)(snow_packet->mEffCount * 0.4f)) {
+                            f32 temp_f2 = std::fabsf(cM_scos((f32)(idx * 4000) + (f32)(g_Counter.mCounter0 * 500.0f)));
                             u32 _69 = 0x45;
                             color0.r = (f32)_69 + (temp_f2 * ((f32)_255 - (f32)_69));
                             u32 _60 = 0x3C;
@@ -4394,7 +4397,7 @@ void dKyr_drawKazanbai(Mtx drawMtx, u8** pImg) {
                             color1.r = (f32)_124 + (temp_f2 * ((f32)_255 - (f32)_124));
                             color1.g = (f32)_124 + (temp_f2 * ((f32)_255 - (f32)_124));
                             u32 _104 = 0x68;
-                            color1.b = (f32)_104 + (temp_f2 * ((f32)_255 - (f32)_104));
+                            color1.b = (f32)_104 + (temp_f2 * ((f32)_0 - (f32)_104));
 
                             temp_f2 *= temp_f2;
                             color0.r = temp_f2 * (f32)_255;
@@ -4416,11 +4419,11 @@ void dKyr_drawKazanbai(Mtx drawMtx, u8** pImg) {
                             color1.b = 0x68;
                         }
 
-                        if (j == 1 || snow_packet->mEff[temp_r4].mStatus == 2) {
+                        if (j == 1 || snow_packet->mEff[idx].mStatus == 2) {
                             color0.r = 0;
                             color0.g = 0;
                             color0.b = 0;
-                            color0.a = snow_packet->mEff[temp_r4].mScale * 255.0f;
+                            color0.a = snow_packet->mEff[idx].mScale * 255.0f;
 
                             color1.r = 0;
                             color1.g = 0;
@@ -4435,10 +4438,10 @@ void dKyr_drawKazanbai(Mtx drawMtx, u8** pImg) {
                         GXSetTevColor(GX_TEVREG1, color1);
 
                         f32 var_f25;
-                        if (j == 1 || snow_packet->mEff[temp_r4].mStatus == 2) {
-                            var_f25 = (f26 + (int)(temp_r4 / 250)) * 0.9f;
+                        if (j == 1 || snow_packet->mEff[idx].mStatus == 2) {
+                            var_f25 = (f26 + (int)(idx / 250)) * 0.9f;
                         } else {
-                            var_f25 = f26 + (int)(temp_r4 / 250);
+                            var_f25 = f26 + (int)(idx / 250);
                         }
 
                         spA0.x = -var_f25 * sp44;
@@ -4488,10 +4491,10 @@ void dKyr_drawKazanbai(Mtx drawMtx, u8** pImg) {
                             GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 
                             f32 temp_f3;
-                            if (snow_packet->mEff[temp_r4].mStatus != 2) {
+                            if (snow_packet->mEff[idx].mStatus != 2) {
                                 temp_f3 = add_table[k].y;
                             } else {
-                                temp_f3 = temp_r4 & 3;
+                                temp_f3 = idx & 3;
                             }
 
                             GXPosition3f32(pos[0].x + add_table[k].x, pos[0].y + temp_f3, pos[0].z + add_table[k].z);
@@ -4763,14 +4766,14 @@ void dKyr_drawStar(Mtx drawMtx, u8** pImg) {
     f32 var_f30 = 0.0f;
 
     if (dComIfGd_getView() != NULL) {
-        var_f30 = dComIfGd_getView()->mFovy / 45.0f;
+        var_f30 = dComIfGd_getView()->mFovy / 40.0f;
         if (var_f30 >= 1.0f) {
             var_f30 = 1.0f;
         }
         var_f30 = 1.0f - var_f30;
     }
 
-    f32 temp_f27 = 0.28f * (1.0f - var_f30);
+    f32 temp_f27 = 0.9f - 0.6f * var_f30;
 
     sp98.x = 0.0f;
     sp98.y = temp_f27;
@@ -4828,13 +4831,13 @@ void dKyr_drawStar(Mtx drawMtx, u8** pImg) {
             star_pos.z = temp_f29 * (sp2C * cM_scos((sp48 - 0x8000)));
 
             sp48 += sp44;
-            sp44 += 2250;
+            sp44 += 2500;
 
             temp_f29 = var_f28 / 200.0f;
             temp_f29 *= temp_f29 * temp_f29;
             var_f28 += 1.0f + (3.0f * temp_f29);
             if (var_f28 > 200.0f) {
-                var_f28 = (20.0f * i) / 1000.0f;
+                var_f28 = 20.0f * (i / 1000.0f);
             }
         }
 
@@ -4848,7 +4851,7 @@ void dKyr_drawStar(Mtx drawMtx, u8** pImg) {
         if (i == 6 || i == 8)
             color_reg0 = star_col[1];
         else if ((i & 0x3F) == 0)
-            color_reg0 = star_col[(i >> 4) & 3];
+            color_reg0 = star_col[(i >> 6) & 3];
         else
             color_reg0 = star_col[0];
         GXSetTevColor(GX_TEVREG0, color_reg0);
@@ -4960,11 +4963,12 @@ void drawWave(Mtx drawMtx, u8** pImg) {
         if (wave <= 0.0f)
             continue;
 
-        f32 scale = dKy_getEnvlight().mWaveChan.mWaveScale * pPkt->mEff[i].mScale * wave;
-        f32 scaleBottom = dKy_getEnvlight().mWaveChan.mWaveScaleBottom * scale;
+        f32 scale = g_env_light.mWaveChan.mWaveScale * pPkt->mEff[i].mScale;
+        f32 height = wave * scale;
+        f32 scaleBottom = g_env_light.mWaveChan.mWaveScaleBottom * scale;
         f32 strength = pPkt->mEff[i].mStrengthEnv;
-        f32 height = strength * scale;
-        f32 width = scaleBottom * (strength - 0.00000015f * (i * 32) * height);
+        height *= strength;
+        f32 width = scaleBottom * (strength - 0.00000015f * (i * 31) * height);
         if (height <= 0.0f)
             continue;
 

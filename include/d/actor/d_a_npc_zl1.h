@@ -22,7 +22,7 @@ public:
     /* 0x6C */ cXy mOffset;
     /* 0x74 */ cXy field_0x74;
     /* 0x7C */ bool field_0x7C;
-};  // Size: 0x7D
+};  // Size: 0x080
 
 class daNpc_Zl1_c : public fopNpc_npc_c {
 public:

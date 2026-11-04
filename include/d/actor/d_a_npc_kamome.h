@@ -151,9 +151,9 @@ public:
     /* 0xC06 */ u8 mUnusedC06;
     /* 0xC07 */ u8 mC07[0xC08 - 0xC07];
     /* 0xC08 */ s16 mC08;
-    /* 0xC08 */ s16 mC0A;
-    /* 0xC08 */ s16 mC0C;
-    /* 0xC08 */ s16 mUnusedC0E;
+    /* 0xC0A */ s16 mC0A;
+    /* 0xC0C */ s16 mC0C;
+    /* 0xC0E */ s16 mUnusedC0E;
     /* 0xC10 */ u8 mC10[0xC14 - 0xC10];
     /* 0xC14 */ f32 mUnusedC14;
     /* 0xC18 */ u8 mC18[0xC1C - 0xC18];

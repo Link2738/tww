@@ -68,7 +68,7 @@ struct bb_class {
     /* 0x0360 */ dPath* ppd;
     /* 0x0364 */ u8 unk_364;
     /* 0x0366 */ s16 unk_366;
-    /* 0x0364 */ s16 unk_368;
+    /* 0x368 */ s16 unk_368;
     /* 0x036A */ char unk36A[0xE];
     /* 0x0378 */ dBgS_AcchCir mAcchCir;
     /* 0x03B8 */ dBgS_ObjAcch mAcch;
@@ -87,7 +87,7 @@ struct bb_class {
     /* 0x0BEC */ s16 unk_BEC;
     /* 0x0BEE */ s16 unk_BEE;
     /* 0x0BF0 */ char unkBF0[0x4];
-    /* 0x0BF0 */ cXyz unk_BF4;
+    /* 0xBF4 */ cXyz unk_BF4;
     /* 0x0C00 */ csXyz unk_C00[11];
     /* 0x0C42 */ csXyz unk_C42[2];
     /* 0x0C4E */ s16 unk_C4E;
@@ -97,8 +97,8 @@ struct bb_class {
     /* 0x0C58 */ f32 unk_C58;
     /* 0x0C5C */ s16 unk_C5C;
     /* 0x0C5E */ s16 unk_C5E;
-    /* 0x0C5C */ u8 unk_C60;
-    /* 0x0C16 */ char unkC61[0x7];
+    /* 0xC60 */ u8 unk_C60;
+    /* 0xC61 */ char unkC61[0x7];
     /* 0x0C68 */ dPa_followEcallBack mParticleCallBack;
     /* 0x0C7C */ s8 unk_C7C;
     /* 0x0C7D */ char unkC7D[0x1];

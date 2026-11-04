@@ -104,7 +104,7 @@ public:
     /* 0x1C */ s8 field_0x1C;
     /* 0x1D */ s8 field_0x1D;
     /* 0x1E */ u8 field_0x1E;
-};  // Size: 0x1F
+};  // Size: 0x020
 
 class daNpc_Btsw_c : public fopNpc_npc_c {
 public:

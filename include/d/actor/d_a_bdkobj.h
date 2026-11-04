@@ -19,7 +19,7 @@ struct bdo_eff_s {
     /* 0x02C */ f32 m02C;
     /* 0x030 */ csXyz m030;
     /* 0x036 */ csXyz m036;
-    /* 0x054 */ dCcD_Stts mStts;
+    /* 0x03C */ dCcD_Stts mStts;
     /* 0x078 */ dCcD_Sph mSph;
     /* 0x1A4 */ f32 m1A4;
     /* 0x1A8 */ s16 m1A8;

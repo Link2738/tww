@@ -11,6 +11,9 @@
 #include "d/d_com_inf_game.h"
 #include "f_op/f_op_actor_mng.h"
 #include "m_Do/m_Do_lib.h"
+#include "d/d_bg_s_gnd_chk.h"
+#include "d/actor/d_a_player.h"
+#include "d/actor/d_a_mo2.h"
 
 /* 000000EC-000001E8       .text kantera_nodeCallBack__FP7J3DNodei */
 static BOOL kantera_nodeCallBack(J3DNode* node, int calcTiming) {
@@ -32,7 +35,7 @@ static BOOL kantera_nodeCallBack(J3DNode* node, int calcTiming) {
 }
 
 /* 000001E8-000002C8       .text ga_draw__FP13kantera_class */
-void ga_draw(kantera_class* i_this) {
+static void ga_draw(kantera_class* i_this) {
     mo_ga_s* pGa = &i_this->mGa[0];
 
     for (s32 i = 0; i < ARRAY_SSIZE(i_this->mGa); i++, pGa++) {
@@ -100,7 +103,7 @@ static BOOL daKantera_Draw(kantera_class* i_this) {
 }
 
 /* 00000584-00000828       .text ga_move__FP13kantera_class */
-void ga_move(kantera_class* i_this) {
+static void ga_move(kantera_class* i_this) {
     mo_ga_s* pmVar4 = &i_this->mGa[0];
     cXyz sp3C;
     cXyz sp30;
@@ -143,7 +146,7 @@ void ga_move(kantera_class* i_this) {
 }
 
 /* 00000864-00000B68       .text bon_move__FP13kantera_class */
-void bon_move(kantera_class* i_this) {
+static void bon_move(kantera_class* i_this) {
     cXyz sp14;
     mDoLib_project(&i_this->mBonPos, &sp14);
     bool bVar2;
@@ -214,7 +217,160 @@ void bon_move(kantera_class* i_this) {
 }
 
 /* 00000B68-0000153C       .text kantera_move__FP13kantera_class */
-void kantera_move(kantera_class* i_this) {
+static void kantera_move(kantera_class* i_this) {
+    fopAc_ac_c* actor = &i_this->actor;
+    daPy_py_c* player = daPy_getPlayerActorClass();
+    mo2_class* owner = (mo2_class*)fopAcM_SearchByID(i_this->mTargetActorID);
+    i_this->mAnimCounter++;
+    i_this->mBonRot += 0x100;
+    switch (i_this->mState) {
+    case 4:
+        break;
+    case 0:
+        if (i_this->mParam0 == 0x23) {
+            i_this->mState = 1;
+        } else if (i_this->mParam0 == 1) {
+            i_this->mState = 3;
+        } else {
+            i_this->mState = 100;
+        }
+        break;
+    case 2:
+        break;
+    case 1: {
+        if (owner == NULL) {
+            break;
+        }
+        actor->current.pos = owner->m28EC;
+        actor->current.angle.y = owner->actor.current.angle.y;
+        cMtx_YrotS(*calc_mtx, -actor->current.angle.y);
+        cXyz delta;
+        cXyz rot;
+        delta.x = i_this->mBonPos.x - i_this->m2E4.x;
+        delta.y = 0.0f;
+        delta.z = i_this->mBonPos.z - i_this->m2E4.z;
+        MtxPosition(&delta, &rot);
+        s16 rx = rot.z * 1.2f * 100.0f;
+        s16 rz = rot.x * -1.2f * 100.0f;
+        if (rx > 0x4000) {
+            rx = 0x4000;
+        } else if (rx < -0x4000) {
+            rx = -0x4000;
+        }
+        if (rz > 0x4000) {
+            rz = 0x4000;
+        } else if (rz < -0x4000) {
+            rz = -0x4000;
+        }
+        if (rx >= 0) {
+            if (i_this->mJointBaseRotTarget.x <= rx) {
+                i_this->mJointBaseRotTarget.x = rx;
+            }
+        } else if (i_this->mJointBaseRotTarget.x >= rx) {
+            i_this->mJointBaseRotTarget.x = rx;
+        }
+        if (rz >= 0) {
+            if (i_this->mJointBaseRotTarget.z <= rz) {
+                i_this->mJointBaseRotTarget.z = rz;
+            }
+        } else if (i_this->mJointBaseRotTarget.z >= rz) {
+            i_this->mJointBaseRotTarget.z = rz;
+        }
+        for (int i = 0; i < 2; i++) {
+            i_this->mJointRot[i].x = cM_ssin(i_this->mAnimCounter * 3000 + i * 14000) * 3000.0f;
+            i_this->mJointRot[i].z = cM_scos(i_this->mAnimCounter * 2500 + i * 16000) * 3000.0f;
+        }
+        if (owner->m2A09 != 1 && owner->m2A09 != 2) {
+            break;
+        }
+        i_this->mState = 5;
+        if (owner->m2A09 == 1) {
+            actor->speed.x = cM_rndFX(15.0f);
+            actor->speed.z = cM_rndFX(15.0f);
+            actor->speed.y = REG6_F(8) + 30.0f;
+        } else {
+            cMtx_YrotS(*calc_mtx, cM_atan2s(player->current.pos.x - actor->current.pos.x, player->current.pos.z - actor->current.pos.z));
+            delta.x = 0.0f;
+            delta.y = 0.0f;
+            delta.z = REG6_F(9) + 20.0f;
+            MtxPosition(&delta, &actor->speed);
+            actor->speed.y = REG6_F(8) + 10.0f;
+        }
+    }
+        // Fall-through
+    case 5:
+        cLib_addCalc2(&i_this->mOffsY, 55.0f, 1.0f, 4.0f);
+        actor->current.angle.y += 500;
+        actor->current.angle.x += 0x514;
+        actor->current.pos.x += actor->speed.x;
+        actor->current.pos.y += actor->speed.y;
+        actor->current.pos.z += actor->speed.z;
+        actor->speed.y -= REG6_F(10) + 2.0f;
+        for (int i = 0; i < 2; i++) {
+            cLib_addCalcAngleS2(&i_this->mJointRot[i].x, 0, 2, 800);
+            cLib_addCalcAngleS2(&i_this->mJointRot[i].z, 0, 2, 800);
+        }
+        i_this->mAcch.CrrPos(*dComIfG_Bgsp());
+        i_this->mSph.SetC(actor->current.pos);
+        dComIfG_Ccsp()->Set(&i_this->mSph);
+        if (i_this->mAcch.ChkGroundHit() || i_this->mAcch.ChkWallHit() || i_this->mSph.ChkAtHit()) {
+            dBgS_GndChk gndChk;
+            gndChk.GetPointP()->set(actor->current.pos.x, actor->current.pos.y + 50.0f, actor->current.pos.z);
+            f32 groundY = dComIfG_Bgsp()->GroundCross(&gndChk) + 2.5f;
+            if (groundY != -1000000000.0f) {
+                actor->current.pos.y = groundY + 2.0f;
+            }
+            static cXyz e_scale(1.0f, 1.0f, 1.0f);
+            dComIfGp_particle_set(dPa_name::ID_IT_JT_KTR_SMOKE, &actor->current.pos, NULL, &e_scale, 200, &i_this->mPtclCallBack0);
+            dComIfGp_particle_set(dPa_name::ID_IT_JN_KTR_FIRE, &actor->current.pos, NULL, &e_scale, 200, &i_this->mPtclCallBack1);
+            fopAcM_seStart(actor, JA_SE_OBJ_KANTERA_BREAK, 0);
+            dKy_Sound_set(actor->current.pos, 150, fopAcM_GetID(actor), 10);
+            i_this->mState = 10;
+            i_this->m35C = 130;
+        } else {
+            break;
+        }
+        // Fall-through
+    case 10:
+        if (i_this->mPtclCallBack0.getEmitter() != NULL && i_this->mPtclCallBack1.getEmitter() != NULL) {
+            if (i_this->m35C > 40) {
+                i_this->mSph.SetR(i_this->mParticleScale.x * 30.0f);
+                i_this->mSph.SetC(actor->current.pos);
+                dComIfG_Ccsp()->Set(&i_this->mSph);
+                cLib_addCalc2(&i_this->mParticleScale.x, 2.0f, 0.2f, REG0_F(0) + 0.1f);
+                cLib_addCalc2(&i_this->mParticleScale.z, 2.0f, 0.2f, REG0_F(0) + 0.1f);
+                i_this->mBonScale = i_this->mParticleScale.x;
+                i_this->mPtclCallBack0.getEmitter()->setEmitterScale(i_this->mParticleScale);
+                i_this->mPtclCallBack1.getEmitter()->setEmitterScale(i_this->mParticleScale);
+                i_this->mPlight.mPos = actor->current.pos;
+                i_this->mPlight.mColor.r = 600;
+                i_this->mPlight.mColor.g = 400;
+                i_this->mPlight.mColor.b = 120;
+                i_this->mPlight.mPower = 800.0f;
+                i_this->mPlight.mFluctuation = 250.0f;
+            } else if (i_this->m35C < 30) {
+                cLib_addCalc0(&i_this->mBonScale, 1.0f, 0.1f);
+            }
+        }
+        if (owner != NULL && owner->m2A09 == 2) {
+            if (i_this->m35C > 110) {
+                i_this->mSph.OnAtSPrmBit(cCcD_AtSPrm_VsEnemy_e);
+            } else {
+                i_this->mSph.OffAtSPrmBit(cCcD_AtSPrm_VsEnemy_e);
+            }
+        }
+        break;
+    case 100:
+        break;
+    }
+    if (i_this->mState < 10) {
+        cLib_addCalcAngleS2(&i_this->mJointBaseRot.x, i_this->mJointBaseRotTarget.x, 2, 800);
+        cLib_addCalcAngleS2(&i_this->mJointBaseRot.z, i_this->mJointBaseRotTarget.z, 2, 800);
+        cLib_addCalcAngleS2(&i_this->mJointBaseRotTarget.x, 0, 1, 1500);
+        cLib_addCalcAngleS2(&i_this->mJointBaseRotTarget.z, 0, 1, 1500);
+        bon_move(i_this);
+        ga_move(i_this);
+    }
 }
 
 /* 000018BC-00001ABC       .text daKantera_Execute__FP13kantera_class */

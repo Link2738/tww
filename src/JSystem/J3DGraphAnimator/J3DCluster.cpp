@@ -90,22 +90,29 @@ void J3DDeformer::deform(J3DVertexBuffer* vtx, u16 idx, f32* weightList) {
         f32* vtxPosDst = (f32*)vtx->getVtxPosArrayPointer(0);
         f32* vtxPosSrc = (f32*)mDeformData->getVtxPos();
 
+        u16* posDstIdx = cluster->mPosDstIdx;
         for (int i = 0; i < posNum; i++) {
-            f32* vtx = &vtxPosDst[cluster->mPosDstIdx[i] * 3];
-            vtx[0] = 0.0f;
-            vtx[1] = 0.0f;
-            vtx[2] = 0.0f;
+            int idx = posDstIdx[i] * 3;
+            vtxPosDst[idx + 0] = 0.0f;
+            vtxPosDst[idx + 1] = 0.0f;
+            vtxPosDst[idx + 2] = 0.0f;
         }
 
         f32 sign[2] = { 1.0f, -1.0f };
         for (u16 i = 0; i < posNum; i++) {
             for (u16 j = 0; j < keyNum; j++) {
-                u16 flag = (u16)key[j].mPosFlag[i];
-                f32* src = &vtxPosSrc[(flag & 0x1FFF) * 3];
+                u32 flag = key[j].mPosFlag[i];
+                f32* src = &vtxPosSrc[(flag & ~0xE000) * 3];
+                f32 x = src[0];
+                f32 y = src[1];
+                f32 z = src[2];
+                x *= sign[(flag >> 15) & 1];
+                y *= sign[(flag >> 14) & 1];
+                z *= sign[(flag >> 13) & 1];
                 f32* dst = &vtxPosDst[cluster->mPosDstIdx[i] * 3];
-                dst[0] += weightList[j] * src[0] * sign[(flag >> 15) & 1];
-                dst[1] += weightList[j] * src[1] * sign[(flag >> 14) & 1];
-                dst[2] += weightList[j] * src[2] * sign[(flag >> 13) & 1];
+                dst[0] += x * weightList[j];
+                dst[1] += y * weightList[j];
+                dst[2] += z * weightList[j];
             }
         }
 
@@ -121,8 +128,8 @@ void J3DDeformer::deform(J3DVertexBuffer* vtx, u16 idx, f32* weightList) {
                 dst[2] = 0.0f;
 
                 for (u16 j = 0; j < cluster->mKeyNum; j++) {
-                    u16 flag = key[j].mNrmFlag[i];
-                    f32* src = &vtxNrmSrc[(flag & 0x1FFF) * 3];
+                    u32 flag = key[j].mNrmFlag[i];
+                    f32* src = &vtxNrmSrc[(flag & ~0xE000) * 3];
 
                     f32 srcX = src[0];
                     f32 srcY = src[1];

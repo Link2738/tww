@@ -1031,8 +1031,52 @@ const PreLoadInfoT_s PreLoadInfoT[] = {
     },
 };
 
+#ifdef TWW_DEVTOOLS
+#include "d/d_kankyo.h"
+#include "d/d_kankyo_wether.h"
+
+// Debug controls on controller 1, while holding L + R.
+//   D-pad left/right: time of day -/+ 15 degrees
+//   D-pad up: cycle weather (clear, rain, rain + thunder)
+// Forced rain is reapplied each frame because the weather code decays it otherwise.
+static void dScnPly_devtools() {
+    static int s_weather = 0;
+    bool chord = CPad_CHECK_HOLD_L(0) && CPad_CHECK_HOLD_R(0);
+
+    if (chord && CPad_CHECK_TRIG_RIGHT(0)) {
+        f32 t = dComIfGs_getTime() + 15.0f;
+        dKy_instant_timechg(t >= 360.0f ? t - 360.0f : t);
+    } else if (chord && CPad_CHECK_TRIG_LEFT(0)) {
+        f32 t = dComIfGs_getTime() - 15.0f;
+        dKy_instant_timechg(t < 0.0f ? t + 360.0f : t);
+    }
+
+    if (chord && CPad_CHECK_TRIG_UP(0)) {
+        s_weather = (s_weather + 1) % 3;
+        if (s_weather == 0) {
+            dKyw_rain_set(0);
+            dKy_change_colpat(0);
+            g_env_light.mColpatWeather = 0;
+            g_env_light.mThunderEff.mMode = 0;
+        }
+    }
+
+    if (s_weather != 0) {
+        dKy_instant_rainchg();
+        g_env_light.mThunderEff.mMode = s_weather == 2 ? 1 : 0;
+    }
+
+    static const char* const l_weatherName[] = {"clear", "rain", "thunder"};
+    JUTReport(30, 400, "%s room %d  time %d  %s", dComIfGp_getStartStageName(),
+              dComIfGp_roomControl_getStayNo(), (int)dComIfGs_getTime(), l_weatherName[s_weather]);
+}
+#endif
+
 /* 80234FD0-802350B4       .text dScnPly_Execute__FP13dScnPly_ply_c */
 static BOOL dScnPly_Execute(dScnPly_ply_c* i_this) {
+#ifdef TWW_DEVTOOLS
+    dScnPly_devtools();
+#endif
     if (!fopOvlpM_IsPeek()) {
         if (mDoAud_zelAudio_c::isBgmSet()) {
             mDoAud_sceneBgmStart();

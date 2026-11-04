@@ -51,8 +51,8 @@ public:
         /* 0x0601 */ UNK_0601 = 0x0601, // Grandma dialogue after Helmaroc cutscene (prologue)
         /* 0x0780 */ UNK_0780 = 0x0780,
         /* 0x0740 */ UNK_0740 = 0x0740, // Grandma dialogue after Aryll kidnapped
-        /* 0x0720 */ UNK_0720 = 0x0720,
-        /* 0x0710 */ UNK_0710 = 0x0710,
+        /* 0x0720 */ P2B_TO_GOAL = 0x0720,  // Finished Niko's rope-crossing cutscene
+        /* 0x0710 */ P2B_GOAL = 0x0710,     // Win Niko's rope game
         /* 0x0704 */ UNK_0704 = 0x0704,
         /* 0x0702 */ UNK_0702 = 0x0702,
         /* 0x0701 */ UNK_0701 = 0x0701,
@@ -60,7 +60,7 @@ public:
         /* 0x0840 */ UNK_0840 = 0x0840,
         /* 0x0820 */ UNK_0820 = 0x0820,
         /* 0x0810 */ UNK_0810 = 0x0810,
-        /* 0x0808 */ UNK_0808 = 0x0808,
+        /* 0x0808 */ ARRIVE_MAJYU = 0x0808, //Arrive at Forsaken Fortress
         /* 0x0804 */ UNK_0804 = 0x0804,
         /* 0x0802 */ UNK_0802 = 0x0802,
         /* 0x0801 */ UNK_0801 = 0x0801,
@@ -114,7 +114,7 @@ public:
         /* 0x0F10 */ UNK_0F10 = 0x0F10,
         /* 0x0F08 */ UNK_0F08 = 0x0F08,
         /* 0x0F04 */ UNK_0F04 = 0x0F04,
-        /* 0x0F02 */ UNK_0F02 = 0x0F02,
+        /* 0x0F02 */ GOT_NIKO_BOMBS = 0x0F02,
         /* 0x0F01 */ UNK_0F01 = 0x0F01,
         /* 0x1080 */ UNK_1080 = 0x1080,
         /* 0x1040 */ UNK_1040 = 0x1040,
@@ -184,7 +184,7 @@ public:
         /* 0x1810 */ UNK_1810 = 0x1810,
         /* 0x1808 */ UNK_1808 = 0x1808,
         /* 0x1804 */ UNK_1804 = 0x1804,
-        /* 0x1802 */ UNK_1802 = 0x1802,
+        /* 0x1802 */ ZK_POSTBOX_TALK = 0x1802,
         /* 0x1801 */ UNK_1801 = 0x1801,
         /* 0x1980 */ UNK_1980 = 0x1980,
         /* 0x1940 */ UNK_1940 = 0x1940,
@@ -213,8 +213,8 @@ public:
         /* 0x1C08 */ UNK_1C08 = 0x1C08,
         /* 0x1C04 */ UNK_1C04 = 0x1C04,
         /* 0x1C02 */ UNK_1C02 = 0x1C02,
-        /* 0x1C01 */ UNK_1C01 = 0x1C01,
-        /* 0x1D80 */ UNK_1D80 = 0x1D80,
+        /* 0x1C01 */ ZK_MONSTERS_TALK = 0x1C01,
+        /* 0x1D80 */ ZK_POST_H2_TALK = 0x1D80,
         /* 0x1D40 */ UNK_1D40 = 0x1D40,
         /* 0x1D20 */ UNK_1D20 = 0x1D20,
         /* 0x1D10 */ UNK_1D10 = 0x1D10,

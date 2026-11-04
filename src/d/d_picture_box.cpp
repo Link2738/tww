@@ -2290,13 +2290,13 @@ void dJle_Pb_c::_delete(JKRExpHeap* i_heap) {
 }
 
 /* 8022BB3C-8022BB7C       .text dPb_Draw__FP12sub_pb_class */
-static BOOL dPb_Draw(sub_pb_class* i_this) {
+BOOL dPb_Draw(sub_pb_class* i_this) {
     dComIfGd_set2DOpa(i_this->dPb_c);
     return TRUE;
 }
 
 /* 8022BB7C-8022BC84       .text dPb_Execute__FP12sub_pb_class */
-static BOOL dPb_Execute(sub_pb_class* i_this) {
+BOOL dPb_Execute(sub_pb_class* i_this) {
     JKRHeap* oldHeap = mDoExt_setCurrentHeap(i_this->heap);
     dJle_Pb_c* a_this = i_this->dPb_c;
     if (a_this->getStatus() == PB_EXEC_CAMERA_OPEN_e) {
@@ -2334,12 +2334,12 @@ static BOOL dPb_Execute(sub_pb_class* i_this) {
 }
 
 /* 8022BC84-8022BC8C       .text dPb_IsDelete__FP12sub_pb_class */
-static BOOL dPb_IsDelete(sub_pb_class*) {
+BOOL dPb_IsDelete(sub_pb_class*) {
     return TRUE;
 }
 
 /* 8022BC8C-8022BD8C       .text dPb_Delete__FP12sub_pb_class */
-static BOOL dPb_Delete(sub_pb_class* i_this) {
+BOOL dPb_Delete(sub_pb_class* i_this) {
     JKRHeap* oldHeap = mDoExt_setCurrentHeap(i_this->heap);
     i_this->dPb_c->_delete(i_this->heap);
 
@@ -2367,7 +2367,7 @@ static BOOL dPb_Delete(sub_pb_class* i_this) {
 }
 
 /* 8022BD8C-8022C03C       .text dPb_Create__FP9msg_class */
-static cPhs_State dPb_Create(msg_class* i_this) {
+cPhs_State dPb_Create(msg_class* i_this) {
     sub_pb_class* i_Pb = (sub_pb_class*)i_this;
     if ((dComIfGp_isHeapLockFlag() != 0) && (dComIfGp_isHeapLockFlag() != 6)) {
         return cPhs_INIT_e;
@@ -2426,7 +2426,9 @@ static cPhs_State dPb_Create(msg_class* i_this) {
     return cPhs_COMPLEATE_e;
 }
 
-static msg_method_class l_dPb_Method = {
+dJle_Pb_c::~dJle_Pb_c() {}
+
+msg_method_class l_dPb_Method = {
     (process_method_func)dPb_Create,
     (process_method_func)dPb_Delete,
     (process_method_func)dPb_Execute,

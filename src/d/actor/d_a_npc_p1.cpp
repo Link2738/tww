@@ -432,7 +432,7 @@ BOOL daNpc_P1_c::talkAction(void*) {
                 m_jnt.offHeadLock();
             }
         } else {
-            if (dComIfGs_isEventBit(dSv_event_flag_c::UNK_0808)) {
+            if (dComIfGs_isEventBit(dSv_event_flag_c::ARRIVE_MAJYU)) {
                 mCurrMesg = 0x1017;
             } else {
                 if (!dComIfGs_isEventBit(dSv_event_flag_c::UNK_0820)) {
@@ -1066,7 +1066,7 @@ cPhs_State daNpc_P1_c::_create() {
         } else if (mType == TYPE_P1C_e) {
             attention_info.distances[fopAc_Attn_TYPE_TALK_e] = 0xAA;
             attention_info.distances[fopAc_Attn_TYPE_SPEAK_e] = 0xAA;
-            if (!dComIfGs_isEventBit(0x820) && !dComIfGs_isEventBit(dSv_event_flag_c::UNK_0808)) {
+            if (!dComIfGs_isEventBit(0x820) && !dComIfGs_isEventBit(dSv_event_flag_c::ARRIVE_MAJYU)) {
                 current.pos.x -= cM_scos(current.angle.y) * 40.0f;
                 current.pos.z += cM_ssin(current.angle.y) * 40.0f;
                 setAnm(4, -1.0f);

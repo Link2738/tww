@@ -110,6 +110,6 @@ public:
     /* 0xA88 */ u32 field_0xA88;
     /* 0xA8C */ u32 field_0xA8C;
     /* 0xA90 */ s16 field_0xA90;
-}; // Size: 0xA92
+}; // Size: 0xA94
 
 #endif /* D_A_NPC_NZ_H */

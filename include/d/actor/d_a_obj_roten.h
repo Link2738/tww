@@ -29,7 +29,7 @@ public:
     /* 0x2D1 */ u8 field_0x2D1;
 
     static const char M_arcname[];
-}; // Size: 0x2D2
+}; // Size: 0x2D4
 
 class daObj_Roten_HIO_c : public JORReflexible {
 public:
@@ -42,6 +42,6 @@ public:
     /* 0x04 */ s8 mNo;
     /* 0x08 */ f32 field_0x08;
     /* 0x0C */ s16 field_0x0C;
-}; // Size: 0x0E
+}; // Size: 0x010
 
 #endif /* D_A_OBJ_ROTEN_H */

@@ -12,8 +12,8 @@ struct sUbMsgDat {
     /* 0x04 */ u8 field_0x04;
     /* 0x05 */ u8 field_0x05;
     /* 0x06 */ u8 field_0x06;
-    /* 0x06 */ u8 field_0x07;
-}; // Size: 0x07
+    /* 0x007 */ u8 field_0x07;
+}; // Size: 0x008
 
 struct sPeopleAnmDat {
     /* 0x00 */ u8 field_0x00;
@@ -279,6 +279,6 @@ private:
     /* 0x7A8 */ u8 m7A8;
 
     static const char m_arcname[];
-}; // Size: 0x7A9
+}; // Size: 0x7AC
 
 #endif /* D_A_NPC_PEOPLE_H */

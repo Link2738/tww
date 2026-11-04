@@ -20,8 +20,8 @@ public: // Attributes
     /* 0x2A0 */ u8 field_2A0;
     /* 0x2A1 */ u8 field_2A1;
     /* 0x2A4 */ cXyz mPosRel;
-    /* 0x2A8 */ cXyz field_2B0;
-    /* 0x2B4 */ cXyz field_2BC;
+    /* 0x2B0 */ cXyz field_2B0;
+    /* 0x2BC */ cXyz field_2BC;
     /* 0x2C8 */ csXyz field_2C8;
     /* 0x2D0 */ float mHeight;
     /* 0x2D4 */ fpc_ProcID field_2D4[4];

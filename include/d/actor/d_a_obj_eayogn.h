@@ -22,7 +22,7 @@ public:
 public:
     /* 0x290 */ J3DModel * mpModel;
     /* 0x294 */ request_of_phase_process_class mPhs;
-    /* 0x2A0 */ dBgW * mpBgW;
+    /* 0x29C */ dBgW * mpBgW;
 };
 
 #endif /* D_A_OBJ_EAYOGN_H */

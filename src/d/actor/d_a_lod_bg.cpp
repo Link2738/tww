@@ -97,7 +97,13 @@ void daLodbg_c::deleteModelData() {
 #if VERSION > VERSION_DEMO
 /* 0000046C-00000738       .text loadModelData__9daLodbg_cFPCcRP12J3DModelDataRP12JKRSolidHeapRUl */
 BOOL daLodbg_c::loadModelData(const char* filename, J3DModelData*& mModelData, JKRSolidHeap*& mDataHeap, u32& mDataSize) {
-    /* Nonmatching - regalloc */
+    // The one function in this file that is not byte-exact: the target holds the
+    // loadBinaryDisplayList result in r29, we get r27, and it shows up in exactly two
+    // instructions (the `mr.` and the deferred `stw` through mModelData). Size, opcodes and
+    // operands are otherwise identical. Tried the type-first checklist from HANDOFF section 4:
+    // a separate J3DModelData* local assigned to the reference at the end (changes the size),
+    // three declaration orders for the local block, and BOOL vs bool for `success`. None moved
+    // it, so this is flagged Equivalent under rule 4 rather than left NonMatching.
     void* bin;
     bool success;
     void* dst;

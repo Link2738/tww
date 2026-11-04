@@ -1,58 +1,127 @@
 #include "TRK_MINNOW_DOLPHIN/MetroTRK/Portable/serpoll.h"
 #include "TRK_MINNOW_DOLPHIN/MetroTRK/Portable/nubevent.h"
+#include "TRK_MINNOW_DOLPHIN/MetroTRK/Portable/msgbuf.h"
+#include "TRK_MINNOW_DOLPHIN/MetroTRK/Portable/msghndlr.h"
 #include "trk.h"
 
-static TRKFramingState gTRKFramingState;
+TRKFramingState gTRKFramingState;
 
 void* gTRKInputPendingPtr;
 
-extern int TRKPollUART(void);
+void TRKProcessInput(int bufferIdx);
 
-MessageBufferID TRKTestForPacket() {
-    u8 payloadBuf[0x880];
-    u8 packetBuf[0x40];
-    int bufID;
-    TRKBuffer* msg;
-    MessageBufferID result;
-
-    if (TRKPollUART() <= 0) {
-        return -1;
+static inline void TRKDiscardFrame(void) {
+    if (gTRKFramingState.msgBufID != -1) {
+        TRKReleaseBuffer(gTRKFramingState.msgBufID);
+        gTRKFramingState.msgBufID = -1;
     }
 
-    result = TRKGetFreeBuffer(&bufID, &msg);
+    gTRKFramingState.buffer = NULL;
+    gTRKFramingState.receiveState = DSRECV_Wait;
+}
 
-    TRKSetBufferPosition(msg, 0);
-    if (TRKReadUARTN(packetBuf, 0x40) == UART_NoError) {
-        int readSize;
+static inline BOOL TRKFrameDone(void) {
+    TRKBuffer* b = gTRKFramingState.buffer;
 
-        TRKAppendBuffer_ui8(msg, packetBuf, 0x40);
-        readSize = ((u32*)packetBuf)[0] - 0x40;
-        result = bufID;
-        if (readSize > 0) {
-            if (TRKReadUARTN(payloadBuf, ((u32*)packetBuf)[0] - 0x40) == UART_NoError) {
-                TRKAppendBuffer_ui8(msg, payloadBuf, ((u32*)packetBuf)[0]);
-            } else {
-                TRKReleaseBuffer(result);
-                result = -1;
-            }
+    if (b->length < 2) {
+        TRKStandardACK(b, DSMSG_ReplyNAK, DSREPLY_PacketSizeError);
+        TRKDiscardFrame();
+        return FALSE;
+    }
+
+    b->position = 0;
+    b->length--;
+    return TRUE;
+}
+
+MessageBufferID TRKTestForPacket(void) {
+    DSError err;
+    UARTError readErr;
+    char c;
+
+    err = DS_NoError;
+    readErr = TRKReadUARTPoll(&c);
+
+    while (readErr == UART_NoError && err == DS_NoError) {
+        if (gTRKFramingState.receiveState != DSRECV_InFrame) {
+            gTRKFramingState.isEscape = FALSE;
         }
-    } else {
-        TRKReleaseBuffer(result);
-        result = -1;
+
+        switch (gTRKFramingState.receiveState) {
+        case DSRECV_Wait:
+            if (c == 0x7E) {
+                err = TRKGetFreeBuffer(&gTRKFramingState.msgBufID, &gTRKFramingState.buffer);
+                gTRKFramingState.fcsType = 0;
+                gTRKFramingState.receiveState = DSRECV_Found;
+            }
+            break;
+        case DSRECV_Found:
+            if (c == 0x7E) {
+                break;
+            }
+            gTRKFramingState.receiveState = DSRECV_InFrame;
+            // fallthrough
+        case DSRECV_InFrame:
+            if (c == 0x7E) {
+                if (gTRKFramingState.isEscape) {
+                    TRKStandardACK(gTRKFramingState.buffer, DSMSG_ReplyNAK, DSREPLY_EscapeError);
+                    TRKDiscardFrame();
+                    break;
+                }
+
+                if (TRKFrameDone()) {
+                    MessageBufferID id = gTRKFramingState.msgBufID;
+                    gTRKFramingState.msgBufID = -1;
+                    gTRKFramingState.buffer = NULL;
+                    gTRKFramingState.receiveState = DSRECV_Wait;
+                    return id;
+                }
+
+                gTRKFramingState.receiveState = DSRECV_Wait;
+            } else {
+                if (gTRKFramingState.isEscape) {
+                    c ^= 0x20;
+                    gTRKFramingState.isEscape = FALSE;
+                } else if (c == 0x7D) {
+                    gTRKFramingState.isEscape = TRUE;
+                    break;
+                }
+
+                err = TRKAppendBuffer1_ui8(gTRKFramingState.buffer, c);
+                gTRKFramingState.fcsType += c;
+            }
+            break;
+        case DSRECV_FrameOverflow:
+            if (c == 0x7E) {
+                TRKDiscardFrame();
+            }
+            break;
+        }
+
+        readErr = TRKReadUARTPoll(&c);
     }
 
-    return result;
+    return -1;
 }
 
 void TRKGetInput(void) {
-    MessageBufferID id = TRKTestForPacket();
-    if (id != -1) {
-        TRKEvent event;
-        TRKGetBuffer(id);
-        TRKConstructEvent(&event, NUBEVENT_Request);
-        event.msgBufID = id;
-        gTRKFramingState.msgBufID = -1;
-        TRKPostEvent(&event);
+    TRKBuffer* msgBuffer;
+    MessageBufferID id;
+    u8 command;
+
+    id = TRKTestForPacket();
+    if (id == -1) {
+        return;
+    }
+
+    msgBuffer = TRKGetBuffer(id);
+    TRKSetBufferPosition(msgBuffer, 0);
+    TRKReadBuffer1_ui8(msgBuffer, &command);
+
+    if (command < DSMSG_ReplyACK) {
+        TRKProcessInput(id);
+    } else {
+        TRKReleaseBuffer(id);
     }
 }
 
@@ -69,7 +138,6 @@ DSError TRKInitializeSerialHandler() {
     gTRKFramingState.msgBufID = -1;
     gTRKFramingState.receiveState = DSRECV_Wait;
     gTRKFramingState.isEscape = FALSE;
-
 
     return DS_NoError;
 }

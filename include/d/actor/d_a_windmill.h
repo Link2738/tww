@@ -40,7 +40,7 @@ public:
     /* 0x0298 */ J3DModel* mpModel;
     /* 0x029C */ dCcD_Stts mStts;
     /* 0x02D8 */ dCcD_Sph mSph[9];
-    /* 0x06D4 */ dCcD_Cps mCps[4];
+    /* 0xD64 */ dCcD_Cps mCps[4];
     /* 0x1244 */ cM3dGCpsS m1244[4];
     /* 0x12B4 */ dBgW* mpBgW;
     /* 0x12B8 */ Mtx mMtx;

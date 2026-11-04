@@ -27,7 +27,7 @@ public:
 public:
     /* 0x290 */ request_of_phase_process_class mPhs;
     /* 0x298 */ u32 field_0x298;
-    /* 0x298 */ u32 field_0x29c;
+    /* 0x29C */ u32 field_0x29c;
     /* 0x2A0 */ mDoExt_brkAnm mBrkAnm;
     /* 0x2B8 */ f32 mSpawnTimer;
     /* 0x2BC */ u32 field_0x2bc;

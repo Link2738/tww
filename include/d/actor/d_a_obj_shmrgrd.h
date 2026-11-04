@@ -107,7 +107,7 @@ public:
     /* 0x880 */ f32 mTopPos;
     /* 0x884 */ dPa_smokeEcallBack mSmokeCb;
     /* 0x8A4 */ Mtx mMtx;
-    /* 0x2D4 */ dBgW* mpBgW;
+    /* 0x8D4 */ dBgW* mpBgW;
 }; // Size: 0x8D8
 
 STATIC_ASSERT(sizeof(daObjShmrgrd_c) == 0x8D8);

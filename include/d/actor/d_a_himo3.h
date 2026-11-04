@@ -16,7 +16,7 @@ struct himo3_s {
 struct h3_ga_s {
     /* 0x00 */ J3DModel* mpModel;
     /* 0x04 */ cXyz mPos;
-    /* 0x04 */ cXyz m10;
+    /* 0x010 */ cXyz m10;
     /* 0x1C */ csXyz m1C;
     /* 0x24 */ f32 m24;
     /* 0x28 */ f32 m28;

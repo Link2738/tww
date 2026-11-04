@@ -2,40 +2,6 @@
 #include "dolphin/gx/GX.h"
 #include "dolphin/gx/GXInit.h"
 
-static void Copy6Floats(__REGISTER f32 src[6], __REGISTER f32 dst[6]) {
-    __REGISTER f32 ps_0, ps_1, ps_2;
-
-    // clang-format off
-#ifdef __MWERKS__
-    asm {
-        psq_l  ps_0,  0(src), 0, 0
-        psq_l  ps_1,  8(src), 0, 0
-        psq_l  ps_2, 16(src), 0, 0
-        psq_st ps_0,  0(dst), 0, 0
-        psq_st ps_1,  8(dst), 0, 0
-        psq_st ps_2, 16(dst), 0, 0
-    }
-#endif
-    // clang-format on
-}
-
-static void WriteProjPS(const __REGISTER f32 src[6], __REGISTER volatile void* dst) {
-    __REGISTER f32 ps_0, ps_1, ps_2;
-
-    // clang-format off
-#ifdef __MWERKS__
-    asm {
-        psq_l  ps_0,  0(src), 0, 0
-        psq_l  ps_1,  8(src), 0, 0
-        psq_l  ps_2, 16(src), 0, 0
-        psq_st ps_0,  0(dst), 0, 0
-        psq_st ps_1,  0(dst), 0, 0
-        psq_st ps_2,  0(dst), 0, 0
-    }
-#endif
-    // clang-format on
-}
-
 void GXProject(f32 model_x, f32 model_y, f32 model_z, Mtx model_mtx, f32* proj_mtx, f32* viewpoint,
                f32* screen_x, f32* screen_y, f32* screen_z) {
     f32 sp10[3];
@@ -133,7 +99,7 @@ void GXGetProjectionv(f32* proj) {
     proj[6] = gx->projMtx[5];
 }
 
-static void WriteMTXPS4x3(__REGISTER volatile void* dst, __REGISTER const Mtx src) {
+static inline void WriteMTXPS4x3(__REGISTER volatile void* dst, __REGISTER const Mtx src) {
     __REGISTER f32 ps_0, ps_1, ps_2, ps_3, ps_4, ps_5;
 
     // clang-format off
@@ -162,7 +128,7 @@ void GXLoadPosMtxImm(Mtx mtx, u32 id) {
     WriteMTXPS4x3(&GXFIFO, mtx);
 }
 
-static void WriteMTXPS3x3(__REGISTER volatile void* dst, __REGISTER const Mtx src) {
+static inline void WriteMTXPS3x3(__REGISTER volatile void* dst, __REGISTER const Mtx src) {
     __REGISTER f32 ps_0, ps_1, ps_2, ps_3, ps_4, ps_5;
 
     // clang-format off
@@ -196,7 +162,7 @@ void GXSetCurrentMtx(u32 id) {
     __GXSetMatrixIndex(GX_VA_PNMTXIDX);
 }
 
-static void WriteMTXPS4x2(__REGISTER volatile void* dst, __REGISTER const Mtx src) {
+static inline void WriteMTXPS4x2(__REGISTER volatile void* dst, __REGISTER const Mtx src) {
     __REGISTER f32 ps_0, ps_1, ps_2, ps_3;
 
     // clang-format off
@@ -239,43 +205,55 @@ void GXLoadTexMtxImm(const Mtx mtx, u32 id, GXTexMtxType type) {
     }
 }
 
-void __GXSetViewport(void) {
-    f32 a, b, c, d, e, f;
-    f32 near, far;
+void GXSetViewportJitter(f32 left, f32 top, f32 width, f32 height, f32 nearZ, f32 farZ, u32 field) {
+    f32 sx, sy, sz, ox, oy, oz;
+    f32 zmin, zmax;
 
-    a = gx->vpWd / 2;
-    b = -gx->vpHt / 2;
-    d = gx->vpLeft + (gx->vpWd / 2) + 342.0f;
-    e = gx->vpTop + (gx->vpHt / 2) + 342.0f;
+    if (field == 0) {
+        top -= 0.5f;
+    }
 
-    near = gx->vpNearz * gx->zScale;
-    far = gx->vpFarz * gx->zScale;
+    sx = width / 2.0f;
+    sy = -height / 2.0f;
+    ox = 342.0f + (left + (width / 2.0f));
+    oy = 342.0f + (top + (height / 2.0f));
+    zmin = 16777215.0f * nearZ;
+    zmax = 16777215.0f * farZ;
+    sz = zmax - zmin;
+    oz = zmax;
 
-    c = far - near;
-    f = far + gx->zOffset;
-
-    GX_XF_LOAD_REGS(5, GX_XF_REG_SCALEX);
-    GXFIFO.f32 = a;
-    GXFIFO.f32 = b;
-    GXFIFO.f32 = c;
-    GXFIFO.f32 = d;
-    GXFIFO.f32 = e;
-    GXFIFO.f32 = f;
-}
-
-void GXSetViewport(f32 left, f32 top, f32 width, f32 height, f32 nearZ, f32 farZ) {
     gx->vpLeft = left;
     gx->vpTop = top;
     gx->vpWd = width;
     gx->vpHt = height;
     gx->vpNearz = nearZ;
     gx->vpFarz = farZ;
-    __GXSetViewport();
+
+    if (gx->fgRange) {
+        __GXSetRange(nearZ, gx->fgSideX);
+    }
+
+    GX_XF_LOAD_REGS(5, GX_XF_REG_SCALEX);
+    GXFIFO.f32 = sx;
+    GXFIFO.f32 = sy;
+    GXFIFO.f32 = sz;
+    GXFIFO.f32 = ox;
+    GXFIFO.f32 = oy;
+    GXFIFO.f32 = oz;
     gx->bpSentNot = GX_TRUE;
 }
 
+void GXSetViewport(f32 left, f32 top, f32 width, f32 height, f32 nearZ, f32 farZ) {
+    GXSetViewportJitter(left, top, width, height, nearZ, farZ, 1);
+}
+
 void GXGetViewportv(f32* p) {
-    Copy6Floats(&gx->vpLeft, p);
+    p[0] = gx->vpLeft;
+    p[1] = gx->vpTop;
+    p[2] = gx->vpWd;
+    p[3] = gx->vpHt;
+    p[4] = gx->vpNearz;
+    p[5] = gx->vpFarz;
 }
 
 void GXSetScissor(u32 left, u32 top, u32 width, u32 height) {

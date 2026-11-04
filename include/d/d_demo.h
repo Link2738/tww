@@ -15,44 +15,42 @@
 #include "JSystem/J3DGraphAnimator/J3DModelData.h"
 #include "JSystem/JUtility/JUTAssert.h"
 #include "JSystem/JUtility/JUTNameTab.h"
-#include "JSystem/JStudio/JStudio/jstudio-control.h"
-#include "JSystem/JStudio/JStudio_JAudio/control.h"
-#include "JSystem/JStudio/JStudio_JMessage/control.h"
-#include "JSystem/JStudio/JStudio_JParticle/control.h"
-#include "JSystem/JStudio/JStudio_JStage/control.h"
+namespace JStudio {
+    class TControl;
+    class TFactory;
+}
+namespace JStudio_JStage {
+    class TCreateObject;
+}
+namespace JStudio_JAudio {
+    class TCreateObject;
+}
+namespace JStudio_JParticle {
+    class TCreateObject;
+}
+namespace JStudio_JMessage {
+    class TCreateObject;
+}
 #include "m_Do/m_Do_mtx.h"
 #include "f_pc/f_pc_base.h"
 
 class fopAc_ac_c;
 class dMesg_tControl;
 
-// TODO: made up, figure out what this is
-struct dDemo_prm_data {
-    /* 0x0 */ u8 field_0x0[0x4 - 0x0];
-    /* 0x4 */ s8 field_0x4;
-    /* 0x5 */ u8 field_0x5[0x6 - 0x5];
-    /* 0x6 */ s8 field_0x6;
-    /* 0x7 */ s8 field_0x7;
-    /* 0x8 */ u8 field_0x8[0xB - 0x8];
-    /* 0xB */ s8 field_0xb;
-    /* 0xC */ u8 field_0xc[0xF - 0xC];
-    /* 0xF */ s8 field_0xf;
-};
-
 class dDemo_prm_c {
 public:
     u32 getId() { return mId; }
-    dDemo_prm_data* getData() { return mData; }
+    const void* getData() { return mData; }
 
 public:
     /* 0x0 */ u32 mId;
-    /* 0x4 */ dDemo_prm_data* mData;
+    /* 0x4 */ const void* mData;
 };
 
 class dDemo_actor_c : public JStage::TActor {
 public:
     enum Enable_e {
-        /* 0x001 */ ENABLE_UNK_e = (1 << 0),
+        /* 0x001 */ ENABLE_DATA_e = (1 << 0),
         /* 0x002 */ ENABLE_TRANS_e = (1 << 1),
         /* 0x004 */ ENABLE_SCALE_e = (1 << 2),
         /* 0x008 */ ENABLE_ROTATE_e = (1 << 3),
@@ -309,8 +307,8 @@ private:
 class dDemo_system_c : public JStage::TSystem {
 public:
     dDemo_system_c() : mObject(NULL) {}
-    ~dDemo_system_c();
     void* JSGFindObject(const char*, JStage::TEObject) const;
+    ~dDemo_system_c();
 
     void setObject(dDemo_object_c* obj) { mObject = obj; }
 

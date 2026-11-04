@@ -431,6 +431,8 @@ public:
     void setItemBombNumCount(s16 num) { mItemBombNumCount += num; }
     void clearItemBombNumCount() { mItemBombNumCount = 0; }
 
+    int getItemNowRupee() { return mItemNowRupee; }
+
     u16 getItemNowLife() { return mItemNowLife; }
     void setItemNowLife(u16 life) { mItemNowLife = life; }
 
@@ -815,7 +817,7 @@ public:
     /* 0x4920 */ s16 mAuctionGauge;
     /* 0x4922 */ s16 mItemTimer;
     /* 0x4924 */ u16 mItemNowLife;
-    /* 0x4926 */ s16 mItemNowRupee;
+    /* 0x4926 */ u16 mItemNowRupee;
     /* 0x4928 */ bool mItemSwimTimerStatus;
     /* 0x4929 */ u8 mItemScopeWipeTimer;
     /* 0x492A */ u8 mMesgStatus;
@@ -2632,6 +2634,8 @@ inline u16 dComIfGp_getItemNowLife() {
     return g_dComIfG_gameInfo.play.getItemNowLife();
 }
 
+
+
 inline void dComIfGp_setItemNowLife(u16 life) {
     g_dComIfG_gameInfo.play.setItemNowLife(life);
 }
@@ -2726,6 +2730,10 @@ inline s16 dComIfGp_getMessageCountNumber() {
 
 inline s32 dComIfGp_checkStatus(u16 flags) {
     return g_dComIfG_gameInfo.play.checkStatus(flags);
+}
+
+inline s32 dComIfGp_getItemNowRupee() {
+    return g_dComIfG_gameInfo.play.getItemNowRupee();
 }
 
 inline s32 dComIfGp_getItemRupeeCount() {

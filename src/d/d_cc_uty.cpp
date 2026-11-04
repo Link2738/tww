@@ -251,7 +251,7 @@ fopAc_ac_c* cc_at_check(fopAc_ac_c* tgActor, CcAtInfo* atInfo) {
             } else {
                 if (fopAcM_GetName(tgActor) == fpcNm_MT_e) {
                     mt_class* mt = (mt_class*)tgActor;
-                    if (mt->m454 == 2) {
+                    if (mt->mMode == 2) {
                         fopAcM_seStart(tgActor, JA_SE_OBJ_MG_BALL_DMG, 0);
                     } else {
                         fopAcM_seStart(tgActor, at_se_get(atInfo->mpObj), r29);

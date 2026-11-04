@@ -4,6 +4,9 @@
 //
 
 #include "d/dolzel.h" // IWYU pragma: keep
+#ifdef TWW_DEVTOOLS
+#include "JSystem/JUtility/JUTDbPrint.h"
+#endif
 #include "d/d_s_logo.h"
 #include "res/Object/Logo.h"
 #include "res/Object/System.h"
@@ -457,7 +460,16 @@ BOOL dvdWaitDraw(dScnLogo_c* i_this) {
 #endif
     ) {
 
+#ifdef TWW_DEVTOOLS
+        // Boot into the developers' map select. It reads /res/Menu/Menu1.dat from the disc.
+        // The normal boot initialises the save in the opening scene, which this skips.
+        dComIfGs_init();
+        dComIfGp_itemDataInit();
+        JUTDbPrint::getManager()->setVisible(true);
+        fopScnM_ChangeReq(i_this, fpcNm_MENU_SCENE_e, fpcNm_OVERLAP0_e, 5);
+#else
         dComIfG_changeOpeningScene(i_this, fpcNm_OPENING_SCENE_e);
+#endif
     }
     return TRUE;
 }

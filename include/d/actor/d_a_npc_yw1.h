@@ -1,105 +1,186 @@
 #ifndef D_A_NPC_YW1_H
 #define D_A_NPC_YW1_H
 
+#include "d/d_npc.h"
 #include "f_op/f_op_actor.h"
 
 class J3DNode;
 
-class daNpc_Yw1_c : public fopAc_ac_c {
+class daNpc_Yw1_c : public fopNpc_npc_c {
 public:
     struct anm_prm_c {
-        
+        /* 0x00 */ s8 anmNum;
+        /* 0x01 */ s8 btpNum;
+        /* 0x04 */ f32 morf;
+        /* 0x08 */ f32 speed;
+        /* 0x0C */ int loopMode;
     };
+
+    typedef BOOL (daNpc_Yw1_c::*ActionFunc)(void*);
 
     void _nodeCB_Hair(J3DNode*, J3DModel*);
     void _nodeCB_Head(J3DNode*, J3DModel*);
     void _nodeCB_BackBone(J3DNode*, J3DModel*);
-    void init_YW1_0();
-    void init_YW1_1();
-    void init_YW1_2();
-    void init_YW1_3();
-    void createInit();
+    bool init_YW1_0();
+    bool init_YW1_1();
+    bool init_YW1_2();
+    bool init_YW1_3();
+    bool createInit();
     void play_animation();
-    void upLift();
+    bool upLift();
     void setMtx(bool);
-    void bckResID(int);
-    void btpResID(int);
-    void init_texPttrnAnm(signed char, bool);
+    int bckResID(int);
+    int btpResID(int);
+    bool init_texPttrnAnm(s8, bool);
     void play_texPttrnAnm();
     void setAnm_anm(anm_prm_c*);
     void setAnm_NUM(int, int);
     void setAnm();
     void chngAnmTag();
     void ctrlAnmTag();
-    void chngAnmAtr(unsigned char);
+    void chngAnmAtr(u8);
     void ctrlAnmAtr();
     void setAnm_ATR();
-    void anmAtr(unsigned short);
-    void next_msgStatus(unsigned long*);
-    void getMsg_YW1_0();
-    void getMsg_YW1_1();
-    void getMsg_YW1_2();
-    void getMsg_YW1_3();
-    void getMsg();
+    void anmAtr(u16);
+    u16 next_msgStatus(u32*);
+    u32 getMsg_YW1_0();
+    u32 getMsg_YW1_1();
+    u32 getMsg_YW1_2();
+    u32 getMsg_YW1_3();
+    u32 getMsg();
     void eventOrder();
     void checkOrder();
-    void chk_talk();
-    void chk_parts_notMov();
-    void searchByID(fpc_ProcID, int*);
-    void partner_search_sub(void* (*)(void*, void*));
+    bool chk_talk();
+    bool chk_parts_notMov();
+    fopAc_ac_c* searchByID(fpc_ProcID, int*);
+    bool partner_search_sub(void* (*)(void*, void*));
     void partner_search();
     void lookBack();
-    void chkAttention();
+    bool chkAttention();
     void setAttention(bool);
-    void decideType(int);
+    bool decideType(int);
     void privateCut(int);
     void endEvent();
-    void isEventEntry();
+    BOOL isEventEntry();
     void event_proc(int);
-    void set_action(int (daNpc_Yw1_c::*)(void*), void*);
-    void setStt(signed char);
+    BOOL set_action(ActionFunc, void*);
+    void setStt(s8);
     void chngTsuboAnm();
-    void chk_areaIN(float, float, short, cXyz);
-    void set_pthPoint(unsigned char);
+    bool chk_areaIN(f32, f32, s16, cXyz);
+    void set_pthPoint(u8);
     void setHairAngle();
-    void chk_brkTsubo();
-    void chk_bm1Odoroki();
-    void wait_1();
-    void wait_2();
-    void wait_3();
-    void walk_1();
-    void turn_1();
-    void talk_1();
-    void wait_action1(void*);
-    void wait_action2(void*);
-    void demo();
+    u8 chk_brkTsubo();
+    bool chk_bm1Odoroki();
+    BOOL wait_1();
+    BOOL wait_2();
+    BOOL wait_3();
+    BOOL walk_1();
+    BOOL turn_1();
+    BOOL talk_1();
+    BOOL wait_action1(void*);
+    BOOL wait_action2(void*);
+    bool demo();
     void shadowDraw();
     BOOL _draw();
     BOOL _execute();
     BOOL _delete();
     cPhs_State _create();
-    void bodyCreateHeap();
-    void headCreateHeap();
-    void CreateHeap();
+    BOOL bodyCreateHeap();
+    BOOL headCreateHeap();
+    BOOL CreateHeap();
 
 public:
-    /* Place member variables here */
-};
-
-class daNpc_Yw1_childHIO_c {
-public:
-    daNpc_Yw1_childHIO_c();
-
-public:
-    /* Place member variables here */
-};
-
-class daNpc_Yw1_HIO_c {
-public:
-    daNpc_Yw1_HIO_c();
-
-public:
-    /* Place member variables here */
-};
+    /* 0x6C4 */ request_of_phase_process_class mPhs;
+    /* 0x6CC */ s8 m_hed_jnt_num;
+    /* 0x6CD */ s8 m_bbone_jnt_num;
+    /* 0x6CE */ s8 m_hair1;
+    /* 0x6CF */ s8 m_hair2;
+    /* 0x6D0 */ s8 m_hair3;
+    /* 0x6D1 */ u8 field_0x6D1[0x6D4 - 0x6D1];
+    /* 0x6D4 */ u32 mShadowId;
+    /* 0x6D8 */ J3DModel* mpHeadModel;
+    /* 0x6DC */ mDoExt_btpAnm mBtpAnm;
+    /* 0x6F0 */ u8 mBtpFrame;
+    /* 0x6F1 */ u8 field_0x6F1;
+    /* 0x6F2 */ s16 mBlinkTimer;
+    /* 0x6F4 */ ActionFunc mCurrActionFunc;
+    /* 0x700 */ fpc_ProcID mPartnerProcID;
+    /* 0x704 */ fpc_ProcID m704;
+    /* 0x708 */ fpc_ProcID m708;
+    /* 0x70C */ dNpc_PathRun_c mPathRun;
+    /* 0x714 */ cXyz mInitialPos;
+    /* 0x720 */ csXyz mInitialAngle;
+    /* 0x726 */ csXyz m726;
+    /* 0x72C */ cXyz mEyePos;
+    /* 0x738 */ cXyz m738;
+    /* 0x744 */ cXyz m744;
+    /* 0x750 */ f32 mFrame;
+    /* 0x754 */ u8 field_0x754[0x758 - 0x754];
+    /* 0x758 */ s16 m758;
+    /* 0x75A */ s16 m75A;
+    /* 0x75C */ s16 m75C;
+    /* 0x75E */ u8 field_0x75E[0x760 - 0x75E];
+    /* 0x760 */ s32 mbSetEyePos;
+    /* 0x764 */ s16 m764;
+    /* 0x766 */ s16 m766;
+    /* 0x768 */ s16 m768;
+    /* 0x76A */ s16 m76A;
+    /* 0x76C */ s16 mHeadLookAtMaxVel;
+    /* 0x76E */ s16 m76E;
+    /* 0x770 */ s8 mbMorfAnimStopped;
+    /* 0x771 */ u8 m771;
+    /* 0x772 */ u8 m772;
+    /* 0x773 */ u8 m773;
+    /* 0x774 */ u8 m774;
+    /* 0x775 */ bool m775;
+    /* 0x776 */ bool m776;
+    /* 0x777 */ u8 m777;
+    /* 0x778 */ bool mbInDemo;
+    /* 0x779 */ u8 m779;
+    /* 0x77A */ u8 m77A;
+    /* 0x77B */ u8 m77B;
+    /* 0x77C */ bool m77C;
+    /* 0x77D */ bool m77D;
+    /* 0x77E */ bool m77E;
+    /* 0x77F */ u8 field_0x77F;
+    /* 0x780 */ s16 m780;
+    /* 0x782 */ s16 m782;
+    /* 0x784 */ s16 m784;
+    /* 0x786 */ s16 m786;
+    /* 0x788 */ s16 m788;
+    /* 0x78A */ s16 m78A;
+    /* 0x78C */ s16 m78C;
+    /* 0x78E */ s16 m78E;
+    /* 0x790 */ s16 m790;
+    /* 0x792 */ s16 m792;
+    /* 0x794 */ cXyz m794;
+    /* 0x7A0 */ s16 m7A0;
+    /* 0x7A2 */ s16 m7A2;
+    /* 0x7A4 */ s16 m7A4;
+    /* 0x7A6 */ s16 m7A6;
+    /* 0x7A8 */ s16 m7A8;
+    /* 0x7AA */ s16 m7AA;
+    /* 0x7AC */ s16 m7AC;
+    /* 0x7AE */ s16 m7AE;
+    /* 0x7B0 */ s16 m7B0;
+    /* 0x7B2 */ s16 m7B2;
+    /* 0x7B4 */ s16 m7B4;
+    /* 0x7B6 */ s16 m7B6;
+    /* 0x7B8 */ s16 m7B8;
+    /* 0x7BA */ s16 m7BA;
+    /* 0x7BC */ s8 mActionIndex;
+    /* 0x7BD */ u8 m7BD;
+    /* 0x7BE */ u8 m7BE;
+    /* 0x7BF */ s8 mBtpNum;
+    /* 0x7C0 */ s8 mAnmNum;
+    /* 0x7C1 */ s8 m7C1;
+    /* 0x7C2 */ s8 mStatus;
+    /* 0x7C3 */ s8 m7C3;
+    /* 0x7C4 */ s8 mLookBackState;
+    /* 0x7C5 */ s8 mType;
+    /* 0x7C6 */ s8 m7C6;
+    /* 0x7C7 */ s8 m7C7;
+    /* 0x7C8 */ s8 m7C8;
+};  // Size: 0x7CC
 
 #endif /* D_A_NPC_YW1_H */

@@ -23,7 +23,7 @@ class fopAc_ac_c;
 
 struct dCamera__EventParam {
     /* 0x00 */ char mName[16];
-    /* 0x10 */ int mValue;
+    /* 0x10 */ void* mValue;
 };
 
 struct dCamera__Type {
@@ -152,7 +152,7 @@ public:
         static const int PatternLengthMax = 4;
 #endif
     }
-    /* 0x05C */ mViewCache;
+    /* 0x03C */ mViewCache;
     /* 0x064 */ f32 m064;
     /* 0x068 */ int m068;
     /* 0x06C */ cSAngle mAngleY;
@@ -270,8 +270,18 @@ public:
     /* 0x364 */ int m364;
     /* 0x368 */ f32 m368;
     /* 0x36C */ cXyz m36C;
+    // Per-mode scratch. Only one variant is live at a time - whichever camera
+    // function engine_tbl currently dispatches to - so every variant starts at
+    // 0x378 and they overlap completely.
+    //
+    // Each mode's first act is to stamp a fourCC of its own name into the first
+    // word: 'CRWL' for crawl, 'VMIT' for vomit, and so on. Nothing reads those tags
+    // back; they exist so a memory dump shows which mode owns the scratch, which
+    // matters precisely because the union hides it. They are built with lis/addi
+    // immediates rather than stored as strings, so grepping the binary finds
+    // nothing.
     /* 0x314 */ union Work {
-        struct {
+        struct Follow {
             /* 0x378 */ int m378;
             /* 0x37C */ int m37C;
             /* 0x380 */ f32 m380;
@@ -305,7 +315,33 @@ public:
             /* 0x3F0 */ f32 m3F0;
             /* 0x3F4 */ u8 m3F4[0x3F8 - 0x3F4];
         } follow;
-        struct {
+        struct Talk {
+            /* 0x378 */ int mTag;
+            /* 0x37C */ cXyz mCenter;
+            /* 0x388 */ cXyz mEye;
+            /* 0x394 */ cXyz m394;
+            /* 0x3A0 */ cSGlobe m3A0;
+            /* 0x3A8 */ cSGlobe m3A8;
+            /* 0x3B0 */ int m3B0;
+            /* 0x3B4 */ int mState;
+            /* 0x3B8 */ int m3B8;
+            /* 0x3BC */ int m3BC;
+            /* 0x3C0 */ int m3C0;
+            /* 0x3C4 */ f32 m3C4;
+            /* 0x3C8 */ f32 m3C8;
+            /* 0x3CC */ u8 m3CC[0x3D0 - 0x3CC];
+            /* 0x3D0 */ f32 mRadius;
+            /* 0x3D4 */ f32 mFovy;
+            /* 0x3D8 */ f32 mLongitude;
+            /* 0x3DC */ f32 mLatitude;
+            /* 0x3E0 */ fopAc_ac_c* mpListener;
+            /* 0x3E4 */ fopAc_ac_c* mpSpeaker;
+            /* 0x3E8 */ fopAc_ac_c* m3E8;
+            /* 0x3EC */ s16 mSmoothless;
+            /* 0x3EE */ s16 mMode;
+            /* 0x3F0 */ u8 m3F0[0x3F8 - 0x3F0];
+        } talk;
+        struct Lockon {
             /* 0x378 */ int m378;
             /* 0x37C */ u8 m37C[0x380 - 0x37C];
             /* 0x380 */ int m380;
@@ -322,7 +358,7 @@ public:
             /* 0x3B4 */ f32 m3B4;
             /* 0x3B8 */ f32 m3B8;
         } lockon;
-        struct {
+        struct Subject {
             /* 0x378 */ int m378;
             /* 0x37C */ u8 m37C;
             /* 0x37D */ u8 m37D;
@@ -332,7 +368,7 @@ public:
             /* 0x38C */ f32 m38C;
             /* 0x390 */ f32 m390;
             /* 0x394 */ f32 m394;
-            /* 0x398 */ f32 m398;
+            /* 0x398 */ int m398;
             /* 0x39C */ f32 m39C;
             /* 0x3A0 */ f32 m3A0;
             /* 0x3A4 */ u8 m3A4[0x3A8 - 0x3A4];
@@ -347,6 +383,12 @@ public:
             /* 0x3C0 */ u32 m3C0;
             /* 0x3C4 */ int m3C4;
         } subject;
+        struct Pause {
+            /* 0x378 */ u8 mHasTimer;
+            /* 0x379 */ u8 m379[0x37C - 0x379];
+            /* 0x37C */ int mStay;
+            /* 0x380 */ int mTimer;
+        } pause;
         struct Crawl {
             /* 0x378 */ int m378;
             /* 0x37C */ int m37C;
@@ -359,6 +401,147 @@ public:
             /* 0x39A */ u8 m39A[0x39C - 0x39A];
             /* 0x39C */ int m39C;
         } crawl;
+        struct Vomit {
+            /* 0x378 */ int m378;
+            /* 0x37C */ int m37C;
+            /* 0x380 */ f32 m380;
+            /* 0x384 */ f32 m384;
+            /* 0x388 */ int m388;
+            /* 0x38C */ int m38C;
+            /* 0x390 */ f32 m390;
+            /* 0x394 */ f32 m394;
+            /* 0x398 */ f32 m398;
+            /* 0x39C */ f32 m39C;
+            /* 0x3A0 */ f32 m3A0;
+            /* 0x3A4 */ f32 m3A4;
+            /* 0x3A8 */ u8 m3A8[0x3AC - 0x3A8];
+            /* 0x3AC */ f32 m3AC;
+            /* 0x3B0 */ cXyz m3B0;
+            /* 0x3BC */ cXyz m3BC;
+            /* 0x3C8 */ u8 m3C8;
+            /* 0x3C9 */ u8 m3C9[0x3CC - 0x3C9];
+            /* 0x3CC */ f32 m3CC;
+            /* 0x3D0 */ f32 m3D0;
+            /* 0x3D4 */ u8 m3D4[0x3E4 - 0x3D4];
+            /* 0x3E4 */ f32 m3E4;
+            /* 0x3E8 */ f32 m3E8;
+        } vomit;
+        struct Hookshot {
+            /* 0x378 */ int m378;
+            /* 0x37C */ u8 m37C[0x380 - 0x37C];
+            /* 0x380 */ cXyz m380;
+            /* 0x38C */ cXyz m38C;
+            /* 0x398 */ u8 m398;
+        } hookshot;
+        struct Tornado {
+            /* 0x378 */ int m378;
+            /* 0x37C */ fopAc_ac_c* mpShipActor;
+            /* 0x380 */ fopAc_ac_c* mpTornadoActor;
+            /* 0x384 */ int m384;
+            /* 0x388 */ int m388;
+            /* 0x38C */ cXyz m38C;
+            /* 0x398 */ cXyz m398;
+            /* 0x3A4 */ cXyz m3A4;
+        } tornado;
+        struct Ride {
+            /* 0x378 */ int m378;
+            /* 0x37C */ fopAc_ac_c* mpShip;
+            /* 0x380 */ int m380;
+            /* 0x384 */ u8 m384;
+            /* 0x385 */ u8 m385;
+            /* 0x386 */ u8 m386[0x388 - 0x386];
+            /* 0x388 */ int m388;
+            /* 0x38C */ cXyz m38C;
+            /* 0x398 */ cXyz m398;
+            /* 0x3A4 */ cXyz m3A4;
+            /* 0x3B0 */ cSAngle m3B0;
+            /* 0x3B2 */ u8 m3B2[0x3B4 - 0x3B2];
+            /* 0x3B4 */ f32 m3B4;
+            /* 0x3B8 */ f32 m3B8;
+            /* 0x3BC */ f32 m3BC;
+            /* 0x3C0 */ f32 m3C0;
+            /* 0x3C4 */ f32 m3C4;
+            /* 0x3C8 */ f32 m3C8;
+        } ride;
+        struct Hung {
+            /* 0x378 */ int m378;
+            /* 0x37C */ int m37C;
+            /* 0x380 */ f32 m380;
+            /* 0x384 */ f32 m384;
+            /* 0x388 */ int m388;
+            /* 0x38C */ int m38C;
+            /* 0x390 */ f32 m390;
+            /* 0x394 */ f32 m394;
+            /* 0x398 */ f32 m398;
+            /* 0x39C */ f32 m39C;
+            /* 0x3A0 */ f32 m3A0;
+            /* 0x3A4 */ f32 m3A4;
+            /* 0x3A8 */ u8 m3A8[0x3AC - 0x3A8];
+            /* 0x3AC */ f32 m3AC;
+            /* 0x3B0 */ cXyz m3B0;
+            /* 0x3BC */ u8 m3BC;
+            /* 0x3BD */ u8 m3BD[0x3C0 - 0x3BD];
+            /* 0x3C0 */ f32 m3C0;
+            /* 0x3C4 */ f32 m3C4;
+            /* 0x3C8 */ u8 m3C8[0x3D8 - 0x3C8];
+            /* 0x3D8 */ f32 m3D8;
+            /* 0x3DC */ f32 m3DC;
+        } hung;
+        struct Manual {
+            /* 0x378 */ u8 m378[0x37C - 0x378];
+            /* 0x37C */ cXyz m37C;
+            /* 0x388 */ cXyz m388;
+            /* 0x394 */ f32 m394;
+            /* 0x398 */ f32 m398;
+            /* 0x39C */ u8 m39C[0x3A0 - 0x39C];
+            /* 0x3A0 */ u8 m3A0;
+            /* 0x3A1 */ u8 m3A1[0x3A4 - 0x3A1];
+            /* 0x3A4 */ f32 m3A4;
+            /* 0x3A8 */ cSGlobe m3A8;
+            /* 0x3B0 */ f32 m3B0;
+            /* 0x3B4 */ f32 m3B4;
+            /* 0x3B8 */ int m3B8;
+        } manual;
+        struct Shield {
+            /* 0x378 */ int m378;
+            /* 0x37C */ int m37C;
+            /* 0x380 */ f32 m380;
+            /* 0x384 */ f32 m384;
+            /* 0x388 */ f32 m388;
+            /* 0x38C */ f32 m38C;
+            /* 0x390 */ f32 m390;
+        } shield;
+        struct Tower {
+            /* 0x378 */ int m378;
+            /* 0x37C */ int m37C;
+            /* 0x380 */ f32 m380;
+            /* 0x384 */ f32 m384;
+            /* 0x388 */ int m388;
+            /* 0x38C */ int m38C;
+            /* 0x390 */ f32 m390;
+            /* 0x394 */ f32 m394;
+            /* 0x398 */ f32 m398;
+            /* 0x39C */ f32 m39C;
+            /* 0x3A0 */ cSAngle m3A0;
+            /* 0x3A2 */ u8 m3A2[0x3A4 - 0x3A2];
+            /* 0x3A4 */ f32 m3A4;
+            /* 0x3A8 */ f32 m3A8;
+            /* 0x3AC */ int m3AC;
+            /* 0x3B0 */ f32 m3B0;
+            /* 0x3B4 */ f32 m3B4;
+            /* 0x3B8 */ cXyz m3B8;
+            /* 0x3C4 */ cXyz m3C4;
+            /* 0x3D0 */ int m3D0;
+            /* 0x3D4 */ u8 m3D4;
+            /* 0x3D5 */ u8 m3D5;
+            /* 0x3D6 */ u8 m3D6[0x3D8 - 0x3D6];
+            /* 0x3D8 */ f32 m3D8;
+            /* 0x3DC */ f32 m3DC;
+            /* 0x3E0 */ f32 m3E0;
+            /* 0x3E4 */ f32 m3E4;
+            /* 0x3E8 */ f32 m3E8;
+            /* 0x3EC */ f32 m3EC;
+        } tower;
         struct FixedFrame {
             /* 0x378 */ cXyz m378;
             /* 0x384 */ cSGlobe m384;
@@ -369,6 +552,309 @@ public:
             /* 0x39C */ cXyz m39C;
             /* 0x3A8 */ cXyz m3A8;
         } fixedFrame;
+        struct WatchActor {
+            /* 0x378 */ cXyz mCtrGap;
+            /* 0x384 */ cXyz mPos;
+            /* 0x390 */ f32 mCushion;
+            /* 0x394 */ int mNearTimer;
+            /* 0x398 */ f32 mNearDist;
+            /* 0x39C */ int mFarTimer;
+            /* 0x3A0 */ f32 mFarDist;
+            /* 0x3A4 */ f32 mZoomDist;
+            /* 0x3A8 */ f32 mZoomVAngle;
+            /* 0x3AC */ fopAc_ac_c* mpTarget;
+            /* 0x3B0 */ fpc_ProcID mTargetID;
+            /* 0x3B4 */ cSGlobe mGlobe;
+            /* 0x3BC */ u8 m3BC[0x3C4 - 0x3BC];
+            /* 0x3C4 */ cSGlobe mTargetGlobe;
+            /* 0x3CC */ int mMode;
+            /* 0x3D0 */ int mBlure;
+            /* 0x3D4 */ f32 mFrontAngle;
+        } watchActor;
+        struct Rolling {
+            /* 0x378 */ u8 mHasTimer;
+            /* 0x379 */ u8 mHasBank;
+            /* 0x37A */ u8 m37A[0x37C - 0x37A];
+            /* 0x37C */ cXyz mEyePos;
+            /* 0x388 */ cXyz mCenterPos;
+            /* 0x394 */ cXyz mEye;
+            /* 0x3A0 */ cXyz mCenter;
+            /* 0x3AC */ f32 mFovy;
+            /* 0x3B0 */ f32 mBank;
+            /* 0x3B4 */ fopAc_ac_c* mpRelActor;
+            /* 0x3B8 */ char mRelUseMask[4];
+            /* 0x3BC */ int mTimer;
+            /* 0x3C0 */ int mTransType;
+            /* 0x3C4 */ f32 mRoll;
+            /* 0x3C8 */ f32 mRadiusAdd;
+            /* 0x3CC */ f32 mLatitude;
+            /* 0x3D0 */ f32 mCtrCus;
+        } rolling;
+        struct WindDirection {
+            /* 0x378 */ int mState;
+            /* 0x37C */ int mCount;
+            /* 0x380 */ cSGlobe mWindGlobe;
+            /* 0x388 */ cSGlobe mStartGlobe;
+            /* 0x390 */ cSGlobe mTargetGlobe;
+            /* 0x398 */ fopAc_ac_c* mpBird;
+            /* 0x39C */ cXyz mEyePos;
+            /* 0x3A8 */ cXyz mCenterPos;
+            /* 0x3B4 */ cXyz mTorishita;
+            /* 0x3C0 */ f32 mStopDist;
+            /* 0x3C4 */ f32 mFollowCushion;
+            /* 0x3C8 */ int mUpCount;
+            /* 0x3CC */ int mSideFlag;
+            /* 0x3D0 */ int mType;
+            /* 0x3D4 */ f32 mBirdDist;
+            /* 0x3D8 */ f32 mBirdFlyDist;
+            /* 0x3DC */ f32 mNearFovy;
+            /* 0x3E0 */ f32 mFarFovy;
+            /* 0x3E4 */ f32 mFovyCushion;
+            /* 0x3E8 */ f32 mTotal;
+            /* 0x3EC */ f32 mProgress;
+        } windDirection;
+        struct UniformAccele {
+            /* 0x378 */ cXyz mStartEye;
+            /* 0x384 */ cXyz mStartCenter;
+            /* 0x390 */ f32 mStartFovy;
+            /* 0x394 */ f32 mStartBank;
+            /* 0x398 */ cXyz mEye;
+            /* 0x3A4 */ cXyz mCenter;
+            /* 0x3B0 */ f32 mFovy;
+            /* 0x3B4 */ f32 mBank;
+            /* 0x3B8 */ fopAc_ac_c* mpRelActor;
+            /* 0x3BC */ fpc_ProcID mRelActorID;
+            /* 0x3C0 */ char mRelUseMask[8];
+            /* 0x3C8 */ int mTimer;
+            /* 0x3CC */ f32 mTotal;
+            /* 0x3D0 */ int mFlatFrames;
+            /* 0x3D4 */ int mAcceleTimer;
+            /* 0x3D8 */ int mAcceleType;
+            /* 0x3DC */ int mTransType;
+            /* 0x3E0 */ f32 mProgress;
+            /* 0x3E4 */ f32 mCushion;
+            /* 0x3E8 */ cSGlobe mGlobe;
+            /* 0x3F0 */ bool mHasBank;
+        } uniformAccele;
+        struct UniformBrake {
+            /* 0x378 */ cXyz mStartEye;
+            /* 0x384 */ cXyz mStartCenter;
+            /* 0x390 */ f32 mStartFovy;
+            /* 0x394 */ f32 mStartBank;
+            /* 0x398 */ cXyz mEye;
+            /* 0x3A4 */ cXyz mCenter;
+            /* 0x3B0 */ f32 mFovy;
+            /* 0x3B4 */ f32 mBank;
+            /* 0x3B8 */ fopAc_ac_c* mpRelActor;
+            /* 0x3BC */ fpc_ProcID mRelActorID;
+            /* 0x3C0 */ char mRelUseMask[8];
+            /* 0x3C8 */ int mTimer;
+            /* 0x3CC */ f32 mTotal;
+            /* 0x3D0 */ int mBrakingPoint;
+            /* 0x3D4 */ int mBrakeFrames;
+            /* 0x3D8 */ int mBrakeType;
+            /* 0x3DC */ int mTransType;
+            /* 0x3E0 */ f32 mProgress;
+            /* 0x3E4 */ f32 mCushion;
+            /* 0x3E8 */ cSGlobe mGlobe;
+            /* 0x3F0 */ bool mHasBank;
+        } uniformBrake;
+        struct UniformTrans {
+            /* 0x378 */ cXyz mStartEye;
+            /* 0x384 */ cXyz mStartCenter;
+            /* 0x390 */ f32 mStartFovy;
+            /* 0x394 */ f32 mStartBank;
+            /* 0x398 */ cXyz mEye;
+            /* 0x3A4 */ cXyz mCenter;
+            /* 0x3B0 */ f32 mFovy;
+            /* 0x3B4 */ f32 mBank;
+            /* 0x3B8 */ fopAc_ac_c* mpRelActor;
+            /* 0x3BC */ fpc_ProcID mRelActorID;
+            /* 0x3C0 */ char mRelUseMask[8];
+            /* 0x3C8 */ int mTimer;
+            /* 0x3CC */ int mTransType;
+            /* 0x3D0 */ f32 mCushion;
+            /* 0x3D4 */ cSGlobe mGlobe;
+            /* 0x3DC */ bool mHasBank;
+            /* 0x3DD */ u8 m3DD[0x3E0 - 0x3DD];
+            /* 0x3E0 */ int mBSpCurve;
+        } uniformTrans;
+        struct UseItem {
+            /* 0x378 */ int mState;
+            /* 0x37C */ int mTimer;
+            /* 0x380 */ int mType;
+            /* 0x384 */ cXyz mCenter;
+            /* 0x390 */ f32 mFovy;
+            /* 0x394 */ int mCut;
+            /* 0x398 */ int mCount;
+            /* 0x39C */ cSGlobe mGlobe;
+        } useItem;
+        struct FixedFrameEv {
+            /* 0x378 */ u8 mHasTimer;
+            /* 0x379 */ u8 m379[0x37C - 0x379];
+            /* 0x37C */ cXyz mEye;
+            /* 0x388 */ cXyz mCenter;
+            /* 0x394 */ f32 mFovy;
+            /* 0x398 */ f32 mBank;
+            /* 0x39C */ fopAc_ac_c* mpRelActor;
+            /* 0x3A0 */ char mRelUseMask[4];
+            /* 0x3A4 */ int mTimer;
+            /* 0x3A8 */ u8 mHasBank;
+            /* 0x3A9 */ u8 m3A9[0x3AC - 0x3A9];
+            /* 0x3AC */ cXyz mBasePos;
+        } fixedFrameEv;
+        struct GameOver {
+            /* 0x378 */ int mState;
+            /* 0x37C */ int mTimer;
+            /* 0x380 */ int mFlip;
+            /* 0x384 */ cXyz mCtrGap;
+            /* 0x390 */ cXyz mEyeGap;
+        } gameOver;
+        struct RestorePos {
+            /* 0x378 */ cXyz mCtrGap;
+            /* 0x384 */ cXyz mPos;
+            /* 0x390 */ f32 mCushion;
+            /* 0x394 */ int mNearTimer;
+            /* 0x398 */ f32 mNearDist;
+            /* 0x39C */ int mFarTimer;
+            /* 0x3A0 */ f32 mFarDist;
+            /* 0x3A4 */ u8 m3A4[0x3AC - 0x3A4];
+            /* 0x3AC */ fopAc_ac_c* mpTarget;
+            /* 0x3B0 */ cSGlobe mGlobe;
+            /* 0x3B8 */ int mMode;
+            /* 0x3BC */ int mDest;
+            /* 0x3C0 */ cXyz mCenter;
+            /* 0x3CC */ cXyz mEye;
+            /* 0x3D8 */ f32 mFovy;
+            /* 0x3DC */ s16 mBank;
+            /* 0x3DE */ u8 m3DE[0x3E0 - 0x3DE];
+            /* 0x3E0 */ int mTargetType;
+        } restorePos;
+        struct TornadoWarp {
+            /* 0x378 */ int mState;
+            /* 0x37C */ int mCount;
+            /* 0x380 */ cXyz mEye;
+            /* 0x38C */ fopAc_ac_c* mpShip;
+        } tornadoWarp;
+        struct TwoActor0 {
+            /* 0x378 */ fopAc_ac_c* mpActor1;
+            /* 0x37C */ fopAc_ac_c* mpActor2;
+            /* 0x380 */ fpc_ProcID mActor1ID;
+            /* 0x384 */ fpc_ProcID mActor2ID;
+            /* 0x388 */ f32 mCtrCus;
+            /* 0x38C */ f32 mEyeCus;
+            /* 0x390 */ f32 mRadiusMin;
+            /* 0x394 */ f32 mRadiusMax;
+            /* 0x398 */ f32 mLatitudeMin;
+            /* 0x39C */ f32 mLatitudeMax;
+            /* 0x3A0 */ f32 mLongitudeMin;
+            /* 0x3A4 */ f32 mLongitudeMax;
+            /* 0x3A8 */ f32 mFovy;
+            /* 0x3AC */ f32 mCtrRatio;
+            /* 0x3B0 */ cXyz mCtrGap;
+            /* 0x3BC */ f32 mRadius;
+            /* 0x3C0 */ f32 mLatitude;
+            /* 0x3C4 */ f32 mLongitude;
+        } twoActor0;
+        struct TurnToActor {
+            /* 0x378 */ cXyz mCtrGap;
+            /* 0x384 */ cXyz mAttentionPos;
+            /* 0x390 */ cXyz mCenter;
+            /* 0x39C */ f32 mCushion;
+            /* 0x3A0 */ u8 m3A0[0x3A4 - 0x3A0];
+            /* 0x3A4 */ int mTimer;
+            /* 0x3A8 */ fopAc_ac_c* mpTarget;
+            /* 0x3AC */ u8 m3AC[0x3BC - 0x3AC];
+            /* 0x3BC */ cSGlobe mGlobe;
+            /* 0x3C4 */ u8 m3C4[0x3C8 - 0x3C4];
+            /* 0x3C8 */ f32 mFrontAngle;
+        } turnToActor;
+        struct Possessed {
+            /* 0x378 */ int mState;
+            /* 0x37C */ int mType;
+            /* 0x380 */ int mTimer;
+            /* 0x384 */ int mCount;
+            /* 0x388 */ f32 mRadius;
+            /* 0x38C */ cSAngle mLatitude;
+            /* 0x38E */ cSAngle mLongitude;
+            /* 0x390 */ f32 mFovy;
+            /* 0x394 */ f32 mCushion;
+            /* 0x398 */ int mBlure;
+            /* 0x39C */ fopAc_ac_c* mpTarget;
+            /* 0x3A0 */ cSGlobe mGlobe;
+        } possessed;
+        struct GetItem {
+            /* 0x378 */ int mState;
+            /* 0x37C */ int mTimer;
+            /* 0x380 */ u8 m380[0x384 - 0x380];
+            /* 0x384 */ cXyz mCenter;
+            /* 0x390 */ f32 mFovy;
+            /* 0x394 */ int m394;
+            /* 0x398 */ int mCount;
+            /* 0x39C */ cSGlobe mGlobe;
+            /* 0x3A4 */ u8 m3A4[0x3BC - 0x3A4];
+            /* 0x3BC */ int mTimer1;
+            /* 0x3C0 */ int mTimer2;
+        } getItem;
+        struct FixedPosition {
+            /* 0x378 */ u8 mHasTimer;
+            /* 0x379 */ u8 mHasBank;
+            /* 0x37A */ u8 m37A[0x37C - 0x37A];
+            /* 0x37C */ cXyz mEye;
+            /* 0x388 */ cXyz mCtrGap;
+            /* 0x394 */ cXyz mCenter;
+            /* 0x3A0 */ f32 mFovy;
+            /* 0x3A4 */ f32 mBank;
+            /* 0x3A8 */ f32 mCtrCus;
+            /* 0x3AC */ f32 mStartRadius;
+            /* 0x3B0 */ f32 mRadius;
+            /* 0x3B4 */ fopAc_ac_c* mpRelActor;
+            /* 0x3B8 */ fopAc_ac_c* mpTarget;
+            /* 0x3BC */ fpc_ProcID mTargetID;
+            /* 0x3C0 */ char mRelUseMask[4];
+            /* 0x3C4 */ int mTimer;
+        } fixedPosition;
+        struct Stoker {
+            /* 0x378 */ u8 mHasTimer;
+            /* 0x379 */ u8 mHasBank;
+            /* 0x37A */ u8 m37A[0x37C - 0x37A];
+            /* 0x37C */ cXyz mEyeGap;
+            /* 0x388 */ cXyz mCtrGap;
+            /* 0x394 */ f32 mFovy;
+            /* 0x398 */ f32 mBank;
+            /* 0x39C */ fopAc_ac_c* mpStoker;
+            /* 0x3A0 */ fopAc_ac_c* mpTarget;
+            /* 0x3A4 */ fpc_ProcID mStokerID;
+            /* 0x3A8 */ fpc_ProcID mTargetID;
+            /* 0x3AC */ u8 m3AC[0x3B0 - 0x3AC];
+            /* 0x3B0 */ int mTimer;
+        } stoker;
+        struct FixedFrames {
+            /* 0x378 */ u8 mHasTimer;
+            /* 0x379 */ u8 m379[0x37C - 0x379];
+            /* 0x37C */ cXyz mCenter;
+            /* 0x388 */ cXyz mEye;
+            /* 0x394 */ cXyz* mEyes;
+            /* 0x398 */ cXyz* mCenters;
+            /* 0x39C */ f32* mFovys;
+            /* 0x3A0 */ f32 mFovy;
+            /* 0x3A4 */ fopAc_ac_c* mpRelActor;
+            /* 0x3A8 */ char mRelUseMask[4];
+            /* 0x3AC */ int mTimer;
+            /* 0x3B0 */ int mKeyNum;
+        } fixedFrames;
+        struct BSpline {
+            /* 0x378 */ cXyz* mCenters;
+            /* 0x37C */ cXyz* mEyes;
+            /* 0x380 */ f32* mFovys;
+            /* 0x384 */ int mTimer;
+            /* 0x388 */ int mKeyNum;
+        } bSpline;
+        struct Tact {
+            /* 0x378 */ int m378;
+            /* 0x37C */ int m37C;
+            /* 0x380 */ int m380;
+        } tact;
         struct FixedPos {
             /* 0x378 */ int m378;
             /* 0x37C */ f32 m37C;
@@ -377,7 +863,10 @@ public:
             /* 0x390 */ cXyz m390;
             /* 0x39C */ u8 m39C;
         } fixedPos;
-    } mWork;
+    };
+    // raw storage, not a Work member: the target ctor and dtor construct nothing here.
+    // Each mode casts this once to its own Work:: struct.
+    /* 0x378 */ u32 mWorkBuf[0x80 / 4];
     /* 0x3F8 */ dCamera_event_data mEventData;
     /* 0x50C */ u32 mEventFlags;
     /* 0x510 */ int mCurStyle;
@@ -565,18 +1054,18 @@ public:
     bool SetExtendedPosition(cXyz*);
     bool ScopeViewMsgModeOff();
 
-    void StartEventCamera(int, int, ...);
-    void EndEventCamera(int);
-    void searchEventArgData(char*);
-    void getEvIntData(int*, char*);
-    void getEvStringPntData(char*);
-    void getEvIntData(int*, char*, int);
-    void getEvFloatData(f32*, char*, f32);
-    void getEvXyzData(cXyz*, char*, cXyz);
+    bool StartEventCamera(int, int, ...);
+    bool EndEventCamera(int);
+    int searchEventArgData(char*);
+    bool getEvIntData(int*, char*);
+    char* getEvStringPntData(char*);
+    bool getEvIntData(int*, char*, int);
+    bool getEvFloatData(f32*, char*, f32);
+    bool getEvXyzData(cXyz*, char*, cXyz);
     bool getEvStringData(char*, char*, char*);
-    void getEvStringPntData(char*, char*);
-    void getEvActor(char*);
-    void getEvActor(char*, char*);
+    char* getEvStringPntData(char*, char*);
+    fopAc_ac_c* getEvActor(char*);
+    fopAc_ac_c* getEvActor(char*, char*);
     bool pauseEvCamera();
     bool fixedFrameEvCamera();
     bool stokerEvCamera();
@@ -689,5 +1178,6 @@ s16 dCam_getAngleX(camera_class*);
 s16 dCam_getControledAngleY(camera_class*);
 camera_class* dCam_getCamera();
 dCamera_c* dCam_getBody();
+
 
 #endif /* D_CAMERA_H */

@@ -361,8 +361,7 @@ public:
         MTXRotAxisRad(now, axis, rad);
     }
 
-    // TODO
-    static void rYrotS(f32) {}
+    static void rYrotS(f32 rad) { MTXRotRad(now, 'Y', rad); }
 
     static Mtx now;
     static Mtx buffer[16];

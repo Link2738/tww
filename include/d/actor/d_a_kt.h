@@ -29,7 +29,7 @@ public:
     /* 0x31C */ s8 mMode;
     /* 0x31D */ u8 field_0x31d;
     /* 0x31E */ bool mHitGround;
-    /* 0x31E */ u8 field_0x31f;
+    /* 0x31F */ u8 field_0x31f;
 };
 
 #endif /* D_A_KT_H */

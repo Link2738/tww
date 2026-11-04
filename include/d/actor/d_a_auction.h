@@ -24,7 +24,7 @@ public:
     void chkNpcExec(int) {}
     void getAnmNpcNo() {}
     u8 getAucMdlNo(u8 idx) { return mAucMdlNo[idx]; }
-    void getAucNpcNo(unsigned char) {}
+    u8 getAucNpcNo(u8 idx) { return m80C[idx]; }
     void getBetNpcNo() {}
     void getKind(unsigned char) {}
     void getNpcNo() {}
@@ -42,7 +42,13 @@ public:
     void setAucMdlNo(u8 idx, u8 mdlNo) { mAucMdlNo[idx] = mdlNo; }
     void setItemNo(unsigned char) {}
     void setKind(unsigned char, unsigned char) {}
-    void setNpcID(int, fpc_ProcID) {}
+    BOOL setNpcID(u8 idx, fpc_ProcID id) {
+        if (m738[idx] == fpcM_ERROR_PROCESS_ID_e) {
+            m738[idx] = id;
+            return TRUE;
+        }
+        return FALSE;
+    }
     void setStart(unsigned char) {}
 
     cPhs_State _create();
@@ -93,7 +99,7 @@ public:
     void nextBet();
     int getRand(int);
 
-private:
+public:
     /* 0x6C4 */ request_of_phase_process_class mPhs;
     /* 0x6CC */ dNpc_EventCut_c mNpcEvtInfo;
     /* 0x738 */ fpc_ProcID m738[8];

@@ -128,7 +128,7 @@ struct bst_class {
     /* 0x2EE8 */ u8 m2EE8[0x2EF4 - 0x2EE8];
     /* 0x2EF4 */ JPABaseEmitter* m2EF4;
     /* 0x2EF8 */ JPABaseEmitter* m2EF8;
-    /* 0x2EF8 */ u8 m2EFC[0x2F00 - 0x2EFC];
+    /* 0x2EFC */ u8 m2EFC[0x2F00 - 0x2EFC];
     /* 0x2F00 */ dPa_smokeEcallBack mPa_smokeEcallBack;
     /* 0x2F20 */ dKy_tevstr_c m2F20;
     /* 0x2FD0 */ J3DModel* m2FD0;

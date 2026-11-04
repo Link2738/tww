@@ -1329,8 +1329,8 @@ void dMsg_dotMove(sub_msg_class* i_Msg) {
             i_Msg->m10C8.b = (u8)(int)((f32)i_Msg->m10C4.b + (f32)((220.0f - (f32)i_Msg->m10C4.b) * dVar5));
             i_Msg->m050C.mNowAlpha = (u8)(int)((f32)i_Msg->m050C.mInitAlpha + (f32)((255.0f - (f32)i_Msg->m050C.mInitAlpha) * dVar5));
         }
-        ((J2DPicture*)i_Msg->m050C.pane)->setBlack(JUtility::TColor(i_Msg->m10C0));
-        ((J2DPicture*)i_Msg->m050C.pane)->setWhite(JUtility::TColor(i_Msg->m10C8));
+        ((J2DPicture*)i_Msg->m050C.pane)->setBlack(i_Msg->m10C0);
+        ((J2DPicture*)i_Msg->m050C.pane)->setWhite(i_Msg->m10C8);
     }
 }
 

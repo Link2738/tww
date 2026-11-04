@@ -19,10 +19,10 @@ public:
     static const char M_arcname[];
 
 public:
-    /* 0x290 */ request_of_phase_process_class mPhs;
-    /* 0x298 */ J3DModel* mpModel;
-    /* 0x29C */ mDoExt_btkAnm mBtkAnm;
-    /* 0x2A0 */ Mtx mMtx;
+    /* 0x294 */ request_of_phase_process_class mPhs;
+    /* 0x29C */ J3DModel* mpModel;
+    /* 0x2A0 */ mDoExt_btkAnm mBtkAnm;
+    /* 0x2B4 */ Mtx mMtx;
 };
 };  // namespace daKomore
 

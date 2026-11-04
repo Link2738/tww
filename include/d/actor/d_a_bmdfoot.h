@@ -41,7 +41,7 @@ struct bmdfoot_class {
     /* 0xBC4 */ f32 mBC4;
     /* 0xBC8 */ u8 mBC8;
     /* 0xBC9 */ u8 mBC9[0xBCC - 0xBC9];
-    /* 0xAF4 */ mDoExt_btkAnm* btk;
+    /* 0xBCC */ mDoExt_btkAnm* btk;
     /* 0xBD0 */ s16 mBD0;
     /* 0xBD2 */ u8 mBD2;
     /* 0xBD3 */ u8 mBD3[0xBD4 - 0xBD3];

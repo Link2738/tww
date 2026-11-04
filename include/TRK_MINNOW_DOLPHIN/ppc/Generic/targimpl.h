@@ -14,6 +14,37 @@ DSError TRKTargetSupportRequest();
 void TRKDestructEvent(TRKEvent*);
 BOOL TRKTargetStopped(void);
 
+typedef struct DSVersions {
+    u8 kernelMajor;
+    u8 kernelMinor;
+    u8 protocolMajor;
+    u8 protocolMinor;
+} DSVersions;
+
+typedef struct DSCPUType {
+    u8 cpuMajor;
+    u8 cpuMinor;
+    u8 bigEndian;
+    u8 defaultTypeSize;
+    u8 fpTypeSize;
+    u8 extended1TypeSize;
+    u8 extended2TypeSize;
+} DSCPUType;
+
+DSError TRKTargetVersions(DSVersions* versions);
+DSError TRKTargetCPUType(DSCPUType* cpuType);
+DSError TRKTargetSupportMask(u8 mask[32]);
+DSError TRKTargetFlushCache(u8 options, void* start, void* end);
+DSError TRKTargetAccessMemory(void* data, u32 start, size_t* length, MemoryAccessOptions accessOptions, BOOL read);
+DSError TRKTargetAccessDefault(u32 firstRegister, u32 lastRegister, TRKBuffer* b, size_t* registersLength, BOOL read);
+DSError TRKTargetAccessFP(u32 firstRegister, u32 lastRegister, TRKBuffer* b, size_t* registersLength, BOOL read);
+DSError TRKTargetAccessExtended1(u32 firstRegister, u32 lastRegister, TRKBuffer* b, size_t* registersLength, BOOL read);
+DSError TRKTargetAccessExtended2(u32 firstRegister, u32 lastRegister, TRKBuffer* b, size_t* registersLength, BOOL read);
+DSError TRKTargetSingleStep(u32 count, BOOL stepOver);
+DSError TRKTargetStepOutOfRange(u32 rangeStart, u32 rangeEnd, BOOL stepOver);
+u32 TRKTargetGetPC(void);
+u32 TRKTargetStop(void);
+
 typedef struct Default_PPC {
     u32 GPR[32];
     u32 PC;

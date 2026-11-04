@@ -32,7 +32,7 @@ struct ssk_class {
     /* 0x35C */ u8 m35C[0x398 - 0x35C];
     /* 0x398 */ dBgS_AcchCir mAcchCir;
     /* 0x3D8 */ dBgS_ObjAcch mAcch;
-    /* 0x5A0 */ dCcD_Stts mStts;
+    /* 0x59C */ dCcD_Stts mStts;
     /* 0x5D8 */ dCcD_Cyl mCyl;
 #if VERSION > VERSION_DEMO
     /* 0x708 */ JntHit_c* m708;

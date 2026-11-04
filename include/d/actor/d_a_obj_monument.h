@@ -15,7 +15,7 @@ namespace daObjMonument {
 
         struct Attr_c {
             /* 0x00 */ s16 mModelId;
-            /* 0x01 */ s16 mBgWId;
+            /* 0x002 */ s16 mBgWId;
         };
     }
 

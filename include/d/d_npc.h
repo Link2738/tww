@@ -29,7 +29,7 @@ public:
     /* 0x1C */ f32 mAttnYOffset;
     /* 0x20 */ s16 mMaxAttnAngleY;
     /* 0x22 */ u8 m22;
-    /* 0x23 */ u8 m23[0x24 - 0x23];
+    /* 0x23 */ // padding
     /* 0x24 */ f32 mMaxAttnDistXZ;
 }; // Size: 0x28
 
@@ -127,7 +127,7 @@ private:
     /* 0x52 */ u8 field_0x52;
     /* 0x54 */ cXyz mPos;
     /* 0x60 */ bool mbAttention;
-    /* 0x61 */ u8 mbNoTurn;
+    /* 0x61 */ bool mbNoTurn;
     /* 0x62 */ s16 mTurnSpeed;
     /* 0x64 */ u32 mTurnType;
     /* 0x68 */ dNpc_JntCtrl_c* mpJntCtrl;
@@ -261,7 +261,8 @@ public:
     /* 0x6A8 */ u32 mEndMsgNo;
     /* 0x6AC */ fpc_ProcID mCurrMsgBsPcId;
     /* 0x6B0 */ msg_class* mpCurrMsg;
-    /* 0x6B4 */ u8 field_0x6b4[6];
+    /* 0x6B4 */ u32 field_0x6b4;
+    /* 0x6B8 */ u16 field_0x6b8;
     /* 0x6BA */ u16 field_0x6ba;
     /* 0x6BC */ u8 field_0x6bc[4];
     /* 0x6C0 */ /* vtable */

@@ -57,6 +57,6 @@ public:
     /* 0x0C */ f32 field_0x0C;
     /* 0x10 */ f32 field_0x10;
     /* 0x14 */ u8 field_0x14;
-};  // Size: 0x15
+};  // Size: 0x018
 
 #endif /* D_A_DK_H */

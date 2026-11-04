@@ -3,6 +3,19 @@
 
 #include "c/c_dylink.h"
 #include "f_op/f_op_actor.h"
+#include "f_op/f_op_actor_mng.h"
+
+struct daFallRockTag_mData {
+    f32 placeholder1;
+    f32 placeholder2;
+    f32 placeholder3;
+    f32 placeholder4;
+    f32 placeholder5;
+    s16 placeholder6;
+    s16 placeholder7;
+    s16 placeholder8;
+    s16 placeholder9;  
+};
 
 struct daFallRockTag_Data_c {
     /* 0x00 */ f32 mRange;

@@ -39,7 +39,7 @@ public:
 
 public:
     /* 0x290 */ request_of_phase_process_class mPhase;
-    /* 0x2AC */ J3DModel* mpModel1;
+    /* 0x298 */ J3DModel* mpModel1;
     /* 0x29C */ mDoExt_bckAnm mBck1;
     /* 0x2AC */ J3DModel* mpModel2;
     /* 0x2B0 */ mDoExt_bckAnm mBck2;

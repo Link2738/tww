@@ -94,7 +94,7 @@ public:
     /* 0x474 */ daDaiocta_c* mpParentActor;
     /* 0x478 */ dPa_followEcallBack mParticleCallback;
     /* 0x48C */ cXyz mParticlePos;
-    /* 0x48C */ csXyz m498;
+    /* 0x498 */ csXyz m498;
     /* 0x49E */ u8 m49E[0x4A0 - 0x49E];
 };  // Size: 0x4A0
 STATIC_ASSERT(sizeof(daDaiocta_Eye_c) == 0x4A0);

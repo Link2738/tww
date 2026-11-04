@@ -106,7 +106,7 @@ public:
     /* 0x1C */ s8 field_0x1C;
     /* 0x1D */ s8 field_0x1D;
     /* 0x1E */ bool mActive;
-};  // Size: 0x1F
+};  // Size: 0x020
 
 class daNpc_Bmsw_c : public fopNpc_npc_c {
 public:

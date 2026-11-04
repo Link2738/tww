@@ -25,8 +25,8 @@ public:
     /* 0x298 */ J3DModel * mpModel;
     /* 0x29C */ dBgW * mpBgW;
     /* 0x2A0 */ dCcD_Stts mStts;
-    /* 0x408 */ dCcD_Sph mSph;
-    /* 0x40C */ fopAc_ac_c * mpHookshotActor;
+    /* 0x2DC */ dCcD_Sph mSph;
+    /* 0x408 */ fopAc_ac_c * mpHookshotActor;
 };
 
 #if VERSION == VERSION_DEMO

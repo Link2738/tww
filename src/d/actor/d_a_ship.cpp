@@ -261,14 +261,9 @@ BOOL daShip_c::draw() {
         
         cXyz local_5c(current.pos.x, current.pos.y + m03D8 + 5.0f, current.pos.z);
         
-        // Fakematch, causes regalloc for demo
-        f32 x = local_5c.x;
-        f32 y = local_5c.y;
-        f32 z = local_5c.z;
-        z += cM_scos(m037C) * 10000.0f * cM_scos(shape_angle.y);
-        y -= cM_ssin(m037C) * 10000.0f;
-        x += cM_scos(m037C) * 10000.0f * cM_ssin(shape_angle.y);
-        cXyz local_68(x, y, z);
+        cXyz local_68(current.pos.x + cM_scos(m037C) * 10000.0f * cM_ssin(shape_angle.y),
+                      current.pos.y + m03D8 + 5.0f - cM_ssin(m037C) * 10000.0f,
+                      current.pos.z + cM_scos(m037C) * 10000.0f * cM_scos(shape_angle.y));
         Mtx MStack_50;
         cMtx_lookAt(MStack_50, &local_5c, &local_68, m037E);
         mDoMtx_stack_c::YrotS(0xC000);
@@ -389,7 +384,7 @@ void daShip_c::setInitMessage() {
         mNextMessageNo = 0x623;
     }
 #endif
-    else if (checkStateFlg(daSFLG_UNK800000_e)) {
+    else if (checkStateFlg(daSFLG_PHANTOM_GANON_BATTLE)) {
         mNextMessageNo = 0x636;
     }
     else if (dComIfGs_isEventBit(dSv_event_flag_c::UNK_3D02)) {
@@ -3470,7 +3465,7 @@ void daShip_c::setHeadAnm() {
 
 /* 00009B4C-0000B978       .text execute__8daShip_cFv */
 BOOL daShip_c::execute() {
-    /* Nonmatching */
+    daGrid_c* grid;
     static cXyz sail_offset(0.5f, 155.0f, 50.0f);
     static cXyz sph_offset(-5.0f, 0.0f, 0.0f);
     static f32 cyl_offset[] = {100.0f, -20.0f, -100.0f};
@@ -3971,7 +3966,6 @@ BOOL daShip_c::execute() {
 
     cMtx_multVec(model1->getAnmMtx(FN_BODY_JNT_J_FN_STEER1_e), &l_tiller_top_offset, &mTillerTopPos);
 
-    daGrid_c* grid;
     MtxP mtx = model1->getAnmMtx(FN_BODY_JNT_J_FN_SAIL1_e);
 
     m0444.x = mtx[0][3];
@@ -3990,7 +3984,8 @@ BOOL daShip_c::execute() {
         cMtx_multVecSR(mtx, &top_offset, &spD8);
         mpGrid->scale.y = spD8.abs() / 365.0f;
 
-        cMtx_multVecSR(model1->getAnmMtx(FN_BODY_JNT_J_FN_SAIL2_e), &XZ_top_offset, &spD8);
+        MtxP tmp487 = model1->getAnmMtx(FN_BODY_JNT_J_FN_SAIL2_e);
+        cMtx_multVecSR(tmp487, &XZ_top_offset, &spD8);
         grid->field_0x2200 = 1.0f - (spD8.abs() / 265.0f); // No idea why this is generating an extra lwz instruction for loading mpGrid when the instructions above don't
 
         if (mTornadoActor) {
@@ -4074,7 +4069,7 @@ BOOL daShip_c::execute() {
     }
     else {
         attention_info.position = current.pos;
-        if (!dComIfGp_checkPlayerStatus0(0, daPyStts0_SHIP_RIDE_e) && dComIfGs_isEventBit(dSv_event_flag_c::UNK_0908) && !checkStateFlg(daSFLG_UNK800000_e)) {
+        if (!dComIfGp_checkPlayerStatus0(0, daPyStts0_SHIP_RIDE_e) && dComIfGs_isEventBit(dSv_event_flag_c::UNK_0908) && !checkStateFlg(daSFLG_PHANTOM_GANON_BATTLE)) {
             if (dComIfGs_isEventBit(dSv_event_flag_c::UNK_1980) || !dComIfGs_isEventBit(dSv_event_flag_c::UNK_0902)) {
                 attention_info.flags = fopAc_Attn_ACTION_SHIP_e;
             }

@@ -1,68 +1,75 @@
 #ifndef D_A_NPC_BJ1_H
 #define D_A_NPC_BJ1_H
 
+#include "JSystem/JParticle/JPAEmitter.h"
+#include "d/d_npc.h"
 #include "f_op/f_op_actor.h"
 
 class J3DNode;
 
-class daNpc_Bj1_c : public fopAc_ac_c {
+class daNpc_Bj1_c : public fopNpc_npc_c {
 public:
     struct anm_prm_c {
-        
+        /* 0x00 */ s8 anmNum;
+        /* 0x04 */ f32 morf;
+        /* 0x08 */ f32 speed;
+        /* 0x0C */ int loopMode;
     };
+
+    typedef BOOL (daNpc_Bj1_c::*ActionFunc)(void*);
 
     void nodeBj1Control(J3DNode*, J3DModel*);
     void nodePrpControl(J3DNode*, J3DModel*);
-    void init_BJ4_0();
-    void init_BJ6_0();
-    void init_BJ7_0();
-    void init_BJX_0();
-    void init_BJX_1();
-    void createInit();
+    bool init_BJ4_0();
+    bool init_BJ6_0();
+    bool init_BJ7_0();
+    bool init_BJX_0();
+    bool init_BJX_1();
+    bool createInit();
     void setMtx_anmProc();
     void setMtx(bool);
-    void anmNum_toResID(int);
-    void setAnm_anm(anm_prm_c*);
+    int anmNum_toResID(int);
+    BOOL setAnm_anm(anm_prm_c*);
     void setAnm_NUM(int);
-    void setAnm();
-    void setAnm_prp(signed char);
+    BOOL setAnm();
+    void setAnm_prp(s8);
     void chg_anmTag();
     void control_anmTag();
-    void chg_anmAtr(unsigned char);
+    void chg_anmAtr(u8);
     void control_anmAtr();
     void setAnm_ATR();
-    void anmAtr(unsigned short);
+    void anmAtr(u16);
     void eventOrder();
     void checkOrder();
-    void chk_talk();
-    void chk_drct(float);
-    void chk_partsNotMove();
+    bool chk_talk();
+    bool chk_drct(f32);
+    BOOL chk_partsNotMove();
     void lookBack();
-    void getMaskInf(unsigned char*);
-    void chkReg(unsigned short);
-    void setReg(unsigned short);
-    void next_msgStatus(unsigned long*);
-    void getMsg_BJ1_0();
-    void getMsg_BJ2_0();
-    void getMsg_BJ3_0();
-    void getMsg_BJ4_0();
-    void getMsg_BJ5_0();
-    void getMsg_BJ6_0();
-    void getMsg_BJ7_0();
-    void getMsg_BJ8_0();
-    void getMsg_BJ9_0();
-    void getMsg_Corog();
-    void getMsg();
-    void chkAttention();
+    bool getMaskInf(u8*);
+    bool chkReg(u16);
+    void setReg(u16);
+    u16 next_msgStatus(u32*);
+    u32 getMsg_BJ1_0();
+    u32 getMsg_BJ2_0();
+    u32 getMsg_BJ3_0();
+    u32 getMsg_BJ4_0();
+    u32 getMsg_BJ5_0();
+    u32 getMsg_BJ6_0();
+    u32 getMsg_BJ7_0();
+    u32 getMsg_BJ8_0();
+    u32 getMsg_BJ9_0();
+    u32 getMsg_Corog();
+    u32 getMsg();
+    bool chkAttention();
     void setAttention(bool);
-    void searchByID(fpc_ProcID);
-    void partner_srch_sub(void* (*)(void*, void*));
+    fopAc_ac_c* searchByID(fpc_ProcID);
+    bool partner_srch_sub(void* (*)(void*, void*));
     void partner_srch();
     void setCollision_SP_();
-    void set_pthPoint(unsigned char);
+    void set_pthPoint(u8);
     void bj_clcFlySpd();
-    void bj_movPass(bool);
-    void bj_flyMove();
+    BOOL bj_movPass(bool);
+    bool bj_flyMove();
     void bj_clcMovSpd();
     void bj_nMove();
     void setPrtcl_drugPot_1();
@@ -72,77 +79,166 @@ public:
     void flwPrtcl_danceLR();
     void delPrtcl_danceLR();
     void setPrtcl_peraProOpen();
-    void createSeed();
-    void deleteSeed();
-    void charDecide(int);
+    bool createSeed();
+    BOOL deleteSeed();
+    bool charDecide(int);
     void eInit_setLocFlag(int*);
-    void eInit_setShapeAngleY(int*, short);
+    void eInit_setShapeAngleY(int*, s16);
     void eInit_setEvTimer(int*);
-    void eInit_calcRelativPos(cXyz*, int*);
-    void eInit_prmFloat(float*, float);
+    cXyz eInit_calcRelativPos(cXyz*, int*);
+    f32 eInit_prmFloat(f32*, f32);
     void eInit_ATTENTION_(int*, int*, int*, cXyz*, int*, int*, int*);
     void eInit_PLYER_MOV_1_();
-    void eInit_MOV_(float*, float*, float*, int*);
-    void eInit_JMP_(float*, float*);
+    void eInit_MOV_(f32*, f32*, f32*, int*);
+    void eInit_JMP_(f32*, f32*);
     void eInit_CHG_PTH_(int*, int*);
     void eInit_END_MOV_();
     void eInit_SET_TNE_();
     void eInit_DEL_TNE_();
-    void eInit_SET_ANM_(int*, float*);
+    void eInit_SET_ANM_(int*, f32*);
     void event_actionInit(int);
-    void eMove_ATTENTION_();
-    void eMove_MOV_();
-    void eMove_JMP_();
-    void eMove_SET_TNE_();
-    void eMove_PTH_MOV_();
-    void event_action();
+    bool eMove_ATTENTION_();
+    bool eMove_MOV_();
+    bool eMove_JMP_();
+    bool eMove_SET_TNE_();
+    bool eMove_PTH_MOV_();
+    bool event_action();
     void privateCut(int);
     void endEvent();
-    void isEventEntry();
+    BOOL isEventEntry();
     void event_proc(int);
-    void set_action(int (daNpc_Bj1_c::*)(void*), void*);
-    void setStt(signed char);
-    void wait_1();
-    void wait_2();
-    void wait_3();
-    void wait_4();
-    void flyMov();
-    void fall01();
-    void talk_1();
-    void walk_1();
-    void wait_action1(void*);
-    void wait_action2(void*);
-    void wait_action3(void*);
-    void wait_action4(void*);
-    void demo();
+    BOOL set_action(ActionFunc, void*);
+    void setStt(s8);
+    BOOL wait_1();
+    BOOL wait_2();
+    BOOL wait_3();
+    BOOL wait_4();
+    BOOL flyMov();
+    BOOL fall01();
+    BOOL talk_1();
+    BOOL walk_1();
+    BOOL wait_action1(void*);
+    BOOL wait_action2(void*);
+    BOOL wait_action3(void*);
+    BOOL wait_action4(void*);
+    bool demo();
     void shadowDraw();
     BOOL _draw();
     BOOL _execute();
     BOOL _delete();
     cPhs_State _create();
-    void create_Anm();
-    void create_prp_Anm();
-    void create_itm_Mdl();
-    void CreateHeap();
+    J3DModelData* create_Anm();
+    J3DModelData* create_prp_Anm();
+    bool create_itm_Mdl();
+    BOOL CreateHeap();
 
 public:
-    /* Place member variables here */
-};
-
-class daNpc_Bj1_childHIO_c {
-public:
-    daNpc_Bj1_childHIO_c();
-
-public:
-    /* Place member variables here */
-};
-
-class daNpc_Bj1_HIO_c {
-public:
-    daNpc_Bj1_HIO_c();
-
-public:
-    /* Place member variables here */
-};
+    /* 0x6C4 */ request_of_phase_process_class mPhs;
+    /* 0x6CC */ s8 m_hed_jnt_num;
+    /* 0x6CD */ s8 m_bbone_jnt_num;
+    /* 0x6CE */ s8 m_armL2_jnt_num;
+    /* 0x6CF */ s8 m_armR2_jnt_num;
+    /* 0x6D0 */ J3DModel* mpFaceModel;
+    /* 0x6D4 */ J3DModel* mpPlantLModel;
+    /* 0x6D8 */ J3DModel* mpPlantRModel;
+    /* 0x6DC */ s8 m_plant_l_jnt_num;
+    /* 0x6DD */ s8 m_plant_r_jnt_num;
+    /* 0x6DE */ u8 field_0x6DE[0x6E0 - 0x6DE];
+    /* 0x6E0 */ u32 mShadowID;
+    /* 0x6E4 */ mDoExt_McaMorf* mpPrpMorf;
+    /* 0x6E8 */ s8 m_cen_jnt_num;
+    /* 0x6E9 */ s8 m_stalk_jnt_num;
+    /* 0x6EA */ u8 field_0x6EA[0x6F0 - 0x6EA];
+    /* 0x6F0 */ s16 field_0x6F0;
+    /* 0x6F2 */ s16 field_0x6F2;
+    /* 0x6F4 */ u8 field_0x6F4[0x6F8 - 0x6F4];
+    /* 0x6F8 */ ActionFunc mCurrActionFunc;
+    /* 0x704 */ Mtx field_0x704;
+    /* 0x734 */ dNpc_PathRun_c mPathRun;
+    /* 0x73C */ dNpc_EventCut_c mEventCut;
+    /* 0x7A8 */ fpc_ProcID mPartnerProcID;
+    /* 0x7AC */ cXyz mInitialPos;
+    /* 0x7B8 */ csXyz m7B8;
+    /* 0x7BE */ u8 field_0x7BE[0x7C0 - 0x7BE];
+    /* 0x7C0 */ cXyz mEyePos;
+    /* 0x7CC */ cXyz m7CC;
+    /* 0x7D8 */ cXyz mTargetPos;
+    /* 0x7E4 */ cXyz field_0x7E4;
+    /* 0x7F0 */ cXyz field_0x7F0;
+    /* 0x7FC */ cXyz field_0x7FC;
+    /* 0x808 */ f32 mFrame;
+    /* 0x80C */ f32 mTargetFlySpeed;
+    /* 0x810 */ f32 mFlySpeedY;
+    /* 0x814 */ f32 mTargetFlyStep;
+    /* 0x818 */ f32 mFlyAccelY;
+    /* 0x81C */ f32 m81C;
+    /* 0x820 */ s16 m820;
+    /* 0x822 */ s16 m822;
+    /* 0x824 */ s16 m824;
+    /* 0x826 */ s16 mEventIdTable[3];
+    /* 0x82C */ s16 mEventIdx;
+    /* 0x82E */ s16 m82E;
+    /* 0x830 */ s16 m830;
+    /* 0x832 */ s16 m832;
+    /* 0x834 */ s16 m834;
+    /* 0x836 */ s16 m836;
+    /* 0x838 */ s16 mHeadLookAtMaxVel;
+    /* 0x83A */ s16 m83A;
+    /* 0x83C */ s8 mbMorfAnimStopped;
+    /* 0x83D */ s8 m83D;
+    /* 0x83E */ u8 m83E;
+    /* 0x83F */ u8 mPathIdx;
+    /* 0x840 */ u8 m840;
+    /* 0x841 */ u8 m841;
+    /* 0x842 */ u8 m842;
+    /* 0x843 */ u8 m843;
+    /* 0x844 */ u8 m844;
+    /* 0x845 */ u8 m845;
+    /* 0x846 */ bool mbSetShapeAngle;
+    /* 0x847 */ u8 m847;
+    /* 0x848 */ u8 m848;
+    /* 0x849 */ bool m849;
+    /* 0x84A */ u8 m84A;
+    /* 0x84B */ u8 m84B;
+    /* 0x84C */ u8 m84C;
+    /* 0x84D */ u8 m84D;
+    /* 0x84E */ u8 m84E;
+    /* 0x84F */ u8 field_0x84F;
+    /* 0x850 */ s32 mbSetEyePos;
+    /* 0x854 */ bool mbAttention;
+    /* 0x855 */ bool m855;
+    /* 0x856 */ bool m856;
+    /* 0x857 */ bool mbInDemo;
+    /* 0x858 */ csXyz m858;
+    /* 0x85E */ u8 field_0x85E[0x860 - 0x85E];
+    /* 0x860 */ cXyz m860;
+    /* 0x86C */ cXyz m86C;
+    /* 0x878 */ u32 m878;
+    /* 0x87C */ JPABaseEmitter* mpDrugPotEmitter0;
+    /* 0x880 */ JPABaseEmitter* mpDrugPotEmitter1;
+    /* 0x884 */ JPABaseEmitter* mpDrugPotEmitter2;
+    /* 0x888 */ u32 m888;
+    /* 0x88C */ JPABaseEmitter* mpDanceEmitterL;
+    /* 0x890 */ JPABaseEmitter* mpDanceEmitterR;
+    /* 0x894 */ s16 m894;
+    /* 0x896 */ u8 field_0x896[0x898 - 0x896];
+    /* 0x898 */ fpc_ProcID mSeedProcID[4];
+    /* 0x8A8 */ s8 m8A8;
+    /* 0x8A9 */ s8 m8A9;
+    /* 0x8AA */ s8 m8AA;
+    /* 0x8AB */ s8 mActionIndex;
+    /* 0x8AC */ s8 mActNo;
+    /* 0x8AD */ u8 m8AD;
+    /* 0x8AE */ u8 m8AE;
+    /* 0x8AF */ s8 mAnmNum;
+    /* 0x8B0 */ s8 m8B0;
+    /* 0x8B1 */ s8 mStatus;
+    /* 0x8B2 */ s8 m8B2;
+    /* 0x8B3 */ s8 mLookBackState;
+    /* 0x8B4 */ s8 mType;
+    /* 0x8B5 */ s8 mSpecificType;
+    /* 0x8B6 */ s8 m8B6;
+    /* 0x8B7 */ s8 m8B7;
+};  // Size: 0x8B8
 
 #endif /* D_A_NPC_BJ1_H */

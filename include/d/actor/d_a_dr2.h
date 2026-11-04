@@ -54,7 +54,7 @@ public:
     /* 0x4A0 */ dBgW* mpBgW1;
     /* 0x4A4 */ dBgW* mpBgW2;
     /* 0x4A8 */ cXyz unk_4A8;
-    /* 0x4B6 */ csXyz unk_4B4;
+    /* 0x4B4 */ csXyz unk_4B4;
     /* 0x4BA */ s16 unk_4BA;
     /* 0x4BC */ u8 field_0x4BC[0x4C0 - 0x4BC];
     /* 0x4C0 */ f32 unk_4C0;

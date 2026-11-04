@@ -5,8 +5,13 @@
 #include "dolphin/os/OSTime.h"
 #include "dolphin/base/PPCArch.h"
 
-static void GXTokenInterruptHandler(__OSInterrupt interrupt, OSContext* context);
-static void GXFinishInterruptHandler(__OSInterrupt interrupt, OSContext* pContext);
+void GXTokenInterruptHandler(__OSInterrupt interrupt, OSContext* context);
+void GXFinishInterruptHandler(__OSInterrupt interrupt, OSContext* pContext);
+
+OSThreadQueue FinishQueue;
+GXBool DrawDone;
+GXDrawDoneCallback DrawDoneCB;
+GXDrawSyncCallback TokenCB;
 
 void GXSetMisc(GXMiscToken token, u32 val) {
     switch (token) {
@@ -46,7 +51,7 @@ void GXFlush(void) {
     PPCSync();
 }
 
-static void __GXAbortWait(u32 clocks) {
+static inline void __GXAbortWait(u32 clocks) {
     OSTime time0, time1;
     time0 = OSGetTime();
 
@@ -55,7 +60,7 @@ static void __GXAbortWait(u32 clocks) {
     } while (time1 - time0 <= clocks / 4);
 }
 
-void __GXAbort(void) {
+static inline void __GXAbort(void) {
     __PIRegs[0x18 / 4] = 1;
     __GXAbortWait(200);
     __PIRegs[0x18 / 4] = 0;
@@ -68,25 +73,35 @@ void GXAbortFrame(void) {
 }
 
 /* ############################################################################################## */
-static GXDrawSyncCallback TokenCB;
 
-static GXDrawDoneCallback DrawDoneCB;
+void GXSetDrawSync(u16 token) {
+    BOOL enabled;
+    u32 reg;
 
-static GXBool DrawDone;
+    enabled = OSDisableInterrupts();
+    reg = token | 0x48000000;
+    GX_WRITE_RAS_REG(reg);
+    SET_REG_FIELD(reg, 16, 0, token);
+    SET_REG_FIELD(reg, 8, 24, 0x47);
+    GX_WRITE_RAS_REG(reg);
+    GXFlush();
+    OSRestoreInterrupts(enabled);
+    gx->bpSentNot = 0;
+}
 
 void GXSetDrawDone(void) {
-    u8 padding[8];
+    u32 reg;
     BOOL restore = OSDisableInterrupts();
-    GX_WRITE_RAS_REG(0x45000002);
+    reg = 0x45000002;
+    GX_WRITE_RAS_REG(reg);
     GXFlush();
     DrawDone = 0;
     OSRestoreInterrupts(restore);
 }
 
 /* ############################################################################################## */
-static OSThreadQueue FinishQueue;
 
-static void GXWaitDrawDone(void) {
+static inline void GXWaitDrawDone(void) {
     BOOL restore = OSDisableInterrupts();
     while (DrawDone == 0) {
         OSSleepThread(&FinishQueue);
@@ -95,7 +110,6 @@ static void GXWaitDrawDone(void) {
 }
 
 void GXDrawDone(void) {
-    u8 padding[8];
     GXSetDrawDone();
     GXWaitDrawDone();
 }
@@ -159,6 +173,14 @@ void GXPokeZMode(GXBool enable_compare, GXCompare comp, GXBool update_enable) {
     __peReg[0] = val;
 }
 
+void GXPeekARGB(u16 x, u16 y, u32* color) {
+    u32 addr = 0xc8000000;
+    SET_REG_FIELD(addr, 10, 2, x);
+    SET_REG_FIELD(addr, 10, 12, y);
+    SET_REG_FIELD(addr, 2, 22, 0);
+    *color = *(u32*)addr;
+}
+
 void GXPeekZ(u16 x, u16 y, u32* z) {
     u32 addr = 0xc8000000;
     GX_BITFIELD_SET(addr, 0x14, 10, x);
@@ -176,7 +198,7 @@ GXDrawSyncCallback GXSetDrawSyncCallback(GXDrawSyncCallback callback) {
     return prevCb;
 }
 
-static void GXTokenInterruptHandler(__OSInterrupt interrupt, OSContext* context) {
+void GXTokenInterruptHandler(__OSInterrupt interrupt, OSContext* context) {
     u16 token;
     OSContext exceptContext;
     u32 reg;
@@ -205,7 +227,7 @@ GXDrawDoneCallback GXSetDrawDoneCallback(GXDrawDoneCallback callback) {
     return prevCb;
 }
 
-static void GXFinishInterruptHandler(__OSInterrupt interrupt, OSContext* context) {
+void GXFinishInterruptHandler(__OSInterrupt interrupt, OSContext* context) {
     OSContext exceptContext;
     u32 reg;
 

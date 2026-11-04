@@ -22,7 +22,7 @@ public:
     /* 0x298 */ J3DModel* mpModel;
     /* 0x29C */ dBgW* mpBgW;
     /* 0x2A0 */ Mtx mMtx;
-};  // Size: 0x2A0
+};  // Size: 0x2D0
 
 class daObj_Pbco_HIO_c {
 public:

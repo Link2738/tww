@@ -338,6 +338,9 @@ public:
 
     bool CheckLatitudeRange(s16*);
     f32 FanBank();
+    // names unknown; the target loads these before the rest of the expression, as it does for an inline accessor
+    f32 Get028() { return m028; }
+    f32 Get07C() { return m07C; }
 
     f32 ChargeBRatio() { return mChargeBRatio; }
     int ChargeTimer() { return mChargeTimer; }
@@ -433,7 +436,7 @@ public:
     BOOL Change(s32);
     s32 SearchStyle(u32);
     f32 ratiof(f32, f32, f32, f32);
-    BOOL DefaultRadius(f32*);
+    bool DefaultRadius(f32*);
     f32 RadiusRatio(f32);
     f32 CenterHeight(f32);
     f32 Fovy(f32);

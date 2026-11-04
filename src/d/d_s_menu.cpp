@@ -25,6 +25,12 @@
 #include "stdio.h"
 #endif
 
+#ifdef TWW_DEVTOOLS
+#define MENU_STR(jp, en) en
+#else
+#define MENU_STR(jp, en) jp
+#endif
+
 static s32 l_startID;
 static s32 l_cursolID;
 static int l_timepat;
@@ -76,7 +82,7 @@ static void dScnMenu_tex_data_set() {
 
 /* 8022E9F4-8022ED50       .text dScnMenu_Draw__FP19menu_of_scene_class */
 static BOOL dScnMenu_Draw(menu_of_scene_class* i_this) {
-    JUTReport(300, 50, "メニュー");
+    JUTReport(300, 50, MENU_STR("メニュー", "MENU"));
     if (i_this->startCode) {
         JUTReport(400, 50,"<%d>", i_this->startCode - 1);
     }
@@ -102,26 +108,26 @@ static BOOL dScnMenu_Draw(menu_of_scene_class* i_this) {
         }
     }
     for (s32 id = l_startID, i = 0; i < lineNum; id++, y += 16, i++) {
-        JUTReport(20, y, "%c %2d %s　＜%s＞", l_cursolID == id ? (s8)79 : (s8)32, id, info->stage[id].name, info->stage[id].roomPtr[l_groupPoint[id]].name);
+        JUTReport(20, y, MENU_STR("%c %2d %s　＜%s＞", "%c %2d %s <%s>"), l_cursolID == id ? (s8)79 : (s8)32, id, info->stage[id].name, info->stage[id].roomPtr[l_groupPoint[id]].name);
     }
-    JUTReport(280,400,"Ｘ：進む　Ｙ：戻る");
-    const char* timepat_str[] = {"通常", "高速経過", "朝（あさ）に固定", "昼（ひる）に固定", "夕方（ゆうがた）に固定", "夜（よる）に固定", "時に固定"};
-    const char* weekpat_str[] = {"日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"};
+    JUTReport(280,400,MENU_STR("Ｘ：進む　Ｙ：戻る", "X:next Y:prev"));
+    const char* timepat_str[] = {MENU_STR("通常", "normal"), MENU_STR("高速経過", "fast"), MENU_STR("朝（あさ）に固定", "morning"), MENU_STR("昼（ひる）に固定", "noon"), MENU_STR("夕方（ゆうがた）に固定", "evening"), MENU_STR("夜（よる）に固定", "night"), MENU_STR("時に固定", ":00")};
+    const char* weekpat_str[] = {MENU_STR("日曜日", "Sun"), MENU_STR("月曜日", "Mon"), MENU_STR("火曜日", "Tue"), MENU_STR("水曜日", "Wed"), MENU_STR("木曜日", "Thu"), MENU_STR("金曜日", "Fri"), MENU_STR("土曜日", "Sat")};
     if (l_timepat >= 6) {
-        JUTReport(280, 420, "時刻：%d%s", l_timepat - 6, timepat_str[6]);
+        JUTReport(280, 420, MENU_STR("時刻：%d%s", "time:%d%s"), l_timepat - 6, timepat_str[6]);
     } else {
-        JUTReport(280, 420, "時刻：%s", timepat_str[l_timepat]);
+        JUTReport(280, 420, MENU_STR("時刻：%s", "time:%s"), timepat_str[l_timepat]);
     }
-    JUTReport(40, 420, "十字右：進む　十字左：戻る");
-    JUTReport(200, 400, "曜日：%s", weekpat_str[l_weekpat]);
+    JUTReport(40, 420, MENU_STR("十字右：進む　十字左：戻る", "D-right:next D-left:prev"));
+    JUTReport(200, 400, MENU_STR("曜日：%s", "day:%s"), weekpat_str[l_weekpat]);
 #if VERSION > VERSION_JPN
     static const char* language[] = {"ENGLISH", "GERMAN", "FRENCH", "SPANISH", "ITALIAN"};
     JUTReport(40, 440, "%s", language[dComIfGs_getPalLanguage()]);
 #endif
     if (dComIfGs_isEventBit(dSv_event_flag_c::UNK_2D01)) {
-        JUTReport(400, 420, "３コン（Ａ）:デモ２３　ＯＮ");
+        JUTReport(400, 420, MENU_STR("３コン（Ａ）:デモ２３　ＯＮ", "pad3 A: demo23 ON"));
     } else {
-        JUTReport(400, 420, "３コン（Ａ）:デモ２３　ＯＦＦ");
+        JUTReport(400, 420, MENU_STR("３コン（Ａ）:デモ２３　ＯＦＦ", "pad3 A: demo23 OFF"));
     }
     JUTReport(36, 40, "NDEBUG %s %s", mDoMain::COPYDATE_STRING, "FINAL");
     return true;

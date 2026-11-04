@@ -31,29 +31,15 @@ GXTlutRegion* __GXDefaultTlutRegionCallback(u32 tlut) {
     }
 }
 
-u32 resetFuncRegistered;
-
-u32 calledOnce;
-
-OSTime time;
-
-u32 peCount;
-
 vu16* __memReg;
 
 u16* __peReg;
 
 u16* __cpReg;
 
-/* ############################################################################################## */
 u32* __piReg;
 
-ALIGN_DECL(32, static u16 DefaultTexData[]) = {
-    0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
-    0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
-};
-
-static GXVtxAttrFmtList GXDefaultVATList[] = {
+GXVtxAttrFmtList GXDefaultVATList[] = {
     {GX_VA_POS, GX_POS_XYZ, GX_F32, 0},
     {GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0},
     {GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0},
@@ -69,17 +55,9 @@ static GXVtxAttrFmtList GXDefaultVATList[] = {
     {GX_VA_NULL, GX_COMPCNT_NULL, GX_COMP_NULL, 0},
 };
 
-static f32 GXDefaultProjData[] = {1.0f, 0.0f, 1.0f, 0.0f, -1.0f, -2.0f, 0.0f};
+f32 GXDefaultProjData[] = {1.0f, 0.0f, 1.0f, 0.0f, -1.0f, -2.0f, 0.0f};
 
-static u32 GXTexRegionAddrTable[] = {
-    0x00000, 0x10000, 0x20000, 0x30000, 0x40000, 0x50000, 0x60000, 0x70000, 0x08000, 0x18000,
-    0x28000, 0x38000, 0x48000, 0x58000, 0x68000, 0x78000, 0x00000, 0x90000, 0x20000, 0xB0000,
-    0x40000, 0x98000, 0x60000, 0xB8000, 0x80000, 0x10000, 0xA0000, 0x30000, 0x88000, 0x50000,
-    0xA8000, 0x70000, 0x00000, 0x90000, 0x20000, 0xB0000, 0x40000, 0x90000, 0x60000, 0xB0000,
-    0x80000, 0x10000, 0xA0000, 0x30000, 0x80000, 0x50000, 0xA0000, 0x70000,
-};
-
-static void EnableWriteGatherPipe() {
+static inline void EnableWriteGatherPipe() {
     u32 hid2;  // r31
     hid2 = PPCMfhid2();
     PPCMtwpar(OSUncachedToPhysical((void*)GXFIFO_ADDR));
@@ -89,7 +67,8 @@ static void EnableWriteGatherPipe() {
 
 GXFifoObj* GXInit(void* base, u32 size) {
     u32 i;
-    u32 pad2;  // for stack matching
+    u32 reg;
+    u32 freqBase;
 
     OSRegisterVersion(__GXVersion);
     gx->inDispList = GX_FALSE;
@@ -100,8 +79,8 @@ GXFifoObj* GXInit(void* base, u32 size) {
 
     GXSetMisc(GX_MT_XF_FLUSH, 0);
 
-    __piReg = (void*)OSPhysicalToUncached(GX_PI_ADDR);
     __cpReg = (void*)OSPhysicalToUncached(GX_CP_ADDR);
+    __piReg = (void*)OSPhysicalToUncached(GX_PI_ADDR);
     __peReg = (void*)OSPhysicalToUncached(GX_PE_ADDR);
     __memReg = (void*)OSPhysicalToUncached(GX_MEM_ADDR);
 
@@ -115,13 +94,13 @@ GXFifoObj* GXInit(void* base, u32 size) {
     EnableWriteGatherPipe();
 
     gx->genMode = 0;
-    SET_REG_FIELD(gx->genMode, 8, 24, 2);
+    SET_REG_FIELD(gx->genMode, 8, 24, 0x00);
 
     gx->bpMask = 255;
-    SET_REG_FIELD(gx->bpMask, 8, 24, 2);
+    SET_REG_FIELD(gx->bpMask, 8, 24, 0x0F);
 
     gx->lpSize = 0;
-    SET_REG_FIELD(gx->lpSize, 8, 24, 2);
+    SET_REG_FIELD(gx->lpSize, 8, 24, 0x22);
 
     for (i = 0; i < GX_MAX_TEVSTAGE; i++) {
         gx->tevc[i] = 0;
@@ -129,65 +108,74 @@ GXFifoObj* GXInit(void* base, u32 size) {
         gx->tref[i / 2] = 0;
         gx->texmapId[i] = GX_TEXMAP_NULL;
 
-        SET_REG_FIELD(gx->tevc[i], 8, 24, 2);
-        SET_REG_FIELD(gx->teva[i], 8, 24, 2);
-        SET_REG_FIELD(gx->tevKsel[i / 2], 8, 24, 2);
-        SET_REG_FIELD(gx->tref[i / 2], 8, 24, 2);
+        SET_REG_FIELD(gx->tevc[i], 8, 24, 0xC0 + i * 2);
+        SET_REG_FIELD(gx->teva[i], 8, 24, 0xC1 + i * 2);
+        SET_REG_FIELD(gx->tevKsel[i / 2], 8, 24, 0xF6 + i / 2);
+        SET_REG_FIELD(gx->tref[i / 2], 8, 24, 0x28 + i / 2);
     }
 
     gx->iref = 0;
-    SET_REG_FIELD(gx->iref, 8, 24, 2);
+    SET_REG_FIELD(gx->iref, 8, 24, 0x27);
 
     for (i = 0; i < GX_MAXCOORD; i++) {
         gx->suTs0[i] = 0;
         gx->suTs1[i] = 0;
 
-        SET_REG_FIELD(gx->suTs0[i], 8, 24, 2);
-        SET_REG_FIELD(gx->suTs1[i], 8, 24, 2);
+        SET_REG_FIELD(gx->suTs0[i], 8, 24, 0x30 + i * 2);
+        SET_REG_FIELD(gx->suTs1[i], 8, 24, 0x31 + i * 2);
     }
 
-    SET_REG_FIELD(gx->suScis0, 8, 24, 2);
-    SET_REG_FIELD(gx->suScis1, 8, 24, 2);
+    SET_REG_FIELD(gx->suScis0, 8, 24, 0x20);
+    SET_REG_FIELD(gx->suScis1, 8, 24, 0x21);
 
-    SET_REG_FIELD(gx->cmode0, 8, 24, 2);
-    SET_REG_FIELD(gx->cmode1, 8, 24, 2);
+    SET_REG_FIELD(gx->cmode0, 8, 24, 0x41);
+    SET_REG_FIELD(gx->cmode1, 8, 24, 0x42);
 
-    SET_REG_FIELD(gx->zmode, 8, 24, 2);
-    SET_REG_FIELD(gx->peCtrl, 8, 24, 2);
+    SET_REG_FIELD(gx->zmode, 8, 24, 0x40);
+    SET_REG_FIELD(gx->peCtrl, 8, 24, 0x43);
 
-    SET_REG_FIELD(gx->cpTex, 2, 7, 2);
-
-    gx->zScale = 1.6777216E7f;
-    gx->zOffset = 0.0f;
+    SET_REG_FIELD(gx->cpTex, 2, 7, 0);
 
     gx->dirtyState = 0;
     gx->dirtyVAT = 0;
 
-    {
-        u32 val1;
-        u32 val2;
+    freqBase = OS_BUS_CLOCK / 500;
 
-        val2 = OS_BUS_CLOCK / 500;
+    __GXFlushTextureState();
+    reg = (freqBase / 2048) | 0x69000400;
+    GX_WRITE_RAS_REG(reg);
 
-        __GXFlushTextureState();
+    __GXFlushTextureState();
+    reg = (freqBase / 4224) | 0x46000200;
+    GX_WRITE_RAS_REG(reg);
 
-        val1 = (val2 / 2048) | 0x69000400;
+    for (i = 0; i < GX_MAX_VTXFMT; i++) {
+        SET_REG_FIELD(gx->vatA[i], 1, 30, 1);
+        SET_REG_FIELD(gx->vatB[i], 1, 31, 1);
 
-        GX_WRITE_RAS_REG(val1);
-
-        __GXFlushTextureState();
-
-        val1 = (val2 / 4224) | 0x46000200;
-        GX_WRITE_RAS_REG(val1);
+        GXFIFO.u8 = 0x8;
+        GXFIFO.u8 = i | 0x80;
+        GXFIFO.u32 = gx->vatB[i];
     }
 
+    GXFIFO.u8 = 0x10;
+    GXFIFO.u32 = 0x1000;
+    GXFIFO.u32 = 0x3F;
+
+    GXFIFO.u8 = 0x10;
+    GXFIFO.u32 = 0x1012;
+    GXFIFO.u32 = 1;
+
+    GX_WRITE_RAS_REG(0x5800000F);
+
     for (i = 0; i < GX_MAX_TEXMAP; i++) {
-        GXInitTexCacheRegion(&gx->TexRegions0[i], GX_FALSE, GXTexRegionAddrTable[i],
-                             GX_TEXCACHE_32K, GXTexRegionAddrTable[i + 8], GX_TEXCACHE_32K);
-        GXInitTexCacheRegion(&gx->TexRegions1[i], GX_FALSE, GXTexRegionAddrTable[i + 16],
-                             GX_TEXCACHE_32K, GXTexRegionAddrTable[i + 24], GX_TEXCACHE_32K);
-        // GXInitTexCacheRegion(&__GXData->TexRegions2[i], GX_TRUE, GXTexRegionAddrTable[i + 32],
-        //                      GX_TEXCACHE_32K, GXTexRegionAddrTable[i + 40], GX_TEXCACHE_32K);
+        GXInitTexCacheRegion(&gx->TexRegions0[i], GX_FALSE, i * 0x8000, GX_TEXCACHE_32K,
+                             0x80000 + i * 0x8000, GX_TEXCACHE_32K);
+    }
+
+    for (i = 0; i < 4; i++) {
+        GXInitTexCacheRegion(&gx->TexRegions1[i], GX_FALSE, (8 + i * 2) << 15, GX_TEXCACHE_32K,
+                             (9 + i * 2) << 15, GX_TEXCACHE_32K);
     }
 
     for (i = 0; i < GX_MAX_TLUT; i++) {
@@ -200,7 +188,7 @@ GXFifoObj* GXInit(void* base, u32 size) {
 
     GX_SET_CP_REG(3, 0);
 
-    SET_REG_FIELD(gx->perfSel, 4, 4, 2);
+    SET_REG_FIELD(gx->perfSel, 4, 4, 0);
 
     GXFIFO.u8 = 0x8;
     GXFIFO.u8 = 0x20;
@@ -211,12 +199,10 @@ GXFifoObj* GXInit(void* base, u32 size) {
     GXFIFO.u32 = 0;
 
     GX_WRITE_RAS_REG(0x23000000);
-
     GX_WRITE_RAS_REG(0x24000000);
-
     GX_WRITE_RAS_REG(0x67000000);
 
-    __GXSetTmemConfig(2);
+    __GXSetTmemConfig(0);
     __GXInitGX();
 
     return &FifoObj;

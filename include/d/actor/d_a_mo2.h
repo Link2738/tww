@@ -20,7 +20,7 @@ struct ke_s {
 struct ga_s {
     /* 0x00 */ J3DModel* mpModel;
     /* 0x04 */ cXyz mPos;
-    /* 0x04 */ cXyz m10;
+    /* 0x010 */ cXyz m10;
     /* 0x1C */ s16 m1C;
     /* 0x1E */ s16 m1E;
     /* 0x20 */ u8 m20[0x24 - 0x20];
@@ -151,7 +151,7 @@ struct mo2_class {
     /* 0x2971 */ u8 m2971[0x2978 - 0x2971];
     /* 0x2978 */ ga_s m2978[3];
     /* 0x2A08 */ s8 m2A08;
-    /* 0x2A09 */ u8 m2A09;
+    /* 0x2A09 */ s8 m2A09;
     /* 0x2A0A */ u8 m2A0A;
     /* 0x2A0B */ s8 m2A0B;
     /* 0x2A0C */ s16 m2A0C;

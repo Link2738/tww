@@ -11,6 +11,7 @@
 #include "d/d_particle_name.h"
 
 enum dCcD_ObjAtType {
+    /* 0x00000000 */ AT_TYPE_UNK0           = 0,        //AT_TYPE_NONE ?
     /* 0x00000002 */ AT_TYPE_SWORD          = (1 << 1),
     /* 0x00000008 */ AT_TYPE_UNK8           = (1 << 3),
     /* 0x00000020 */ AT_TYPE_BOMB           = (1 << 5),
@@ -418,6 +419,7 @@ public:
     void OffAtNoConHit() { mGObjAt.OffSPrm(dCcG_AtSPrm_NoConHit_e); }
     bool ChkTgNoConHit() { return mGObjTg.ChkSPrm(dCcG_TgSPrm_NoConHit_e); }
     void OnTgNoConHit() { mGObjTg.OnSPrm(dCcG_TgSPrm_NoConHit_e); }
+    void OffTgNoConHit() { mGObjTg.OffSPrm(dCcG_TgSPrm_NoConHit_e); }
     int GetAtHitMark() { return mGObjAt.GetHitMark(); }
     int GetTgHitMark() { return mGObjTg.GetHitMark(); }
     void SetAtHitMark(u8 mark) { mGObjAt.SetHitMark(mark); }

@@ -437,8 +437,10 @@ void dDlst_2DOutFont_c::messageSet(u32 i_msgNo) {
     spA0[0] = 0;
     mEC[0] = 0;
 
-    while (*message != '\0') {
-        if ((u8)*message == 0x1A) {
+    // u8 read tested as signed: the target's extsb. here, with separate char loads below; message may really be a u8*
+    while ((s8)*(u8*)message != '\0') {
+        // read as u8 through the pointer: the char reads below are separate loads in the target
+        if (*(u8*)message == 0x1A) {
             u32 uvar6 = *(u32*)(++message) & 0xFFFFFF;
             if (uvar6 == (0xFF0000 | MsgSpclCode_COLOR)) {
                 char sp50[28];
@@ -449,7 +451,7 @@ void dDlst_2DOutFont_c::messageSet(u32 i_msgNo) {
                 }
             } else if (uvar6 == (0xFF0000 | MsgSpclCode_RUBY)) {
                 if (mpRubyFont != NULL) {
-                    u8 temp_r3_5 = (u8)message[0];
+                    u32 temp_r3_5 = (u8)message[0];
                     if (temp_r3_5 != 5) {
                         int var_r27 = temp_r3_5 - 6;
                         int i = 0;
@@ -527,7 +529,7 @@ void dDlst_2DOutFont_c::messageSet(u32 i_msgNo) {
             message += *message - 1;
         } else {
 #if VERSION < VERSION_PAL
-            int hi_nibble = ((u8)*message >> 4) & 0xF;
+            int hi_nibble = (*(u8*)message >> 4) & 0xF;
             if (hi_nibble == 8 || hi_nibble == 9) {
                 char temp_r4_2 = message[0];
                 *(dst++) = temp_r4_2;

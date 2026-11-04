@@ -2,7 +2,12 @@
 #define D_A_OBJ_TRY_H
 
 #include "d/d_a_obj.h"
+#include "d/d_bg_s_acch.h"
+#include "d/d_cc_d.h"
+#include "d/d_particle.h"
 #include "f_op/f_op_actor.h"
+#include "m_Do/m_Do_ext.h"
+#include "SSystem/SComponent/c_phase.h"
 
 namespace daObjTry {
     enum Type_e {
@@ -18,7 +23,7 @@ namespace daObjTry {
         UNK_11 = 11,
         UNK_12 = 12,
     };
-    
+
     class Act_c : public fopAc_ac_c {
     public:
         enum Prm_e {
@@ -27,11 +32,64 @@ namespace daObjTry {
 
             PRM_TYPE_S = 0,
             PRM_TYPE_W = 4,
+
+            PRM_DUMMY_S = 31,
+            PRM_DUMMY_W = 1,
         };
 
-        void attr() const {}
+        struct Attr_c {
+            /* 0x00 */ f32 m00;
+            /* 0x04 */ f32 m04;
+            /* 0x08 */ f32 m08;
+            /* 0x0C */ u8 m0C;
+            /* 0x10 */ f32 m10;
+            /* 0x14 */ f32 m14;
+            /* 0x18 */ f32 m18;
+            /* 0x1C */ f32 m1C;
+            /* 0x20 */ f32 m20;
+            /* 0x24 */ f32 m24;
+            /* 0x28 */ f32 m28;
+            /* 0x2C */ f32 m2C;
+            /* 0x30 */ f32 m30;
+            /* 0x34 */ s16 m34;
+            /* 0x36 */ s16 m36;
+            /* 0x38 */ f32 m38;
+            /* 0x3C */ f32 m3C;
+            /* 0x40 */ u8 m40;
+            /* 0x41 */ u8 m41;
+            /* 0x42 */ u8 m42;
+            /* 0x43 */ u8 m43;
+            /* 0x44 */ u8 m44;
+            /* 0x45 */ u8 m45;
+            /* 0x46 */ s16 m46;
+            /* 0x48 */ s16 m48;
+            /* 0x4A */ u8 m4A;
+            /* 0x4B */ u8 m4B;
+            /* 0x4C */ u8 m4C;
+            /* 0x4D */ u8 m4D;
+            /* 0x50 */ u32 m50;
+            /* 0x54 */ u32 m54;
+            /* 0x58 */ u32 m58;
+            /* 0x5C */ u32 m5C;
+            /* 0x60 */ u32 m60;
+            /* 0x64 */ f32 m64;
+            /* 0x68 */ f32 m68;
+            /* 0x6C */ f32 m6C;
+            /* 0x70 */ u8 m70;
+            /* 0x71 */ u8 m71;
+            /* 0x72 */ u8 m72;
+            /* 0x73 */ u8 m73;
+            /* 0x74 */ u8 m74;
+            /* 0x75 */ u8 m75;
+        };  // Size: 0x78
+
+        Act_c() { m668 = NULL; }
+
+        const Attr_c& attr() const { return M_attr[mType]; }
         void prm_chk_type_tryStatue() const {}
-        void prm_get_dummy() const {}
+        int prm_get_dummy() const {
+            return daObj::PrmAbstract(this, PRM_DUMMY_W, PRM_DUMMY_S);
+        }
         int prm_get_swSave() const {
             return daObj::PrmAbstract(this, PRM_SWSAVE_W, PRM_SWSAVE_S);
         }
@@ -44,13 +102,13 @@ namespace daObjTry {
             field_0x64C = param_3;
             field_0x64D = param_4;
         }
-    
+
         void prm_set_swSave(int);
-        void solidHeapCB(fopAc_ac_c*);
-        void create_heap();
+        static BOOL solidHeapCB(fopAc_ac_c*);
+        bool create_heap();
         void init_cc();
-        void search_sameType(void*, void*);
-        void chk_appear() const;
+        static void* search_sameType(void*, void*);
+        bool chk_appear() const;
         cPhs_State _create();
         bool _delete();
         void mode_restart_init();
@@ -63,17 +121,17 @@ namespace daObjTry {
         void mode_drop();
         void mode_sink_init();
         void mode_sink();
-        void mode_proc_call();
+        bool mode_proc_call();
         void cull_set_draw();
         void cull_set_move();
         void damaged();
-        void damage_cc_proc();
-        void damage_bg_proc();
+        bool damage_cc_proc();
+        bool damage_bg_proc();
         void damage_bg_proc_directly();
-        void chk_sink_water();
-        void chk_sinkdown_water();
+        bool chk_sink_water();
+        bool chk_sinkdown_water();
         void calc_drop_param(float*, float*, float*) const;
-        void bound();
+        bool bound();
         void se_fall_water();
         void set_senv(int, int) const;
         void cam_lockoff() const;
@@ -84,21 +142,47 @@ namespace daObjTry {
         void eff_land_smoke();
         void eff_hit_water_splash();
         void make_vib();
-        void check_circle();
-        void get_water_h();
+        bool check_circle();
+        f32 get_water_h();
         bool _execute();
         bool _draw();
-    
+
+        static const char M_arcname[6];
         static const dCcD_SrcCyl M_cyl_src;
-    
+        static const Attr_c M_attr[13];
+        static bool M_bingo;
+        static bool M_restart;
+
     public:
-        /* 0x290 */ u8 field_0x290[0x63C - 0x290];
+        /* 0x290 */ request_of_phase_process_class mPhs;
+        /* 0x298 */ J3DModel* mpModel;
+        /* 0x29C */ mDoExt_brkAnm mBrk;
+        /* 0x2B4 */ dBgS_ObjAcch mAcch;
+        /* 0x478 */ dBgS_AcchCir mAcchCir;
+        /* 0x4B8 */ dCcD_Stts mStts;
+        /* 0x4F4 */ dCcD_Cyl mCyl;
+        /* 0x624 */ int mType;
+        /* 0x628 */ int mMode;
+        /* 0x62C */ int mPrevMode;
+        /* 0x630 */ s16 mTimer;
+        /* 0x632 */ s16 m632;
+        /* 0x634 */ u8 m634;
+        /* 0x635 */ u8 m635;
+        /* 0x636 */ u8 m636;
+        /* 0x638 */ f32 m638;
         /* 0x63C */ cXyz field_0x63C;
         /* 0x648 */ s16 field_0x648;
-        /* 0x64A */ u8 field_0x64A[0x64C - 0x64A];
-        /* 0x64C */ s8 field_0x64C;
-        /* 0x64D */ s8 field_0x64D;
-        /* 0x64E */ u8 field_0x64E[0x66C - 0x64E];
+        /* 0x64A */ s16 m64A;
+        /* 0x64C */ bool field_0x64C;
+        /* 0x64D */ bool field_0x64D;
+        /* 0x64E */ u8 m64E;
+        /* 0x64F */ u8 m64F;
+        /* 0x650 */ u8 mAppear;
+        /* 0x651 */ u8 m651;
+        /* 0x652 */ u8 m652;
+        /* 0x653 */ u8 m653;
+        /* 0x654 */ dPa_followEcallBack mFollowCb;
+        /* 0x668 */ JPABaseEmitter* m668;
     };  // Size: 0x66C
 };
 

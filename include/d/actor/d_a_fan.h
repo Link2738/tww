@@ -34,8 +34,8 @@ public:
     /* 0x4C0 */ u32 field_0x4c0;
     /* 0x4C4 */ J3DModel* mWindModel;
     /* 0x4C8 */ mDoExt_btkAnm mWindBtkAnm0;
-    /* 0x4C8 */ mDoExt_btkAnm mWindBtkAnm1;
-    /* 0x4C8 */ mDoExt_bckAnm mWindBckAnm;
+    /* 0x4DC */ mDoExt_btkAnm mWindBtkAnm1;
+    /* 0x4F0 */ mDoExt_bckAnm mWindBckAnm;
     /* 0x500 */ cXyz mWindScale;
     /* 0x50C */ fpc_ProcID mWindSePId;
 

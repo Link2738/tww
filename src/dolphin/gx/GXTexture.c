@@ -110,7 +110,6 @@ void GXInitTexObj(GXTexObj* obj, void* imagePtr, u16 width, u16 height, GXTexFmt
                   GXTexWrapMode sWrap, GXTexWrapMode tWrap, GXBool useMIPmap) {
     u32 imageBase;
     u16 a, b;
-    u32 c, d;
 
     GXTexObj* internal = (GXTexObj*)obj;
     memset(internal, 0, sizeof(*internal));
@@ -140,7 +139,7 @@ void GXInitTexObj(GXTexObj* obj, void* imagePtr, u16 width, u16 height, GXTexFmt
     GX_SET_REG(internal->texture_size, height - 1, 12, 21);
 
     GX_SET_REG(internal->texture_size, format & 0xf, 8, 11);
-    imageBase = (u32)imagePtr >> 5;
+    imageBase = ((u32)imagePtr & 0x3FFFFFFF) >> 5;
     GX_SET_REG(internal->texture_address, imageBase, 11, 31);
 
     switch (format & 0xf) {
@@ -211,7 +210,7 @@ u8 GXTexImage3Ids[8] = {0x94, 0x95, 0x96, 0x97, 0xB4, 0xB5, 0xB6, 0xB7};
 
 u8 GXTexTlutIds[8] = {0x98, 0x99, 0x9a, 0x9b, 0xB8, 0xB9, 0xBa, 0xBb};
 
-u8 GX2HWFiltConv[6] = {0x00, 0x04, 0x01, 0x05, 0x02, 0x06};
+static u8 GX2HWFiltConv[6] = {0x00, 0x04, 0x01, 0x05, 0x02, 0x06};
 
 void GXInitTexObjLOD(GXTexObj* obj, GXTexFilter minFilter, GXTexFilter maxFilter, f32 minLOD,
                      f32 maxLOD, f32 lodBias, GXBool doBiasClamp, GXBool doEdgeLOD,
@@ -251,6 +250,10 @@ void GXInitTexObjLOD(GXTexObj* obj, GXTexFilter minFilter, GXTexFilter maxFilter
     GX_SET_REG(internal->texture_lod, reg2, 16, 23);
 }
 
+void* GXGetTexObjData(GXTexObj* obj) {
+    return (void*)(GX_GET_REG(obj->texture_address, 11, 31) << 5);
+}
+
 u16 GXGetTexObjWidth(const GXTexObj* obj) {
     return (obj->texture_size & 0x3ff) + 1;
 }
@@ -276,8 +279,6 @@ u32 GXGetTexObjTlut(GXTexObj* obj) {
 }
 
 void GXLoadTexObjPreLoaded(GXTexObj* obj, GXTexRegion* region, GXTexMapID map) {
-    u8 stackManipulation[0x18];
-
     GXTexObj* internalObj = (GXTexObj*)obj;
     GXTexRegion* internalRegion = (GXTexRegion*)region;
 
@@ -323,7 +324,7 @@ void GXInitTlutObj(GXTlutObj* obj, void* table, GXTlutFmt format, u16 numEntries
     internal->format = 0;
 
     GX_SET_REG(internal->format, format, 20, 21);
-    GX_SET_REG(internal->address, (u32)table >> 5, 11, 31);
+    GX_SET_REG(internal->address, ((u32)table & 0x3FFFFFFF) >> 5, 11, 31);
     GX_SET_REG(internal->address, 100, 0, 7);
 
     internal->numEntries = numEntries;
@@ -342,7 +343,7 @@ void GXLoadTlut(GXTlutObj* obj, u32 tlut_name) {
     __GXFlushTextureState();
 
     reg = ret->unk0;
-    GX_SET_REG(internal->format, reg, 22, 31);
+    SET_REG_FIELD(internal->format, 10, 0, reg & 0x3FF);
 
     ret->tlutObj = *internal;
 }
@@ -426,28 +427,46 @@ GXTlutRegionCallback GXSetTlutRegionCallback(GXTlutRegionCallback callback) {
 }
 
 void GXSetTexCoordScaleManually(GXTexCoordID coord, GXBool enable, u16 s_scale, u16 t_scale) {
-    /* Nonmatching */
+    gx->tcsManEnab = (gx->tcsManEnab & ~(1 << coord)) | (enable << coord);
+
+    if (enable) {
+        SET_REG_FIELD(gx->suTs0[coord], 16, 0, (u16)(s_scale - 1));
+        SET_REG_FIELD(gx->suTs1[coord], 16, 0, (u16)(t_scale - 1));
+        GX_WRITE_RAS_REG(gx->suTs0[coord]);
+        GX_WRITE_RAS_REG(gx->suTs1[coord]);
+        gx->bpSentNot = 0;
+    }
+}
+
+void GXSetTexCoordBias(GXTexCoordID coord, GXBool s_enable, GXBool t_enable) {
+    SET_REG_FIELD(gx->suTs0[coord], 1, 16, s_enable);
+    SET_REG_FIELD(gx->suTs1[coord], 1, 16, t_enable);
+
+    if (gx->tcsManEnab & (1 << coord)) {
+        GX_WRITE_RAS_REG(gx->suTs0[coord]);
+        GX_WRITE_RAS_REG(gx->suTs1[coord]);
+        gx->bpSentNot = 0;
+    }
 }
 
 void __SetSURegs(u32 texImgIndex, u32 setUpRegIndex) {
-    u16 a1, a2;
-    GXBool b, c;
+    u32 width;
+    u32 height;
+    GXBool sBias;
+    GXBool tBias;
 
-    a1 = GX_GET_REG(gx->tImage0[texImgIndex], 22, 31);
-    a2 = (gx->tImage0[texImgIndex] & (0x3ff << 10)) >> 10;
+    width = GET_REG_FIELD(gx->tImage0[texImgIndex], 10, 0);
+    height = GET_REG_FIELD(gx->tImage0[texImgIndex], 10, 10);
+    SET_REG_FIELD(gx->suTs0[setUpRegIndex], 16, 0, width);
+    SET_REG_FIELD(gx->suTs1[setUpRegIndex], 16, 0, height);
 
-    GX_SET_REG(gx->suTs0[setUpRegIndex], a1, 16, 31);
-    GX_SET_REG(gx->suTs1[setUpRegIndex], a2, 16, 31);
+    sBias = GET_REG_FIELD(gx->tMode0[texImgIndex], 2, 0) == GX_REPEAT;
+    tBias = GET_REG_FIELD(gx->tMode0[texImgIndex], 2, 2) == GX_REPEAT;
+    SET_REG_FIELD(gx->suTs0[setUpRegIndex], 1, 16, sBias);
+    SET_REG_FIELD(gx->suTs1[setUpRegIndex], 1, 16, tBias);
 
-    b = GX_GET_REG(gx->tMode0[texImgIndex], 30, 31) == 1;
-    c = GX_GET_REG(gx->tMode0[texImgIndex], 28, 29) == 1;
-
-    GX_SET_REG(gx->suTs0[setUpRegIndex], b, 15, 15);
-    GX_SET_REG(gx->suTs1[setUpRegIndex], c, 15, 15);
-
-    GX_BP_LOAD_REG(gx->suTs0[setUpRegIndex]);
-    GX_BP_LOAD_REG(gx->suTs1[setUpRegIndex]);
-
+    GX_WRITE_RAS_REG(gx->suTs0[setUpRegIndex]);
+    GX_WRITE_RAS_REG(gx->suTs1[setUpRegIndex]);
     gx->bpSentNot = GX_FALSE;
 }
 

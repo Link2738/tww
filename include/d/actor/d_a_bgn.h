@@ -31,7 +31,7 @@ struct part_s {
     /* 0x004 */ mDoExt_J3DModelPacketS m004;
     /* 0x018 */ dKy_tevstr_c mPartTevStr;
     /* 0x0C8 */ s16 m0C8;
-    /* 0x0C8 */ u8 m0CA[0x0CC - 0x0CA];
+    /* 0x0CA */ u8 m0CA[0x0CC - 0x0CA];
     /* 0x0CC */ f32 m0CC;
     /* 0x0D0 */ s16 mPartArrowHitFlashTimer;
     /* 0x0D2 */ s8 m0D2;
@@ -153,7 +153,7 @@ struct bgn_class {
     /* 0xC774 */ f32 mC774;
     /* 0xC778 */ s8 mC778;
     /* 0xC779 */ s8 mC779;
-    /* 0xC772 */ u8 mC77A[0xC77C - 0xC77A];
+    /* 0xC77A */ u8 mC77A[0xC77C - 0xC77A];
     /* 0xC77C */ cXyz mC77C;
     /* 0xC788 */ cXyz mC788;
     /* 0xC794 */ cXyz mC794;

@@ -1115,7 +1115,73 @@ void dPa_ripplePcallBack::execute(JPABaseEmitter* emitter, JPABaseParticle* ptcl
 
 /* 8007DE94-8007E254       .text draw__19dPa_ripplePcallBackFP14JPABaseEmitterP15JPABaseParticle */
 void dPa_ripplePcallBack::draw(JPABaseEmitter* emitter, JPABaseParticle* particle) {
-    /* Nonmatching */
+    JGeometry::TVec3<f32> pos;
+    particle->getGlobalPosition(pos);
+    f32 sinR = JMASSin(particle->getDrawParamPPtr()->mRotateAngle);
+    f32 cosR = JMASCos(particle->getDrawParamPPtr()->mRotateAngle);
+    f32 sizeX = particle->getDrawParamPPtr()->mScaleX * 2.0f * JPADraw::cb.mGlobalScaleX * 0.5f;
+    f32 sizeY = particle->getDrawParamPPtr()->mScaleY * 2.0f * JPADraw::cb.mGlobalScaleY * 0.5f;
+
+    f32 x0 = cosR * -sizeX - sinR * sizeY;
+    f32 z0 = cosR * sizeY + sinR * -sizeX;
+    f32 x1 = cosR * sizeX - sinR * sizeY;
+    f32 z1 = cosR * sizeY + sinR * sizeX;
+    f32 x2 = cosR * sizeX - sinR * -sizeY;
+    f32 z2 = cosR * -sizeY + sinR * sizeX;
+    f32 x3 = cosR * -sizeX - sinR * -sizeY;
+    f32 z3 = cosR * -sizeY + sinR * -sizeX;
+
+    f32 y0, y1, y2, y3;
+    f32 waterY;
+    cXyz chkPos;
+    if (dPa_control_c::isStatus(1)) {
+        chkPos.set(x0 + pos.x, pos.y, z0 + pos.z);
+        if (fopAcM_getWaterY(&chkPos, &waterY)) {
+            y0 = waterY + 2.0f;
+        } else {
+            y0 = pos.y + 2.0f;
+        }
+        chkPos.set(x1 + pos.x, pos.y, z1 + pos.z);
+        if (fopAcM_getWaterY(&chkPos, &waterY)) {
+            y1 = waterY + 2.0f;
+        } else {
+            y1 = pos.y + 2.0f;
+        }
+        chkPos.set(x2 + pos.x, pos.y, z2 + pos.z);
+        if (fopAcM_getWaterY(&chkPos, &waterY)) {
+            y2 = waterY + 2.0f;
+        } else {
+            y2 = pos.y + 2.0f;
+        }
+        chkPos.set(x3 + pos.x, pos.y, z3 + pos.z);
+        if (fopAcM_getWaterY(&chkPos, &waterY)) {
+            y3 = waterY + 2.0f;
+        } else {
+            y3 = pos.y + 2.0f;
+        }
+    } else {
+        chkPos.set(pos.x, pos.y, pos.z);
+        if (fopAcM_getWaterY(&chkPos, &waterY)) {
+            y0 = waterY + 2.0f;
+        } else {
+            y0 = pos.y + 2.0f;
+        }
+        y1 = y0;
+        y2 = y0;
+        y3 = y0;
+    }
+
+    GXSetCullMode(GX_CULL_NONE);
+    GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+    GXPosition3f32(x0 + pos.x, y0, z0 + pos.z);
+    GXTexCoord2f32(0.0f, 0.0f);
+    GXPosition3f32(x1 + pos.x, y1, z1 + pos.z);
+    GXTexCoord2f32(1.0f, 0.0f);
+    GXPosition3f32(x2 + pos.x, y2, z2 + pos.z);
+    GXTexCoord2f32(1.0f, 1.0f);
+    GXPosition3f32(x3 + pos.x, y3, z3 + pos.z);
+    GXTexCoord2f32(0.0f, 1.0f);
+    particle->setInvisibleParticleFlag();
 }
 
 /* 8007E254-8007E288       .text setup__17dPa_waveEcallBackFP14JPABaseEmitterPC4cXyzPC5csXyzSc */
@@ -1317,7 +1383,63 @@ void dPa_cutTurnEcallBack_c::end() {
 
 /* 8007EB00-8007F028       .text draw__20dPa_stripesEcallBackFP14JPABaseEmitter */
 void dPa_stripesEcallBack::draw(JPABaseEmitter* emitter) {
-    /* Nonmatching */
+    if (emitter->isChildDraw()) {
+        f32 widthScale = emitter->getUserWork() * 0.01f;
+        u32 childNum = emitter->getChildParticleList()->getNumLinks();
+        u32 rowLen = childNum / 5;
+        f32 texStep = 1.0f / (rowLen - 1);
+        u32 activeNum = emitter->getParticleList()->getNumLinks();
+        if (activeNum % 5 == 0 && childNum >= 10 && childNum % 5 == 0) {
+            for (u8 row = 0; row < 5; row++) {
+                GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, childNum * 2 / 5);
+                u16 idx = 0;
+                f32 texT = 0.0f;
+                for (JSULink<JPABaseParticle>* link = emitter->getChildParticleList()->getFirst(); link != NULL; link = link->getNext()) {
+                    if (idx % 5 == row) {
+                        JPABaseParticle* ptcl = link->getObject();
+                        JGeometry::TVec3<f32> ptclScale;
+                        emitter->getGlobalParticleScale(ptclScale);
+                        f32 width = widthScale * (25.0f * ptcl->getDrawParamPPtr()->mScaleX * ptclScale.x);
+                        f32 sinR = JMASSin(ptcl->getDrawParamPPtr()->mRotateAngle);
+                        f32 cosR = JMASCos(ptcl->getDrawParamPPtr()->mRotateAngle);
+                        f32 ax0 = -width * sinR;
+                        f32 sx0 = -width * cosR;
+                        f32 ax1 = width * sinR;
+                        f32 sx1 = width * cosR;
+
+                        JGeometry::TVec3<f32> vel(ptcl->mVelocity);
+                        if (!vel.isZero()) {
+                            vel.normalize();
+                        } else {
+                            vel.set(0.0f, 1.0f, 0.0f);
+                        }
+
+                        JGeometry::TVec3<f32>& axis = ptcl->getDrawParamPPtr()->mAxis;
+                        JGeometry::TVec3<f32> side;
+                        side.cross(axis, vel);
+                        if (!side.isZero()) {
+                            side.normalize();
+                        } else {
+                            side.set(1.0f, 0.0f, 0.0f);
+                        }
+                        axis.cross(vel, side);
+                        axis.normalize();
+
+                        GXPosition3f32(ax0 * axis.x + sx0 * side.x + vel.x * 0.0f + ptcl->mGlobalPosition.x,
+                                       ax0 * axis.y + sx0 * side.y + vel.y * 0.0f + ptcl->mGlobalPosition.y,
+                                       ax0 * axis.z + sx0 * side.z + vel.z * 0.0f + ptcl->mGlobalPosition.z);
+                        GXTexCoord2f32(0.0f, texT);
+                        GXPosition3f32(ax1 * axis.x + sx1 * side.x + vel.x * 0.0f + ptcl->mGlobalPosition.x,
+                                       ax1 * axis.y + sx1 * side.y + vel.y * 0.0f + ptcl->mGlobalPosition.y,
+                                       ax1 * axis.z + sx1 * side.z + vel.z * 0.0f + ptcl->mGlobalPosition.z);
+                        GXTexCoord2f32(1.0f, texT);
+                        texT += texStep;
+                    }
+                    idx++;
+                }
+            }
+        }
+    }
 }
 
 /* 8007F028-8007F05C       .text draw__19dPa_kageroEcallBackFP14JPABaseEmitter */

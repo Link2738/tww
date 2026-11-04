@@ -520,10 +520,15 @@ u8 dMsg2_kankyoBrightness() {
 }
 
 /* 801E8C2C-801E8C78       .text dMsg2_aimBrightness__Fv */
-// NONMATCHING
 u8 dMsg2_aimBrightness() {
-    u32 brightness = dMsg2_kankyoBrightness();
-    return g_messageHIO.field_0x29 <= brightness ? 0xFF : 0xFF - (brightness - g_messageHIO.field_0x29);
+    u8 brightness = dMsg2_kankyoBrightness();
+    u8 ret;
+    if (brightness <= g_messageHIO.field_0x29) {
+        ret = 0xFF;
+    } else {
+        ret = 0xFF - (brightness - g_messageHIO.field_0x29);
+    }
+    return ret;
 }
 
 /* 801E8C78-801E9054       .text dMsg2_setCharAlpha__FP14sub_msg2_classUc */
@@ -535,10 +540,11 @@ void dMsg2_setCharAlpha(sub_msg2_class* i_Msg, u8 i_index) {
     int var_r31 = i_index;
     f32 temp_f2 = temp_f1 + i_Msg->text_pane[var_r31].mPosTopLeft.y + (i_Msg->field_0xeb0 * (2 - i_Msg->field_0xecc[i_index]));
 
-    int temp_r27 = (temp_r6 * i_Msg->field_0xecc[i_index]);
-    int var_r26 = (int)temp_f2 + temp_r27;
+    int temp_r27 = (int)temp_f2;
+    int lineOfs = temp_r6 * i_Msg->field_0xecc[i_index];
+    int var_r26 = temp_r27 + lineOfs;
     int var_r30 = (int)(temp_f2 - g_messageHIO.field_0x38);
-    int var_r29 = var_r30 + temp_r27;
+    int var_r29 = var_r30 + lineOfs;
 
     if (var_r26 < 58) {
         int temp_r3 = var_r26 + i_Msg->mx->getHeight();

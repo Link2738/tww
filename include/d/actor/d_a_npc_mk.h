@@ -63,7 +63,7 @@ public:
     void ClrOrder(u8 flag) { mOrderFlags &= ~flag; }
     void SetOrder(u8 flag) { mOrderFlags |= flag; }
     
-    void chkAngry() {}
+    bool chkAngry() { return mVisitMode == VISIT_WALK_PATH_FAST || mVisitMode == VISIT_WALK_PATH_IGNORE_LINK; }
     bool chkFlag(u16 flag) { return (mFlags & flag) == flag; }
     void clrFlag(u16 flag) { mFlags &= ~flag; }
     s8 getBackboneJntNum() { return m_jnt.getBackboneJntNum(); }
@@ -72,7 +72,7 @@ public:
     s16 getBackbone_y() { return m_jnt.getBackbone_y(); }
     s16 getHead_x() { return m_jnt.getHead_x(); }
     s16 getHead_y() { return m_jnt.getHead_y(); }
-    void getVisitMode() {}
+    u8 getVisitMode() { return mVisitMode; }
 
     void incAttnSetCount() {
         if (mAttnSetCount != 0xff) {

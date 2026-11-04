@@ -22,7 +22,7 @@ struct btd_sibuki_s {
     /* 0x01 */ u8 m01[0x04 - 0x01];
     /* 0x04 */ cXyz m04;
     /* 0x10 */ cXyz m10;
-    /* 0x20 */ u8 m1C[0x24 - 0x1C];
+    /* 0x01C */ u8 m1C[0x24 - 0x1C];
 }; // Size: 0x24
 
 struct btd_class {

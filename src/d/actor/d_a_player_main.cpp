@@ -21,6 +21,7 @@
 #include "d/d_path.h"
 #include "d/d_kankyo.h"
 #include "JSystem/JKernel/JKRSolidHeap.h"
+#include "JSystem/JStudio/JStudio/jstudio-control.h"
 #include "JSystem/JUtility/JUTAssert.h"
 #include "d/actor/d_a_itembase.h"
 #include "d/d_item_data.h"

@@ -41,7 +41,7 @@ namespace daObjVmc {
     public:
         /* 0x290 */ request_of_phase_process_class mPhs;
         /* 0x298 */ dBgW* mpBgBase;
-        /* 0x29A */ dBgW* mpBgTree;
+        /* 0x29C */ dBgW* mpBgTree;
         /* 0x2A0 */ J3DModel* mModelBase;
         /* 0x2A4 */ J3DModel* mModelTree;
         /* 0x2A8 */ mDoExt_bckAnm mBckAnmGrow;
@@ -49,7 +49,7 @@ namespace daObjVmc {
         /* 0x2C8 */ dCcD_Stts mStts;
         /* 0x304 */ dCcD_Cyl mCyl;
         /* 0x434 */ Mtx mMtxBase;
-        /* 0x434 */ Mtx mMtxTree;
+        /* 0x464 */ Mtx mMtxTree;
         /* 0x494 */ dPa_smokeEcallBack mSmoke;
 #if VERSION == VERSION_DEMO
         /* 0x4B4 */ JPABaseEmitter* m4B4_demo;

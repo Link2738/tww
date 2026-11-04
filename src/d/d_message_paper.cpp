@@ -6,258 +6,1286 @@
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/d_message_paper.h"
 #include "f_op/f_op_msg.h"
+#include "JSystem/J3DGraphLoader/J3DModelLoader.h"
+#include "JSystem/J3DGraphLoader/J3DAnmLoader.h"
+#include "JSystem/J2DGraph/J2DPane.h"
+#include "d/d_meter.h"
+#include "m_Do/m_Do_controller_pad.h"
+#include "m_Do/m_Do_mtx.h"
+#include "d/d_com_inf_game.h"
+#include "m_Do/m_Do_graphic.h"
+#include "JSystem/JUtility/JUTAssert.h"
+#include "string.h"
+#include "stdio.h"
+#include "math.h"
+#include "d/d_kankyo.h"
+#include "JSystem/J2DGraph/J2DScreen.h"
+#include "JSystem/J2DGraph/J2DTextBox.h"
+#include "JSystem/J2DGraph/J2DOrthoGraph.h"
+#include "JSystem/JKernel/JKRExpHeap.h"
 
 #if VERSION < VERSION_PAL
+void dMsg3_messageDataInit(sub_msg3_class*, int);
+
+// Byte-identical to d_message.cpp's dMsg2_tex_i4_color, but global rather than
+// static: the target exports it.
+u8 dMsg3_tex_i4_color[] = {
+    0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x02, 0x02, 0x02, 0x03, 0x04, 0x06, 0x07, 0x09, 0x0b, 0x0d, 0x0f, 0x12, 0x16, 0x1c, 0x22, 0x2a, 0x32, 0x39,
+    0x41, 0x4b, 0x54, 0x5e, 0x67, 0x72, 0x7c, 0x87, 0x8f, 0x98, 0xa2, 0xac, 0xb3, 0xbb, 0xc2, 0xca, 0xd0, 0xd8, 0xdd, 0xe1, 0xe7, 0xea, 0xee, 0xf1,
+    0xf3, 0xf5, 0xf7, 0xf9, 0xfb, 0xfe, 0xfd, 0xfd, 0xfd, 0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfd, 0xfd, 0xfd,
+    0xfd, 0xfb, 0xfb, 0xf9, 0xf7, 0xf5, 0xf3, 0xf1, 0xee, 0xea, 0xe7, 0xe1, 0xdd, 0xd8, 0xd0, 0xc9, 0xc2, 0xbc, 0xb3, 0xab, 0xa2, 0x99, 0x8f, 0x87,
+    0x7c, 0x72, 0x68, 0x5e, 0x54, 0x4a, 0x41, 0x3a, 0x32, 0x2a, 0x22, 0x1d, 0x15, 0x12, 0x0f, 0x0d, 0x0b, 0x09, 0x07, 0x05, 0x04, 0x04, 0x03, 0x02,
+};
+
+// .sbss, in this order: msg3d at 0, dMsg3_popSpeed at 4, message at 8. These are
+// reached through @sda21 relocations, so their offsets do not appear in the
+// instruction bytes.
+dmsg3_3d_c* msg3d;
+int dMsg3_popSpeed;
+
+// .bss, and here the order DOES matter: the code reaches these as a base symbol
+// plus a literal displacement, so every offset below is baked into the
+// instruction stream. The target's layout, from its symbol table, is
+//
+//   +0x000   12 B  @3569          <- not ours; see below
+//   +0x00C   12 B  sScreen3
+//   +0x018   96 B  bbutton_icon3
+//   +0x078   96 B  bbutton_kage3
+//   +0x0D8   48 B  bbuttonTimer3
+//   +0x108   12 B  @4175          <- __register_global_object node for message
+//   +0x114   12 B  @4176          <- ... and for board
+//   +0x120  132 B  board
+//
+// The 12 bytes at +0x000 come from a header: every unit that includes it gets
+// them (ours is named @368), and dtk names the target's @3569 only because the
+// code uses it as the .bss base symbol. Nothing here declares it.
+//
+// `message` lives in .sbss, but its destructor-chain node lives in .bss and is
+// emitted where `message` is *defined*. So the definition sits here, after
+// bbuttonTimer3, even though the object belongs with the .sbss group above.
+// Defined above sScreen3 instead, the node lands at +0x00C and shifts the whole
+// block by 12 bytes.
+J2DScreen* sScreen3[3];
+J2DPicture* bbutton_icon3[8][3];
+J2DPicture* bbutton_kage3[8][3];
+s16 bbuttonTimer3[8][3];
+static dDlst_2DMSG3_c message;
+static dDlst_2Dm_c board;
+
 /* 801EB128-801EB420       .text setDummyTexture__10dmsg3_3d_cFv */
 void dmsg3_3d_c::setDummyTexture() {
-    /* Nonmatching */
+    J3DModelData* modelData = mModel->getModelData();
+    J3DTexture* texture = modelData->getTexture();
+    JUTNameTab* textureName = modelData->getTextureName();
+
+    JUT_ASSERT(146, texture != 0);
+    JUT_ASSERT(147, textureName != 0);
+
+    for (u16 i = 0; i < texture->getNum(); i++) {
+        const char* name = textureName->getName(i);
+
+        if (strcmp(name, "0_black") == 0) {
+            texture->setResTIMG(i, *mDoGph_gInf_c::getFrameBufferTimg());
+        } else if (strcmp(name, "1_black") == 0) {
+            texture->setResTIMG(i, *mDoGph_gInf_c::getFrameBufferTimg());
+        }
+    }
+
+    mDoExt_modelTexturePatch(modelData);
 }
 
 /* 801EB420-801EB444       .text loadModelData__FPUc */
-void loadModelData(u8*) {
-    /* Nonmatching */
+J3DModelData* loadModelData(u8* i_data) {
+    return J3DModelLoaderDataBase::loadBinaryDisplayList(i_data, 0x1020);
 }
 
 /* 801EB444-801EB464       .text loadAnmTransformData__FPUc */
-void loadAnmTransformData(u8*) {
-    /* Nonmatching */
+J3DAnmTransform* loadAnmTransformData(u8* i_data) {
+    return (J3DAnmTransform*)J3DAnmLoaderDataBase::load(i_data);
 }
 
 /* 801EB464-801EB6FC       .text __ct__10dmsg3_3d_cFv */
 dmsg3_3d_c::dmsg3_3d_c() {
-    /* Nonmatching */
+    mpHeap = NULL;
+    mpHeap = mDoExt_createSolidHeapFromGameToCurrent(0x20000, 0x20);
+
+    mpModelRes = mpHeap->alloc(0x1F40, 0x20);
+    JKRReadTypeResource(mpModelRes, 0x1F40, 'BDLM', "hukidashi_07.bdl",
+                        dComIfGp_getMsgArchive());
+    DCStoreRangeNoSync(mpModelRes, 0x1F40);
+
+    mpBckRes = mpHeap->alloc(0x1388, 0x20);
+    JKRReadTypeResource(mpBckRes, 0x1388, 'BCK ', "hukidashi_07.bck",
+                        dComIfGp_getMsgArchive());
+    DCStoreRangeNoSync(mpBckRes, 0x1388);
+
+    J3DModelData* modelData = loadModelData((u8*)mpModelRes);
+    JUT_ASSERT(213, modelData != 0);
+
+    mModel = mDoExt_J3DModel__create(modelData, 0x80000, 0x37441422);
+    JUT_ASSERT(218, mModel != 0);
+
+    J3DAnmTransform* bck = loadAnmTransformData((u8*)mpBckRes);
+    JUT_ASSERT(221, bck != 0);
+
+    int ok_bck = mBck.init(modelData, bck, 1, 0, 1.0f, 0, -1, false);
+    JUT_ASSERT(228, ok_bck != 0);
+
+    setDummyTexture();
+
+    mRotX = 0;
+    mRotY = -0x8000;
+    mRotZ = 0;
+
+    mScale.set(1.0f, 1.0f, 1.0f);
+    mModel->setBaseScale(mScale);
+
+    set_mtx();
+
+    mDoExt_adjustSolidHeap(mpHeap);
+    mDoExt_restoreCurrentHeap();
 }
 
 /* 801EB6FC-801EB79C       .text __dt__10dmsg3_3d_cFv */
 dmsg3_3d_c::~dmsg3_3d_c() {
-    /* Nonmatching */
+    mpHeap->free(mpModelRes);
+    mpHeap->free(mpBckRes);
+    mDoExt_destroySolidHeap(mpHeap);
 }
 
 /* 801EB79C-801EB808       .text set_mtx__10dmsg3_3d_cFv */
 void dmsg3_3d_c::set_mtx() {
-    /* Nonmatching */
+    mDoMtx_stack_c::transS(0.0f, 0.0f, 0.0f);
+    mDoMtx_stack_c::ZXYrotM(mRotX, mRotY, mRotZ);
+    mModel->setBaseTRMtx(mDoMtx_stack_c::get());
 }
 
 /* 801EB808-801EB840       .text exec__10dmsg3_3d_cFv */
 void dmsg3_3d_c::exec() {
-    /* Nonmatching */
+    mBck.play();
+    set_mtx();
 }
 
 /* 801EB840-801EB8DC       .text draw__10dmsg3_3d_cFv */
 void dmsg3_3d_c::draw() {
-    /* Nonmatching */
+    J3DDrawBuffer* list2D = dComIfGd_getList2D();
+    j3dSys.setDrawBuffer(list2D, J3DSysDrawBuf_Opa);
+    j3dSys.setDrawBuffer(list2D, J3DSysDrawBuf_Xlu);
+
+    mBck.entry(mModel->getModelData());
+    mDoExt_modelUpdateDL(mModel);
+    mBck.remove(mModel->getModelData());
+
+    j3dSys.setDrawBuffer(g_dComIfG_gameInfo.drawlist.getOpaList(), J3DSysDrawBuf_Opa);
+    j3dSys.setDrawBuffer(dComIfGd_getXluList(), J3DSysDrawBuf_Xlu);
 }
 
 /* 801EB8DC-801EBA18       .text dMsg3_value_init__FP14sub_msg3_classUc */
-void dMsg3_value_init(sub_msg3_class*, u8) {
-    /* Nonmatching */
+// NONMATCHING - 16 bytes SHORT, so not a register-allocation difference. The stack
+// slots and the buffer-to-output mapping are right: mwcc assigns the LAST-declared
+// buffer the lowest address, so declaring text, textSdw, ruby, rubySdw puts text
+// at 0x68 and rubySdw at 0x8, which is what the strcpy order needs.
+//
+// The target loads the four alpha bytes into scratch registers, computes all four
+// colour ORs from them, and only then copies the raw bytes into r25-r28 with four
+// `mr`s - those are the missing 16 bytes. We keep colour live in a callee-saved
+// register and sink the ruby ORs to their sprintf instead. The load-then-copy shape
+// is what mwcc emits for a temporary copied into a second variable, but none of
+// these produce it: the alphas as int or u32 (-24), colour as int, an int copy of
+// i_no, all four ORs hoisted into u32 or int locals, the field reads spelled out at
+// each use (-20; with colorTable inlined too it reaches the right length but reloads
+// after every sprintf, 44w), and an inline helper taking the eight values as
+// arguments (u32/u8 and int/int -16, u32/u32 -24).
+void dMsg3_value_init(sub_msg3_class* i_Msg, u8 i_no) {
+    static const u32 colorTable[] = {
+        0x00000000, 0xB4000000, 0x82828200, 0x0000AA00, 0xF0F01E00,
+        0x82FFFF00, 0x6400FF00, 0x50505000, 0xFFB40000,
+    };
+
+    char text[0x20];
+    char textSdw[0x20];
+    char ruby[0x20];
+    char rubySdw[0x20];
+
+    u32 color = colorTable[i_Msg->colorNo];
+    int c0 = i_Msg->msgDataProc[i_no].getCharAlpha();
+    int c1 = i_Msg->msgDataProc[i_no].getGradAlpha();
+    int c2 = i_Msg->msgDataProc[i_no].getRCharAlpha();
+    int c3 = i_Msg->msgDataProc[i_no].getRGradAlpha();
+
+    sprintf(text, "CC[%08x]GC[%08x]", color | c0, color | c1);
+    sprintf(ruby, "CC[%08x]GC[%08x]", color | c2, color | c3);
+    sprintf(textSdw, "CC[%08x]GC[%08x]", c0, c1);
+    sprintf(rubySdw, "CC[%08x]GC[%08x]", c2, c3);
+
+    strcpy(i_Msg->output_text[i_no], text);
+    strcpy(i_Msg->output_ruby[i_no], ruby);
+    strcpy(i_Msg->output_textSdw[i_no], textSdw);
+    strcpy(i_Msg->output_rubySdw[i_no], rubySdw);
 }
 
 /* 801EBA18-801EBAB4       .text dMsg3_setString__FP14sub_msg3_classUc */
-void dMsg3_setString(sub_msg3_class*, u8) {
-    /* Nonmatching */
+void dMsg3_setString(sub_msg3_class* i_this, u8 i_no) {
+    ((J2DTextBox*)i_this->text_pane[i_no].pane)->setString(i_this->output_text[i_no]);
+    ((J2DTextBox*)i_this->ruby_pane[i_no].pane)->setString(i_this->output_ruby[i_no]);
+    ((J2DTextBox*)i_this->textSdw_pane[i_no].pane)->setString(i_this->output_textSdw[i_no]);
+    ((J2DTextBox*)i_this->rubySdw_pane[i_no].pane)->setString(i_this->output_rubySdw[i_no]);
 }
 
 /* 801EBAB4-801EBAD8       .text dMsg3_messagePaneShow__FP14sub_msg3_classUc */
-void dMsg3_messagePaneShow(sub_msg3_class*, u8) {
-    /* Nonmatching */
+void dMsg3_messagePaneShow(sub_msg3_class* i_this, u8 i_no) {
+    i_this->text_pane[i_no].pane->show();
+    i_this->ruby_pane[i_no].pane->show();
 }
 
 /* 801EBAD8-801EBAFC       .text dMsg3_messagePaneHide__FP14sub_msg3_classUc */
-void dMsg3_messagePaneHide(sub_msg3_class*, u8) {
-    /* Nonmatching */
+void dMsg3_messagePaneHide(sub_msg3_class* i_this, u8 i_no) {
+    i_this->text_pane[i_no].pane->hide();
+    i_this->ruby_pane[i_no].pane->hide();
 }
 
 /* 801EBAFC-801EBBD0       .text dMsg3_outFontHide__FUc */
-void dMsg3_outFontHide(u8) {
-    /* Nonmatching */
+void dMsg3_outFontHide(u8 i_no) {
+    for (int i = 0; i < 8; i++) {
+        bbutton_icon3[i][i_no]->hide();
+        bbutton_kage3[i][i_no]->hide();
+
+        bbutton_icon3[i][i_no]->rotate(0.0f);
+        bbutton_kage3[i][i_no]->rotate(0.0f);
+
+        bbuttonTimer3[i][i_no] = -1;
+    }
 }
 
 /* 801EBBD0-801EBC08       .text dMsg3_arrowUpShow__FP14sub_msg3_class */
-void dMsg3_arrowUpShow(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_arrowUpShow(sub_msg3_class* i_this) {
+    fopMsgM_setInitAlpha(&i_this->field_0xbac);
+    fopMsgM_setInitAlpha(&i_this->field_0xbe4);
 }
 
 /* 801EBC08-801EBC40       .text dMsg3_arrowUpHide__FP14sub_msg3_class */
-void dMsg3_arrowUpHide(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_arrowUpHide(sub_msg3_class* i_this) {
+    fopMsgM_setNowAlphaZero(&i_this->field_0xbac);
+    fopMsgM_setNowAlphaZero(&i_this->field_0xbe4);
 }
 
 /* 801EBC40-801EBC78       .text dMsg3_arrowDownShow__FP14sub_msg3_class */
-void dMsg3_arrowDownShow(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_arrowDownShow(sub_msg3_class* i_this) {
+    fopMsgM_setInitAlpha(&i_this->field_0xc1c);
+    fopMsgM_setInitAlpha(&i_this->field_0xc54);
 }
 
 /* 801EBC78-801EBCB0       .text dMsg3_arrowDownHide__FP14sub_msg3_class */
-void dMsg3_arrowDownHide(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_arrowDownHide(sub_msg3_class* i_this) {
+    fopMsgM_setNowAlphaZero(&i_this->field_0xc1c);
+    fopMsgM_setNowAlphaZero(&i_this->field_0xc54);
 }
 
 /* 801EBCB0-801EBCE8       .text dMsg3_dotShow__FP14sub_msg3_class */
-void dMsg3_dotShow(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_dotShow(sub_msg3_class* i_this) {
+    fopMsgM_setInitAlpha(&i_this->field_0xc8c);
+    fopMsgM_setInitAlpha(&i_this->field_0xcc4);
 }
 
 /* 801EBCE8-801EBD20       .text dMsg3_dotHide__FP14sub_msg3_class */
-void dMsg3_dotHide(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_dotHide(sub_msg3_class* i_this) {
+    fopMsgM_setNowAlphaZero(&i_this->field_0xc8c);
+    fopMsgM_setNowAlphaZero(&i_this->field_0xcc4);
 }
 
 /* 801EBD20-801EBDE4       .text dMsg3_multiTexInit__FP14sub_msg3_class */
-void dMsg3_multiTexInit(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_multiTexInit(sub_msg3_class* i_Msg) {
+    JKRReadTypeResource(i_Msg->Tex[0], 0x11800, 'TIMG', "hukidashi_0212.bti",
+                        dComIfGp_getMsgArchive());
+    DCStoreRangeNoSync(i_Msg->Tex[0], 0x11800);
+
+    JKRReadTypeResource(i_Msg->Tex[1], 0x11800, 'TIMG', "hukidashi_07.bti",
+                        dComIfGp_getMsgArchive());
+    DCStoreRangeNoSync(i_Msg->Tex[1], 0x11800);
+
+    board.init(i_Msg->Tex[0], i_Msg->Tex[1], 1.0f, 1.0f);
 }
 
 /* 801EBDE4-801EBE94       .text dMsg3_fontdataInit__FP14sub_msg3_class */
-void dMsg3_fontdataInit(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_fontdataInit(sub_msg3_class* i_Msg) {
+    i_Msg->mx = mDoExt_getMesgFont();
+    JUT_ASSERT(628, i_Msg->mx != 0);
+
+    i_Msg->rx = mDoExt_getRubyFont();
+    JUT_ASSERT(631, i_Msg->rx != 0);
 }
 
 /* 801EBE94-801EBED8       .text dMsg3_screenDataSet__FP14sub_msg3_classUc */
-void dMsg3_screenDataSet(sub_msg3_class*, u8) {
-    /* Nonmatching */
+void dMsg3_screenDataSet(sub_msg3_class* i_this, u8 i_no) {
+    dMsg3_value_init(i_this, i_no);
+    dMsg3_setString(i_this, i_no);
 }
 
 /* 801EBED8-801EC52C       .text dMsg3_screenDataInit__FP14sub_msg3_classUc */
-void dMsg3_screenDataInit(sub_msg3_class*, u8) {
-    /* Nonmatching */
+// The retail (#else) path of dMsg2_screenDataInit, without its +10 height bump
+// on the text panes, and with negative character spacing: -2 for the text and
+// -1 for the ruby, where dMsg2 uses 0. Only GZLE01 is verified; the JPN build
+// may branch on g_msgDHIO the way dMsg2 does.
+void dMsg3_screenDataInit(sub_msg3_class* i_Msg, u8 i_no) {
+    fopMsgM_setPaneData(&i_Msg->text_pane[i_no], sScreen3[i_no]->search('tx23'));
+    fopMsgM_setPaneData(&i_Msg->ruby_pane[i_no], sScreen3[i_no]->search('tx29'));
+    fopMsgM_setPaneData(&i_Msg->textSdw_pane[i_no], sScreen3[i_no]->search('tx20'));
+    fopMsgM_setPaneData(&i_Msg->rubySdw_pane[i_no], sScreen3[i_no]->search('tx26'));
+
+    i_Msg->textSdw_pane[i_no].pane->hide();
+    i_Msg->rubySdw_pane[i_no].pane->hide();
+
+    fopMsgM_setPaneData(&i_Msg->field_0xcfc[i_no], sScreen3[i_no]->search('ms22'));
+    fopMsgM_setPaneData(&i_Msg->field_0xda4[i_no], sScreen3[i_no]->search('ms20'));
+
+    sScreen3[i_no]->search('tx24')->hide();
+    sScreen3[i_no]->search('tx30')->hide();
+    sScreen3[i_no]->search('tx21')->hide();
+    sScreen3[i_no]->search('tx27')->hide();
+
+    ((J2DPicture*)i_Msg->field_0xcfc[i_no].pane)->setWhite(0);
+    ((J2DPicture*)i_Msg->field_0xda4[i_no].pane)->setWhite(0);
+
+    if (i_no == 0) {
+        fopMsgM_setPaneData(&i_Msg->field_0xbac, sScreen3[i_no]->search('yz21'));
+        fopMsgM_setPaneData(&i_Msg->field_0xc1c, sScreen3[i_no]->search('yz20'));
+        fopMsgM_setPaneData(&i_Msg->field_0xc8c, sScreen3[i_no]->search('dt20'));
+        fopMsgM_setPaneData(&i_Msg->field_0xbe4, sScreen3[i_no]->search('yz23'));
+        fopMsgM_setPaneData(&i_Msg->field_0xc54, sScreen3[i_no]->search('yz22'));
+        fopMsgM_setPaneData(&i_Msg->field_0xcc4, sScreen3[i_no]->search('dt21'));
+
+        ((J2DPicture*)i_Msg->field_0xbe4.pane)->setWhite(0x000000FF);
+        ((J2DPicture*)i_Msg->field_0xc54.pane)->setWhite(0x000000FF);
+        ((J2DPicture*)i_Msg->field_0xcc4.pane)->setWhite(0x000000FF);
+    } else {
+        sScreen3[i_no]->search('yz21')->hide();
+        sScreen3[i_no]->search('yz20')->hide();
+        sScreen3[i_no]->search('dt20')->hide();
+        sScreen3[i_no]->search('yz23')->hide();
+        sScreen3[i_no]->search('yz22')->hide();
+        sScreen3[i_no]->search('dt21')->hide();
+    }
+
+    ((J2DTextBox*)i_Msg->text_pane[i_no].pane)->setFont(i_Msg->mx);
+    ((J2DTextBox*)i_Msg->ruby_pane[i_no].pane)->setFont(i_Msg->rx);
+    ((J2DTextBox*)i_Msg->textSdw_pane[i_no].pane)->setFont(i_Msg->mx);
+    ((J2DTextBox*)i_Msg->rubySdw_pane[i_no].pane)->setFont(i_Msg->rx);
+
+    J2DTextBox::TFontSize fontSize;
+    J2DTextBox::TFontSize rubySize;
+    fontSize.mSizeX = g_msgHIO.field_0x70;
+    fontSize.mSizeY = g_msgHIO.field_0x70;
+
+    ((J2DTextBox*)i_Msg->text_pane[i_no].pane)->setFontSize(fontSize);
+    ((J2DTextBox*)i_Msg->textSdw_pane[i_no].pane)->setFontSize(fontSize);
+
+    ((J2DTextBox*)i_Msg->text_pane[i_no].pane)->setCharSpace(-2.0f);
+    ((J2DTextBox*)i_Msg->ruby_pane[i_no].pane)->setCharSpace(-1.0f);
+    ((J2DTextBox*)i_Msg->textSdw_pane[i_no].pane)->setCharSpace(-2.0f);
+    ((J2DTextBox*)i_Msg->rubySdw_pane[i_no].pane)->setCharSpace(-1.0f);
+
+    ((J2DTextBox*)i_Msg->text_pane[i_no].pane)->setLineSpace(g_msgHIO.field_0x5e);
+    ((J2DTextBox*)i_Msg->textSdw_pane[i_no].pane)->setLineSpace(g_msgHIO.field_0x5e);
+
+    i_Msg->field_0xeb0 = fontSize.mSizeX;
+    i_Msg->field_0xeb4 = rubySize.mSizeX; // !@bug uninitialized use, as in dMsg2
 }
 
 /* 801EC52C-801EC638       .text dMsg3_ScreenDataValueInit__FP14sub_msg3_class */
-void dMsg3_ScreenDataValueInit(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_ScreenDataValueInit(sub_msg3_class* i_Msg) {
+    J2DTextBox* box = (J2DTextBox*)i_Msg->text_pane[0].pane;
+    f32 lineSpace = box->mLineSpace;
+
+    i_Msg->field_0xeac = lineSpace / 2.0f;
+    i_Msg->field_0xe90 = g_messageHIO.field_0x3c + box->getHeight();
+
+    fopMsgM_paneTrans(&i_Msg->text_pane[0], 0.0f, 0.0f);
+    fopMsgM_paneTrans(&i_Msg->text_pane[1], 0.0f, i_Msg->field_0xe90);
+    fopMsgM_paneTrans(&i_Msg->text_pane[2], 0.0f, -i_Msg->field_0xe90);
+
+    fopMsgM_setNowAlphaZero(&i_Msg->field_0xbac);
+    fopMsgM_setNowAlphaZero(&i_Msg->field_0xbe4);
+    fopMsgM_setNowAlphaZero(&i_Msg->field_0xc1c);
+    fopMsgM_setNowAlphaZero(&i_Msg->field_0xc54);
+    fopMsgM_setNowAlphaZero(&i_Msg->field_0xc8c);
+    fopMsgM_setNowAlphaZero(&i_Msg->field_0xcc4);
+
+    for (int i = 0; i < 3; i++) {
+        dMsg3_messageDataInit(i_Msg, i);
+    }
 }
 
 /* 801EC638-801EC690       .text dMsg3_stickInfoInit__FP14sub_msg3_class */
-void dMsg3_stickInfoInit(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_stickInfoInit(sub_msg3_class* i_this) {
+    if (CPad_GET_STICK_POS_Y(0) > 0.7f || CPad_GET_STICK_POS_Y(3) > 0.7f) {
+        i_this->field_0xed9 = 1;
+    } else if (CPad_GET_STICK_POS_Y(0) < 0.7f || CPad_GET_STICK_POS_Y(3) < 0.7f) {
+        i_this->field_0xed9 = 2;
+    } else {
+        i_this->field_0xed9 = 0;
+    }
 }
 
 /* 801EC690-801EC714       .text dMsg3_stickInfoCheck__FP14sub_msg3_class */
-void dMsg3_stickInfoCheck(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_stickInfoCheck(sub_msg3_class* i_this) {
+    if (i_this->field_0xed9 == 1) {
+        if (CPad_GET_STICK_POS_Y(0) <= 0.0f || CPad_GET_STICK_POS_Y(3) <= 0.0f) {
+            i_this->field_0xed9 = 0;
+        }
+    } else if (i_this->field_0xed9 == 2) {
+        if (CPad_GET_STICK_POS_Y(0) >= 0.0f || CPad_GET_STICK_POS_Y(3) >= 0.0f) {
+            i_this->field_0xed9 = 0;
+        }
+    }
 }
 
 /* 801EC714-801EC84C       .text dMsg3_messageOut__FP14sub_msg3_classUci */
-void dMsg3_messageOut(sub_msg3_class*, u8, int) {
-    /* Nonmatching */
+void dMsg3_yose_select(sub_msg3_class*, u8);
+void dMsg3_setCharAlpha(sub_msg3_class*, u8);
+
+// dMsg2_messageOut without the heap switch around fopMsgM_outFontSet, and without
+// its fix-up that turns a colourless arrow icon white: the colour goes through as is.
+void dMsg3_messageOut(sub_msg3_class* i_this, u8 i_no, int i_aimLine) {
+    i_this->field_0xec8[i_no] = 0;
+    dMsg3_messagePaneShow(i_this, i_no);
+    dMsg3_messageDataInit(i_this, i_no);
+
+    i_this->msgDataProc[i_no].setCount(0);
+    i_this->msgDataProc[i_no].resetNowLine();
+    i_this->msgDataProc[i_no].setAimLine(i_aimLine);
+    dMsg3_yose_select(i_this, i_no);
+    i_this->msgDataProc[i_no].shortCut();
+    dMsg3_setCharAlpha(i_this, i_no);
+    i_this->msgDataProc[i_no].stringSet();
+
+    for (int i = 0; i < 8; i++) {
+        u8 iconNum = i_this->msgDataProc[i_no].getIconNum(i);
+        u32 iconColor = i_this->msgDataProc[i_no].getIconColor(i);
+
+        if (iconNum != fopMsgM_Icon_NONE_e && bbuttonTimer3[i][i_no] == -1) {
+            fopMsgM_outFontSet(bbutton_icon3[i][i_no], bbutton_kage3[i][i_no], &bbuttonTimer3[i][i_no], iconColor, iconNum);
+        }
+    }
+
+    dMsg3_setString(i_this, i_no);
 }
 
+void dMsg3_textPosition(sub_msg3_class*, u8);
+u8 dMsg3_aimBrightness();
+
 /* 801EC84C-801EC8CC       .text dMsg3_yose_select__FP14sub_msg3_classUc */
-void dMsg3_yose_select(sub_msg3_class*, u8) {
-    /* Nonmatching */
+void dMsg3_yose_select(sub_msg3_class* i_this, u8 i_no) {
+    i_this->msgDataProc[i_no].count = i_this->msgDataProc[i_no].stringLength();
+    i_this->field_0xec8[i_no] = i_this->msgDataProc[i_no].lineCount;
+    i_this->msgDataProc[i_no].lineCount = 0;
+
+    i_this->msgDataProc[i_no].stringShift();
+    dMsg3_textPosition(i_this, i_no);
 }
 
 /* 801EC8CC-801EC97C       .text dMsg3_textPosition__FP14sub_msg3_classUc */
-void dMsg3_textPosition(sub_msg3_class*, u8) {
-    /* Nonmatching */
+void dMsg3_textPosition(sub_msg3_class* i_Msg, u8 i_no) {
+    int pos = i_Msg->field_0xeac * (2 - i_Msg->field_0xec8[i_no]);
+
+    J2DTextBox* box = (J2DTextBox*)i_Msg->text_pane[i_no].pane;
+    box->field_0xd8 = 0.0f;
+    box->field_0xdc = pos;
+
+    box = (J2DTextBox*)i_Msg->ruby_pane[i_no].pane;
+    box->field_0xd8 = 0.0f;
+    box->field_0xdc = pos;
+
+    box = (J2DTextBox*)i_Msg->textSdw_pane[i_no].pane;
+    box->field_0xd8 = 0.0f;
+    box->field_0xdc = pos;
+
+    box = (J2DTextBox*)i_Msg->rubySdw_pane[i_no].pane;
+    box->field_0xd8 = 0.0f;
+    box->field_0xdc = pos;
 }
 
 /* 801EC97C-801EC9F0       .text dMsg3_rubySet__FP14sub_msg3_class */
-void dMsg3_rubySet(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_rubySet(sub_msg3_class* i_this) {
+    if (i_this->mStatus == 5 || i_this->mStatus == 6 || i_this->mStatus == 7 ||
+        i_this->mStatus == 10) {
+        for (int i = 0; i < 3; i++) {
+            if (g_messageHIO.field_0x4b == 0) {
+                i_this->ruby_pane[i].pane->hide();
+            } else {
+                i_this->ruby_pane[i].pane->show();
+            }
+        }
+    }
 }
 
 /* 801EC9F0-801ECC08       .text dMsg3_arrowMove__FP14sub_msg3_class */
-void dMsg3_arrowMove(sub_msg3_class*) {
-    /* Nonmatching */
+// Unlike dMsg2_arrowMove, the bob is applied to integer-truncated origins.
+void dMsg3_arrowMove(sub_msg3_class* i_Msg) {
+    i_Msg->field_0xeb8++;
+    if (i_Msg->field_0xeb8 > 12) {
+        i_Msg->field_0xeb8 -= 12;
+    }
+
+    i_Msg->field_0xc1c.pane->move((int)i_Msg->field_0xc1c.mPosTopLeftOrig.x, (int)i_Msg->field_0xc1c.mPosTopLeftOrig.y - abs(6 - i_Msg->field_0xeb8));
+    i_Msg->field_0xc54.pane->move((int)i_Msg->field_0xc1c.mPosTopLeftOrig.x, (int)i_Msg->field_0xc1c.mPosTopLeftOrig.y - abs(6 - i_Msg->field_0xeb8));
+    i_Msg->field_0xbac.pane->move((int)i_Msg->field_0xbac.mPosTopLeftOrig.x, (int)i_Msg->field_0xbac.mPosTopLeftOrig.y + abs(6 - i_Msg->field_0xeb8));
+    i_Msg->field_0xbe4.pane->move((int)i_Msg->field_0xbac.mPosTopLeftOrig.x, (int)i_Msg->field_0xbac.mPosTopLeftOrig.y + abs(6 - i_Msg->field_0xeb8));
 }
 
 /* 801ECC08-801ECCE4       .text dMsg3_aimAlphaSqare__FP14sub_msg3_classii */
-void dMsg3_aimAlphaSqare(sub_msg3_class*, int, int) {
-    /* Nonmatching */
+void dMsg3_aimAlphaSqare(sub_msg3_class* i_Msg, int param_1, int param_2) {
+    if (param_2 < 0) {
+        param_2 = 0;
+    } else if (param_2 > param_1) {
+        param_2 = param_1;
+    }
+
+    f32 f0 = (255.0f - dMsg3_aimBrightness());
+    f32 f31 = (((f32)param_2 * (f32)param_2) / ((f32)param_1 * (f32)param_1));
+    i_Msg->field_0xea4 = 255.0f - f0 * f31;
 }
 
 /* 801ECCE4-801ECE04       .text dMsg3_aimAlphaSqrt__FP14sub_msg3_classii */
-void dMsg3_aimAlphaSqrt(sub_msg3_class*, int, int) {
-    /* Nonmatching */
+void dMsg3_aimAlphaSqrt(sub_msg3_class* i_Msg, int param_1, int param_2) {
+    if (param_2 < 0) {
+        param_2 = 0;
+    } else if (param_2 > param_1) {
+        param_2 = param_1;
+    }
+
+    f32 progress = std::sqrtf((f32)param_2 / (f32)param_1);
+    f32 headroom = (255.0f - dMsg3_aimBrightness());
+    i_Msg->field_0xea4 = 255.0f - headroom * progress;
 }
 
 /* 801ECE04-801ECEA0       .text dMsg3_kankyoBrightness__Fv */
-void dMsg3_kankyoBrightness() {
-    /* Nonmatching */
+int dMsg3_kankyoBrightness() {
+    GXColorS10* col = dKy_Get_DifCol();
+    return 0.299f * col->r + 0.587f * col->g + 0.114f * col->b;
 }
 
 /* 801ECEA0-801ECEEC       .text dMsg3_aimBrightness__Fv */
-void dMsg3_aimBrightness() {
-    /* Nonmatching */
+u8 dMsg3_aimBrightness() {
+    int brightness = dMsg3_kankyoBrightness();
+    u8 now = brightness;
+
+    if (now > g_messageHIO.field_0x29) {
+        return 0xFF - (brightness - g_messageHIO.field_0x29);
+    }
+
+    return 0xFF;
 }
 
 /* 801ECEEC-801ED2C8       .text dMsg3_setCharAlpha__FP14sub_msg3_classUc */
-void dMsg3_setCharAlpha(sub_msg3_class*, u8) {
-    /* Nonmatching */
+// Fades each line's top and bottom edge (text and ruby separately) by where it
+// sits inside the 240-line paper texture: the first 58 lines fade in, the last
+// 52 fade out, and anything between is opaque. The result is then capped by the
+// box's current alpha.
+//
+// NONMATCHING - 4 words, one instruction scheduled early. The target zero-extends
+// i_no (clrlwi r31,r4,24) after the rubyOffset subtraction; we emit it before the
+// two lfs. Opcodes, operands and registers are otherwise identical. Tried, none of
+// which moves it: `no` dropped (i_no throughout), `no` as u8, `no` declared at the
+// top and assigned late, `no` above rubyOffset or just above `top`, `top` split
+// with +=, the implicit (f32) on the product, a J2DTextBox* local for the line
+// space, an explicit (int), s32. Worse: `no` above lineSpace (9w), rubyOffset
+// inlined into `top` (8w), a pane reference local (7w).
+void dMsg3_setCharAlpha(sub_msg3_class* i_Msg, u8 i_no) {
+    int lineSpace = ((J2DTextBox*)i_Msg->text_pane[0].pane)->getLineSpace();
+    f32 rubyOffset = i_Msg->field_0xcfc[0].mPosTopLeftOrig.y - i_Msg->field_0xda4[0].mPosTopLeftOrig.y;
+
+    int no = i_no;
+    f32 top = rubyOffset + i_Msg->text_pane[no].mPosTopLeft.y + (f32)(i_Msg->field_0xeac * (2 - i_Msg->field_0xec8[i_no]));
+
+    // The product is written out twice on purpose. Hoisted into one local, lineSpace
+    // has a single use, mwcc sinks its float-to-int conversion down to it, and the
+    // conversion lands in the wrong stack slot (29 words). With two uses it stays
+    // put; the later CSE still merges the two multiplies into one.
+    int textTop = (int)top;
+    int textBottom = textTop + lineSpace * i_Msg->field_0xec8[i_no];
+    int rubyTop = (int)(top - g_messageHIO.field_0x38);
+    int rubyBottom = rubyTop + lineSpace * i_Msg->field_0xec8[i_no];
+
+    if (textBottom < 58) {
+        int end = textBottom + i_Msg->mx->getHeight();
+        if (textBottom >= 0) {
+            i_Msg->field_0xedb[0][no] = dMsg3_tex_i4_color[textBottom];
+        } else {
+            i_Msg->field_0xedb[0][no] = 0;
+        }
+
+        if (end >= 0) {
+            i_Msg->field_0xedb[1][no] = dMsg3_tex_i4_color[end];
+        } else {
+            i_Msg->field_0xedb[1][no] = 0;
+        }
+    } else if (textTop > 187) {
+        int end = textTop + i_Msg->mx->getHeight();
+        if (textTop <= 239) {
+            i_Msg->field_0xedb[0][no] = dMsg3_tex_i4_color[textTop];
+        } else {
+            i_Msg->field_0xedb[0][no] = 0;
+        }
+
+        if (end <= 239) {
+            i_Msg->field_0xedb[1][no] = dMsg3_tex_i4_color[end];
+        } else {
+            i_Msg->field_0xedb[1][no] = 0;
+        }
+    } else {
+        i_Msg->field_0xedb[0][no] = 0xFF;
+        i_Msg->field_0xedb[1][no] = 0xFF;
+    }
+
+    if (rubyBottom < 58) {
+        int end = rubyBottom + i_Msg->rx->getHeight();
+        if (rubyBottom >= 0) {
+            i_Msg->field_0xedb[2][no] = dMsg3_tex_i4_color[rubyBottom];
+        } else {
+            i_Msg->field_0xedb[2][no] = 0;
+        }
+
+        if (end >= 0) {
+            i_Msg->field_0xedb[3][no] = dMsg3_tex_i4_color[end];
+        } else {
+            i_Msg->field_0xedb[3][no] = 0;
+        }
+    } else if (rubyTop > 187) {
+        int end = rubyTop + i_Msg->rx->getHeight();
+        if (rubyTop <= 239) {
+            i_Msg->field_0xedb[2][no] = dMsg3_tex_i4_color[rubyTop];
+        } else {
+            i_Msg->field_0xedb[2][no] = 0;
+        }
+
+        if (end <= 239) {
+            i_Msg->field_0xedb[3][no] = dMsg3_tex_i4_color[end];
+        } else {
+            i_Msg->field_0xedb[3][no] = 0;
+        }
+    } else {
+        i_Msg->field_0xedb[2][no] = 0xFF;
+        i_Msg->field_0xedb[3][no] = 0xFF;
+    }
+
+    if (i_Msg->field_0xedb[0][no] > (u8)i_Msg->field_0xea8) {
+        i_Msg->field_0xedb[0][no] = i_Msg->field_0xea8;
+    }
+
+    if (i_Msg->field_0xedb[1][no] > (u8)i_Msg->field_0xea8) {
+        i_Msg->field_0xedb[1][no] = i_Msg->field_0xea8;
+    }
+
+    if (i_Msg->field_0xedb[2][no] > (u8)i_Msg->field_0xea8) {
+        i_Msg->field_0xedb[2][no] = i_Msg->field_0xea8;
+    }
+
+    if (i_Msg->field_0xedb[3][no] > (u8)i_Msg->field_0xea8) {
+        i_Msg->field_0xedb[3][no] = i_Msg->field_0xea8;
+    }
+
+    i_Msg->msgDataProc[no].setCharAlpha(i_Msg->field_0xedb[0][no],
+                                        i_Msg->field_0xedb[1][no],
+                                        i_Msg->field_0xedb[2][no],
+                                        i_Msg->field_0xedb[3][no]);
 }
 
 /* 801ED2C8-801ED37C       .text dMsg3_messageShow__FP14sub_msg3_class */
-void dMsg3_messageShow(sub_msg3_class*) {
-    /* Nonmatching */
+void dMsg3_messageShow(sub_msg3_class* i_this) {
+    for (u8 i = 0; i < 3; i++) {
+        dMsg3_screenDataSet(i_this, i);
+    }
+
+    if (i_this->field_0xec0 > 0) {
+        dMsg3_messageOut(i_this, i_this->field_0xe98,
+                         i_this->field_0xec0 - i_this->mesgEntry.field_0x16);
+    }
+
+    dMsg3_messageOut(i_this, i_this->field_0xe99, i_this->field_0xec0);
+
+    if (i_this->msgDataProc[i_this->field_0xe99].getMesgStatus() == 7) {
+        dMsg3_messageOut(i_this, i_this->field_0xe9a,
+                         i_this->field_0xec0 + i_this->mesgEntry.field_0x16);
+    }
 }
 
 /* 801ED37C-801ED4B4       .text dMsg3_messageDataInit__FP14sub_msg3_classi */
-void dMsg3_messageDataInit(sub_msg3_class*, int) {
-    /* Nonmatching */
+// NONMATCHING - 2 words: the four output_* loads are issued in the order
+// ruby, textSdw, rubySdw, text where the target has rubySdw, textSdw, ruby, text.
+// The registers are already right (text r0, ruby r5, textSdw r6, rubySdw r7). All
+// 24 declaration orders of the four locals were measured: none reaches 0, the
+// four orders that produce the target's load order (rubySdw first, or text then
+// rubySdw then textSdw) permute the registers instead (6w, register fields only),
+// and dropping the locals for direct loads is 12w.
+void dMsg3_messageDataInit(sub_msg3_class* i_Msg, int i_no) {
+    int line_width = 503;
+    int center_line_width = 486;
+
+    f32 charSpace = ((J2DTextBox*)i_Msg->text_pane[i_no].pane)->mCharSpace;
+    f32 rubyCharSpace = ((J2DTextBox*)i_Msg->ruby_pane[i_no].pane)->mCharSpace;
+
+    i_Msg->msgDataProc[i_no].dataInit();
+
+    i_Msg->msgDataProc[i_no].bmgData = i_Msg->message;
+
+    char* text = i_Msg->output_text[i_no];
+    char* ruby = i_Msg->output_ruby[i_no];
+    char* textSdw = i_Msg->output_textSdw[i_no];
+    char* rubySdw = i_Msg->output_rubySdw[i_no];
+
+    i_Msg->msgDataProc[i_no].field_0x40 = i_Msg->msgDataProc[i_no].field_0x60 = text;
+    i_Msg->msgDataProc[i_no].field_0x44 = i_Msg->msgDataProc[i_no].field_0x64 = ruby;
+    i_Msg->msgDataProc[i_no].field_0x48 = i_Msg->msgDataProc[i_no].field_0x68 = textSdw;
+    i_Msg->msgDataProc[i_no].field_0x4C = i_Msg->msgDataProc[i_no].field_0x6C = rubySdw;
+
+    i_Msg->msgDataProc[i_no].font = i_Msg->mx;
+    i_Msg->msgDataProc[i_no].rubyFont = i_Msg->rx;
+
+    i_Msg->msgDataProc[i_no].charSpace = charSpace;
+    i_Msg->msgDataProc[i_no].rubyCharSpace = rubyCharSpace;
+    i_Msg->msgDataProc[i_no].lineSpace =
+        ((J2DTextBox*)i_Msg->text_pane[i_no].pane)->mLineSpace;
+
+    i_Msg->msgDataProc[i_no].mesgEntry = &i_Msg->mesgEntry;
+
+    i_Msg->msgDataProc[i_no].fontSize = i_Msg->field_0xeb0;
+    i_Msg->msgDataProc[i_no].rubyFontSize = i_Msg->field_0xeb4;
+
+    i_Msg->msgDataProc[i_no].lineWidth = line_width;
+    i_Msg->msgDataProc[i_no].centerLineWidth = center_line_width;
+
+    i_Msg->msgDataProc[i_no].spaceFlag = 0;
 }
 
 /* 801ED4B4-801ED608       .text dMsg3_stopProc__FP14sub_msg3_class */
-void dMsg3_stopProc(sub_msg3_class*) {
-    /* Nonmatching */
+int dMsg3_stopProc(sub_msg3_class* i_Msg) {
+    if (i_Msg->field_0xed9 == 0) {
+        if (CPad_GET_STICK_POS_Y(0) > 0.7f || CPad_GET_STICK_POS_Y(3) > 0.7f) {
+            if (i_Msg->field_0xec0 != 0) {
+                u8 r4 = i_Msg->field_0xe9a;
+                i_Msg->field_0xed9 = 1;
+                dMsg3_screenDataSet(i_Msg, r4);
+                i_Msg->field_0xebc = 3;
+                i_Msg->field_0xec0 -= i_Msg->mesgEntry.field_0x16;
+                i_Msg->mStatus = fopMsgStts_MSG_UNK5_e;
+                mDoAud_seStart(JA_SE_SCROLL_1, NULL);
+            }
+        } else if (CPad_CHECK_TRIG_A(0) || CPad_GET_STICK_POS_Y(0) < -0.7f ||
+                   CPad_GET_STICK_POS_Y(3) < -0.7f) {
+            u8 r4 = i_Msg->field_0xe98;
+            i_Msg->field_0xed9 = 2;
+            dMsg3_screenDataSet(i_Msg, r4);
+            i_Msg->field_0xebc = 1;
+            i_Msg->field_0xec0 += i_Msg->mesgEntry.field_0x16;
+            i_Msg->mStatus = fopMsgStts_MSG_UNK5_e;
+            mDoAud_seStart(JA_SE_SCROLL_1, NULL);
+        }
+    } else {
+        dMsg3_stickInfoCheck(i_Msg);
+    }
+
+    return 1;
 }
 
 /* 801ED608-801ED738       .text dMsg3_closewaitProc__FP14sub_msg3_class */
-void dMsg3_closewaitProc(sub_msg3_class*) {
-    /* Nonmatching */
+int dMsg3_closewaitProc(sub_msg3_class* i_Msg) {
+    if (i_Msg->field_0xed9 == 0) {
+        if (CPad_GET_STICK_POS_Y(0) > 0.7f || CPad_GET_STICK_POS_Y(3) > 0.7f) {
+            if (i_Msg->field_0xec0 != 0) {
+                u8 r4 = i_Msg->field_0xe9a;
+                i_Msg->field_0xed9 = 1;
+                dMsg3_screenDataSet(i_Msg, r4);
+                i_Msg->field_0xebc = 3;
+                i_Msg->field_0xec0 -= i_Msg->mesgEntry.field_0x16;
+                i_Msg->mStatus = fopMsgStts_MSG_UNK5_e;
+                mDoAud_seStart(JA_SE_SCROLL_1, NULL);
+            }
+        } else if (CPad_CHECK_TRIG_A(0) || CPad_GET_STICK_POS_Y(0) < -0.7f ||
+                   CPad_GET_STICK_POS_Y(3) < -0.7f) {
+            i_Msg->field_0xed9 = 2;
+            mDoAud_seStart(JA_SE_TALK_WIN_CLOSE, NULL);
+            i_Msg->mStatus = fopMsgStts_MSG_ENDS_e;
+        }
+    } else {
+        dMsg3_stickInfoCheck(i_Msg);
+    }
+
+    return 1;
 }
 
 /* 801ED738-801ED8A8       .text dMsg3_openProc__FP14sub_msg3_class */
-void dMsg3_openProc(sub_msg3_class*) {
-    /* Nonmatching */
+int dMsg3_openProc(sub_msg3_class* i_Msg) {
+    if (i_Msg->field_0xe94 == 0) {
+        dMsg3_messageOut(i_Msg, i_Msg->field_0xe99, i_Msg->field_0xec0);
+        if (i_Msg->msgDataProc[i_Msg->field_0xe99].getMesgStatus() == 7) {
+            dMsg3_messageOut(i_Msg, i_Msg->field_0xe9a,
+                             i_Msg->field_0xec0 + i_Msg->mesgEntry.field_0x16);
+        }
+    } else if (i_Msg->field_0xe94 == dMsg3_popSpeed) {
+        i_Msg->mStatus = i_Msg->msgDataProc[i_Msg->field_0xe99].getMesgStatus();
+    }
+
+    i_Msg->field_0xea8 =
+        fopMsgM_valueIncrease(dMsg3_popSpeed, i_Msg->field_0xe94, 0) * 255.0f;
+    if (i_Msg->field_0xe94 != 0) {
+        dMsg3_messageShow(i_Msg);
+    }
+
+    if (i_Msg->msgDataProc[i_Msg->field_0xe99].getMesgStatus() == 7) {
+        i_Msg->field_0xc1c.mNowAlpha = i_Msg->field_0xea8;
+        i_Msg->field_0xc54.mNowAlpha = i_Msg->field_0xea8;
+    } else {
+        i_Msg->field_0xc8c.mNowAlpha = i_Msg->field_0xea8;
+        i_Msg->field_0xcc4.mNowAlpha = i_Msg->field_0xea8;
+    }
+
+    dMsg3_aimAlphaSqrt(i_Msg, dMsg3_popSpeed, i_Msg->field_0xe94);
+    dComIfG_setBrightness(i_Msg->field_0xea4);
+    i_Msg->field_0xe94++;
+    return 1;
 }
 
 /* 801ED8A8-801EDA30       .text dMsg3_closeProc__FP14sub_msg3_class */
-void dMsg3_closeProc(sub_msg3_class*) {
-    /* Nonmatching */
+int dMsg3_closeProc(sub_msg3_class* i_Msg) {
+    if (i_Msg->field_0xe94 == 0) {
+        for (u8 i = 0; i < 3; i++) {
+            dMsg3_messagePaneHide(i_Msg, i);
+            dMsg3_outFontHide(i);
+        }
+
+        JKRRemoveResource(i_Msg->head_p, NULL);
+        i_Msg->mStatus = fopMsgStts_BOX_CLOSED_e;
+    }
+
+    i_Msg->field_0xe94--;
+    if (i_Msg->field_0xe94 < 0) {
+        i_Msg->field_0xe94 = 0;
+    }
+
+    i_Msg->field_0xea8 =
+        fopMsgM_valueIncrease(dMsg3_popSpeed, i_Msg->field_0xe94, 0) * 255.0f;
+
+    if (i_Msg->field_0xbac.mNowAlpha != 0) {
+        i_Msg->field_0xbac.mNowAlpha = i_Msg->field_0xea8;
+        i_Msg->field_0xbe4.mNowAlpha = i_Msg->field_0xea8;
+    }
+
+    if (i_Msg->field_0xc1c.mNowAlpha != 0) {
+        i_Msg->field_0xc1c.mNowAlpha = i_Msg->field_0xea8;
+        i_Msg->field_0xc54.mNowAlpha = i_Msg->field_0xea8;
+    }
+
+    if (i_Msg->field_0xc8c.mNowAlpha != 0) {
+        i_Msg->field_0xc8c.mNowAlpha = i_Msg->field_0xea8;
+        i_Msg->field_0xcc4.mNowAlpha = i_Msg->field_0xea8;
+    }
+
+    dMsg3_aimAlphaSqare(i_Msg, dMsg3_popSpeed, i_Msg->field_0xe94);
+    dComIfG_setBrightness(i_Msg->field_0xea4);
+    return 1;
 }
 
 /* 801EDA30-801EDE80       .text dMsg3_outwaitProc__FP14sub_msg3_class */
-void dMsg3_outwaitProc(sub_msg3_class*) {
-    /* Nonmatching */
+int dMsg3_outwaitProc(sub_msg3_class* i_Msg) {
+    if (i_Msg->field_0xebc == 1 || i_Msg->field_0xebc == 2) {
+        i_Msg->field_0xec4 += 12;
+    } else if (i_Msg->field_0xebc == 3 || i_Msg->field_0xebc == 4) {
+        i_Msg->field_0xec4 -= 12;
+    }
+
+    if (i_Msg->field_0xec4 > 1020) {
+        i_Msg->field_0xec4 -= 2040;
+    } else if (i_Msg->field_0xec4 < -1020) {
+        i_Msg->field_0xec4 += 2040;
+    }
+
+    if (i_Msg->field_0xebc == 1) {
+        int top = i_Msg->field_0xe98;
+
+        for (int i = 0; i < 3; i++) {
+            i_Msg->text_pane[i].mPosTopLeft.y -= 12.0f;
+        }
+
+        i_Msg->field_0xeda -= 85;
+
+        if (i_Msg->text_pane[top].mPosTopLeft.y < -i_Msg->field_0xe90) {
+            i_Msg->field_0xebc = 2;
+
+            u8 tmp = i_Msg->field_0xe99;
+            i_Msg->field_0xe99 = i_Msg->field_0xe9a;
+            i_Msg->field_0xe9a = i_Msg->field_0xe98;
+            i_Msg->field_0xe98 = tmp;
+
+            if (i_Msg->msgDataProc[i_Msg->field_0xe99].getMesgStatus() == 7) {
+                dMsg3_messageOut(i_Msg, i_Msg->field_0xe9a, i_Msg->field_0xec0 + i_Msg->mesgEntry.field_0x16);
+            } else {
+                dMsg3_messagePaneHide(i_Msg, i_Msg->field_0xe9a);
+                dMsg3_outFontHide(i_Msg->field_0xe9a);
+            }
+
+            i_Msg->field_0xeda = 0;
+            dMsg3_arrowUpHide(i_Msg);
+            dMsg3_arrowDownHide(i_Msg);
+            dMsg3_dotHide(i_Msg);
+        }
+    } else if (i_Msg->field_0xebc == 3) {
+        int bottom = i_Msg->field_0xe9a;
+
+        for (int i = 0; i < 3; i++) {
+            i_Msg->text_pane[i].mPosTopLeft.y += 12.0f;
+        }
+
+        i_Msg->field_0xeda -= 127;
+
+        if (i_Msg->text_pane[bottom].mPosTopLeft.y > i_Msg->field_0xcfc[0].mSizeOrig.y) {
+            i_Msg->field_0xebc = 4;
+
+            u8 tmp = i_Msg->field_0xe99;
+            i_Msg->field_0xe99 = i_Msg->field_0xe98;
+            i_Msg->field_0xe98 = i_Msg->field_0xe9a;
+            i_Msg->field_0xe9a = tmp;
+
+            if (i_Msg->field_0xec0 > 0) {
+                dMsg3_messageOut(i_Msg, i_Msg->field_0xe98, i_Msg->field_0xec0 - i_Msg->mesgEntry.field_0x16);
+            } else {
+                dMsg3_messagePaneHide(i_Msg, i_Msg->field_0xe98);
+                dMsg3_outFontHide(i_Msg->field_0xe98);
+            }
+
+            i_Msg->field_0xeda = 0;
+            dMsg3_arrowUpHide(i_Msg);
+            dMsg3_arrowDownHide(i_Msg);
+            dMsg3_dotHide(i_Msg);
+        }
+    } else if (i_Msg->field_0xebc == 2) {
+        for (int i = 0; i < 3; i++) {
+            i_Msg->text_pane[i].mPosTopLeft.y -= 12.0f;
+        }
+
+        i_Msg->field_0xeda += 43;
+
+        if (i_Msg->text_pane[i_Msg->field_0xe99].mPosTopLeft.y <= i_Msg->text_pane[0].mPosTopLeftOrig.y) {
+            i_Msg->text_pane[i_Msg->field_0xe98].mPosTopLeft.y = i_Msg->text_pane[0].mPosTopLeftOrig.y - i_Msg->field_0xe90;
+            i_Msg->text_pane[i_Msg->field_0xe99].mPosTopLeft.y = i_Msg->text_pane[0].mPosTopLeftOrig.y;
+            i_Msg->text_pane[i_Msg->field_0xe9a].mPosTopLeft.y = i_Msg->text_pane[0].mPosTopLeftOrig.y + i_Msg->field_0xe90;
+
+            i_Msg->field_0xebc = 0;
+
+            if (i_Msg->msgDataProc[i_Msg->field_0xe99].getMesgStatus() == 7) {
+                i_Msg->mStatus = fopMsgStts_STOP_e;
+                dMsg3_arrowDownShow(i_Msg);
+            } else {
+                i_Msg->mStatus = fopMsgStts_MSG_DISPLAYED_e;
+                dMsg3_dotShow(i_Msg);
+            }
+
+            i_Msg->field_0xeda = 0xFF;
+
+            if (i_Msg->field_0xec0 != 0) {
+                dMsg3_arrowUpShow(i_Msg);
+            }
+        }
+
+        dMsg3_messageShow(i_Msg);
+    } else if (i_Msg->field_0xebc == 4) {
+        for (int i = 0; i < 3; i++) {
+            i_Msg->text_pane[i].mPosTopLeft.y += 12.0f;
+        }
+
+        i_Msg->field_0xeda += 37;
+
+        if (i_Msg->text_pane[i_Msg->field_0xe99].mPosTopLeft.y >= i_Msg->text_pane[0].mPosTopLeftOrig.y) {
+            i_Msg->text_pane[i_Msg->field_0xe98].mPosTopLeft.y = i_Msg->text_pane[0].mPosTopLeftOrig.y - i_Msg->field_0xe90;
+            i_Msg->text_pane[i_Msg->field_0xe99].mPosTopLeft.y = i_Msg->text_pane[0].mPosTopLeftOrig.y;
+            i_Msg->text_pane[i_Msg->field_0xe9a].mPosTopLeft.y = i_Msg->text_pane[0].mPosTopLeftOrig.y + i_Msg->field_0xe90;
+
+            i_Msg->field_0xebc = 0;
+            i_Msg->mStatus = fopMsgStts_STOP_e;
+            i_Msg->field_0xeda = 0xFF;
+            dMsg3_arrowDownShow(i_Msg);
+
+            if (i_Msg->field_0xec0 != 0) {
+                dMsg3_arrowUpShow(i_Msg);
+            }
+        }
+
+        dMsg3_messageShow(i_Msg);
+    } else {
+        dMsg3_messageShow(i_Msg);
+    }
+
+    return 1;
 }
 
 /* 801EDE80-801EDF18       .text draw__14dDlst_2DMSG3_cFv */
 void dDlst_2DMSG3_c::draw() {
-    /* Nonmatching */
+    J2DOrthoGraph* graf = dComIfGp_getCurrentGrafPort();
+    graf->setPort();
+
+    for (int i = 0; i < 3; i++) {
+        sScreen3[i]->setScissor(true);
+        sScreen3[i]->draw(0.0f, 0.0f, graf);
+    }
+
+    outFontDraw();
 }
 
 /* 801EDF18-801EE104       .text outFontDraw__14dDlst_2DMSG3_cFv */
+// dDlst_2DMSG2_c::outFontDraw with the large-icon branch gone: every icon takes
+// the line-height formula. No heap switch either.
 void dDlst_2DMSG3_c::outFontDraw() {
-    /* Nonmatching */
+    J2DPane* ppane = actorP->field_0xcfc[0].pane;
+    f32 top = ppane->getGlbBounds().i.y;
+    f32 bottom = ppane->getGlbBounds().f.y;
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 8; j++) {
+            u8 iconNum = actorP->msgDataProc[i].getIconNum(j);
+            int posX = actorP->msgDataProc[i].getIconPosX(j);
+            int posY = actorP->msgDataProc[i].getIconPosY(j);
+            int scale = actorP->msgDataProc[i].getIconScale(j);
+
+            if (iconNum != fopMsgM_Icon_NONE_e) {
+                // The pane is spelled out twice on purpose. Hoisted into a local
+                // (as dMsg2 does), it permutes the proc base, posY and the pane
+                // across r4/r5/r6: 11 words, register fields only.
+                int x = (f32)posX + actorP->text_pane[i].pane->getGlbBounds().i.x;
+                int y = (f32)(actorP->field_0xeac * (2 - actorP->field_0xec8[i] + posY * 2)) + actorP->text_pane[i].pane->getGlbBounds().i.y;
+                u8 alpha = actorP->field_0xea8;
+
+                if ((f32)y > top && (f32)y < bottom - (f32)scale) {
+                    fopMsgM_outFontDraw(bbutton_icon3[j][i], bbutton_kage3[j][i], x, y, scale, &bbuttonTimer3[j][i], alpha, iconNum);
+                }
+            }
+        }
+    }
 }
 
 /* 801EE104-801EE218       .text dMsg3_Draw__FP14sub_msg3_class */
-static BOOL dMsg3_Draw(sub_msg3_class*) {
-    /* Nonmatching */
+BOOL dMsg3_Draw(sub_msg3_class* i_this) {
+    for (int i = 0; i < 3; i++) {
+        i_this->text_pane[i].mNowAlpha = i_this->field_0xea8;
+        i_this->ruby_pane[i].mNowAlpha = i_this->field_0xea8;
+        i_this->textSdw_pane[i].mNowAlpha = i_this->field_0xea8;
+        i_this->rubySdw_pane[i].mNowAlpha = i_this->field_0xea8;
+
+        fopMsgM_setAlpha(&i_this->text_pane[i]);
+        fopMsgM_setAlpha(&i_this->ruby_pane[i]);
+        fopMsgM_setAlpha(&i_this->textSdw_pane[i]);
+        fopMsgM_setAlpha(&i_this->rubySdw_pane[i]);
+    }
+
+    fopMsgM_setAlpha(&i_this->field_0xbac);
+    fopMsgM_setAlpha(&i_this->field_0xbe4);
+    fopMsgM_setAlpha(&i_this->field_0xc1c);
+    fopMsgM_setAlpha(&i_this->field_0xc54);
+    fopMsgM_setAlpha(&i_this->field_0xc8c);
+    fopMsgM_setAlpha(&i_this->field_0xcc4);
+
+    dComIfGd_set2DOpa(&message);
+    msg3d->draw();
+
+    return TRUE;
 }
 
 /* 801EE218-801EE740       .text dMsg3_Execute__FP14sub_msg3_class */
-static BOOL dMsg3_Execute(sub_msg3_class*) {
-    /* Nonmatching */
+// dMsg2_Execute run on the message heap and with the paper model ticked first.
+// The ruby option is ignored: there is no -4 lift and no ruby show/hide pass.
+BOOL dMsg3_Execute(sub_msg3_class* i_Msg) {
+    JKRHeap* heap = mDoExt_setCurrentHeap(i_Msg->Heap);
+    msg3d->exec();
+
+    if (i_Msg->mStatus == fopMsgStts_BOX_OPENING_e) {
+        dMsg3_openProc(i_Msg);
+    } else if (i_Msg->mStatus == fopMsgStts_MSG_UNK5_e) {
+        dMsg3_outwaitProc(i_Msg);
+    } else if (i_Msg->mStatus == fopMsgStts_STOP_e) {
+        dMsg3_stopProc(i_Msg);
+    } else if (i_Msg->mStatus == fopMsgStts_MSG_DISPLAYED_e) {
+        dMsg3_closewaitProc(i_Msg);
+    } else if (i_Msg->mStatus == fopMsgStts_MSG_ENDS_e) {
+        dMsg3_closeProc(i_Msg);
+    } else if (i_Msg->mStatus == fopMsgStts_MSG_DESTROYED_e) {
+        fopMsgM_Delete(i_Msg);
+    }
+
+    dMsg3_arrowMove(i_Msg);
+
+    for (int i = 0; i < 3; i++) {
+        f32 x = i_Msg->text_pane[i].mPosTopLeft.x + g_messageHIO.field_0x58;
+        f32 y = i_Msg->text_pane[i].mPosTopLeft.y;
+        i_Msg->text_pane[i].pane->move((int)x, (int)y);
+        i_Msg->ruby_pane[i].pane->move((int)x, (int)y - g_messageHIO.field_0x38);
+
+        i_Msg->textSdw_pane[i].pane->move((int)x + 2, (int)y + 2);
+        i_Msg->rubySdw_pane[i].pane->move((int)x + 2, (int)y + 2 - g_messageHIO.field_0x38);
+    }
+
+    dMsg3_rubySet(i_Msg);
+
+    for (int i = 0; i < 3; i++) {
+        // Same casts as dMsg2_Execute: the HIO members are not TColors.
+        ((J2DTextBox*)i_Msg->text_pane[i].pane)->setFontColor(*(JUtility::TColor*)&g_messageHIO.field_0x5, *(JUtility::TColor*)&g_messageHIO.field_0x5);
+        ((J2DTextBox*)i_Msg->ruby_pane[i].pane)->setFontColor(*(JUtility::TColor*)&g_messageHIO.field_0x1d, *(JUtility::TColor*)&g_messageHIO.field_0x1d);
+        ((J2DTextBox*)i_Msg->textSdw_pane[i].pane)->setFontColor(*(JUtility::TColor*)&g_messageHIO.field_0x11, *(JUtility::TColor*)&g_messageHIO.field_0x11);
+        ((J2DTextBox*)i_Msg->rubySdw_pane[i].pane)->setFontColor(*(JUtility::TColor*)&g_messageHIO.field_0x11, *(JUtility::TColor*)&g_messageHIO.field_0x11);
+
+        ((J2DTextBox*)i_Msg->text_pane[i].pane)->setWhite(*(JUtility::TColor*)&g_messageHIO.field_0x9);
+        ((J2DTextBox*)i_Msg->ruby_pane[i].pane)->setWhite(*(JUtility::TColor*)&g_messageHIO.field_0x21);
+        ((J2DTextBox*)i_Msg->textSdw_pane[i].pane)->setWhite(*(JUtility::TColor*)&g_messageHIO.field_0x15);
+        ((J2DTextBox*)i_Msg->rubySdw_pane[i].pane)->setWhite(*(JUtility::TColor*)&g_messageHIO.field_0x15);
+
+        ((J2DTextBox*)i_Msg->text_pane[i].pane)->setBlack(*(JUtility::TColor*)&g_messageHIO.field_0xd);
+        ((J2DTextBox*)i_Msg->ruby_pane[i].pane)->setBlack(*(JUtility::TColor*)&g_messageHIO.field_0x25);
+        ((J2DTextBox*)i_Msg->textSdw_pane[i].pane)->setBlack(*(JUtility::TColor*)&g_messageHIO.field_0x19);
+        ((J2DTextBox*)i_Msg->rubySdw_pane[i].pane)->setBlack(*(JUtility::TColor*)&g_messageHIO.field_0x19);
+    }
+
+    dComIfGp_setMesgStatus(i_Msg->mStatus);
+    mDoExt_setCurrentHeap(heap);
+    return TRUE;
 }
 
 /* 801EE740-801EE748       .text dMsg3_IsDelete__FP14sub_msg3_class */
-static BOOL dMsg3_IsDelete(sub_msg3_class*) {
-    /* Nonmatching */
+BOOL dMsg3_IsDelete(sub_msg3_class*) {
+    return TRUE;
 }
 
 /* 801EE748-801EE904       .text dMsg3_Delete__FP14sub_msg3_class */
-static BOOL dMsg3_Delete(sub_msg3_class*) {
-    /* Nonmatching */
+BOOL dMsg3_Delete(sub_msg3_class* i_this) {
+    dComIfGp_setMesgStatus(0);
+    dComIfG_setBrightness(0xFF);
+
+    JKRHeap* heap = mDoExt_setCurrentHeap(i_this->Heap);
+
+    for (int i = 0; i < 3; i++) {
+        delete sScreen3[i];
+    }
+
+    i_this->Heap->free(i_this->Tex[0]);
+    i_this->Heap->free(i_this->Tex[1]);
+    mDoExt_removeMesgFont();
+    mDoExt_removeRubyFont();
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 8; j++) {
+            delete bbutton_icon3[j][i];
+            delete bbutton_kage3[j][i];
+        }
+
+        i_this->Heap->free(i_this->output_text[i]);
+        i_this->Heap->free(i_this->output_ruby[i]);
+        i_this->Heap->free(i_this->output_textSdw[i]);
+        i_this->Heap->free(i_this->output_rubySdw[i]);
+    }
+
+    delete msg3d;
+    msg3d = NULL;
+
+    // Unlike dMsg2_Delete, the heap is restored *before* freeAll, and the message
+    // archive is not emptied here.
+    mDoExt_setCurrentHeap(heap);
+    i_this->Heap->freeAll();
+    dComIfGp_setHeapLockFlag(0);
+    return TRUE;
 }
 
 /* 801EE904-801EEEFC       .text dMsg3_Create__FP9msg_class */
-static cPhs_State dMsg3_Create(msg_class*) {
-    /* Nonmatching */
+// dMsg2_Create with its own heap-lock value (9, not 8), the 3D paper model, a
+// different screen layout and no message-number substitution.
+cPhs_State dMsg3_Create(msg_class* i_this) {
+    sub_msg3_class* i_Msg = (sub_msg3_class*)i_this;
+
+    if (dComIfGp_isHeapLockFlag() != 0 && dComIfGp_isHeapLockFlag() != 9) {
+        return cPhs_INIT_e;
+    }
+
+    i_Msg->Heap = dComIfGp_getExpHeap2D();
+    dComIfGp_setHeapLockFlag(9);
+    JKRHeap* heap = mDoExt_setCurrentHeap(i_Msg->Heap);
+
+    msg3d = new dmsg3_3d_c();
+
+    for (u8 i = 0; i < 3; i++) {
+        sScreen3[i] = new J2DScreen();
+        sScreen3[i]->set("hukidashi_02.blo", dComIfGp_getMsgArchive());
+    }
+
+    // The asserts compare against a literal 0: the condition is stringified into
+    // the pool, and the target's strings read "!= 0", not "!= NULL".
+    i_Msg->Tex[0] = (ResTIMG*)i_Msg->Heap->alloc(0x11800, 0x20);
+    JUT_ASSERT(2188, i_Msg->Tex[0] != 0);
+
+    i_Msg->Tex[1] = (ResTIMG*)i_Msg->Heap->alloc(0x11800, 0x20);
+    JUT_ASSERT(2190, i_Msg->Tex[1] != 0);
+
+    dMsg3_fontdataInit(i_Msg);
+
+    for (u8 i = 0; i < 3; i++) {
+        for (int j = 0; j < 8; j++) {
+            bbutton_icon3[j][i] = new J2DPicture("font_07_02.bti");
+            bbutton_kage3[j][i] = new J2DPicture("font_07_02.bti");
+            fopMsgM_blendInit(bbutton_icon3[j][i], "font_00.bti");
+            fopMsgM_blendInit(bbutton_kage3[j][i], "font_00.bti");
+
+            bbutton_icon3[j][i]->hide();
+            bbutton_kage3[j][i]->hide();
+            bbutton_icon3[j][i]->setAlpha(0);
+            bbutton_kage3[j][i]->setAlpha(0);
+
+            bbuttonTimer3[j][i] = -1;
+        }
+    }
+
+    for (u8 i = 0; i < 3; i++) {
+        i_Msg->output_text[i] = (char*)i_Msg->Heap->alloc(1001, 4);
+        JUT_ASSERT(2213, i_Msg->output_text[i] != 0);
+
+        i_Msg->output_ruby[i] = (char*)i_Msg->Heap->alloc(1001, 4);
+        JUT_ASSERT(2216, i_Msg->output_ruby[i] != 0);
+
+        i_Msg->output_textSdw[i] = (char*)i_Msg->Heap->alloc(1001, 4);
+        JUT_ASSERT(2219, i_Msg->output_textSdw[i] != 0);
+
+        i_Msg->output_rubySdw[i] = (char*)i_Msg->Heap->alloc(1001, 4);
+        JUT_ASSERT(2222, i_Msg->output_rubySdw[i] != 0);
+    }
+
+    i_Msg->head_p = i_Msg->msgGet.getMesgHeader(i_this->mMsgNo);
+    JUT_ASSERT(2227, i_Msg->head_p);
+
+    i_Msg->message = (char*)i_Msg->msgGet.getMessage(i_Msg->head_p);
+    i_Msg->mesgEntry = i_Msg->msgGet.getMesgEntry(i_Msg->head_p);
+    i_Msg->mesgNumber = i_Msg->msgGet.getMesgNumber();
+    i_this->mStatus = fopMsgStts_BOX_OPENING_e;
+
+    dMsg3_multiTexInit(i_Msg);
+
+    for (u8 i = 0; i < 3; i++) {
+        dMsg3_screenDataInit(i_Msg, i);
+        dMsg3_screenDataSet(i_Msg, i);
+        dMsg3_messagePaneHide(i_Msg, i);
+    }
+
+    dMsg3_ScreenDataValueInit(i_Msg);
+    dMsg3_stickInfoInit(i_Msg);
+    i_Msg->field_0xebc = 0;
+    i_Msg->field_0xe98 = 2;
+    i_Msg->field_0xe99 = 0;
+    i_Msg->field_0xe9a = 1;
+
+    dMsg3_popSpeed = g_messageHIO.field_0x3b;
+    mDoExt_setCurrentHeap(heap);
+    message.setActorP(i_Msg);
+    dComIfGp_setMesgStatus(i_this->mStatus);
+    return cPhs_COMPLEATE_e;
 }
-static msg_method_class l_dMsg3_Method = {
+msg_method_class l_dMsg3_Method = {
     (process_method_func)dMsg3_Create,
     (process_method_func)dMsg3_Delete,
     (process_method_func)dMsg3_Execute,

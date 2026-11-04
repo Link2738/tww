@@ -83,7 +83,7 @@ public:
     /* 0x2E2 */ s16 mBlinkTimer;
     /* 0x2E4 */ u32 mShadowId;
     /* 0x2E8 */ dBgS_ObjAcch mObjAcch;
-    /* 0x4A8 */ dBgS_AcchCir mAcchCir;
+    /* 0x4AC */ dBgS_AcchCir mAcchCir;
     /* 0x4EC */ dCcD_Stts mStts;
     /* 0x528 */ dCcD_Cyl mCyl;
     /* 0x658 */ u8 pad658;

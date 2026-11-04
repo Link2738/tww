@@ -6,6 +6,7 @@
 #include "dolphin/gx/GXBump.h"
 #include "dolphin/gx/GX.h"
 
+#pragma dont_inline on
 void GXSetTevIndirect(GXTevStageID tevStage, GXIndTexStageID texStage, GXIndTexFormat texFmt,
                       GXIndTexBiasSel biasSel, GXIndTexMtxID mtxID, GXIndTexWrap wrapS,
                       GXIndTexWrap wrapT, u8 addPrev, u8 utcLod, GXIndTexAlphaSel alphaSel) {
@@ -28,11 +29,12 @@ void GXSetTevIndirect(GXTevStageID tevStage, GXIndTexStageID texStage, GXIndTexF
     gx->bpSentNot = 0;
 }
 
+#pragma dont_inline reset
+
 void GXSetIndTexMtx(GXIndTexMtxID mtxID, f32 offset[6], s8 scale_exp) {
+    s32 mtx[6];
     u32 val;
     u32 field;
-    f32 mtx2[6];
-    u32 stack_padding[6];
 
     scale_exp += 17;
 
@@ -58,27 +60,33 @@ void GXSetIndTexMtx(GXIndTexMtxID mtxID, f32 offset[6], s8 scale_exp) {
         val = 0;
     }
 
+    mtx[0] = (int)(1024.0f * offset[0]) & 0x7FF;
+    mtx[3] = (int)(1024.0f * offset[3]) & 0x7FF;
     field = 0;
-    GX_BITFIELD_SET(field, 21, 11, 1024.0f * offset[0]);
-    GX_BITFIELD_SET(field, 10, 11, 1024.0f * offset[3]);
-    GX_BITFIELD_SET(field, 8, 2, (scale_exp >> 0) & 3);
-    GX_BITFIELD_SET(field, 0, 8, val * 3 + 6);
+    SET_REG_FIELD(field, 11, 0, mtx[0]);
+    SET_REG_FIELD(field, 11, 11, mtx[3]);
+    SET_REG_FIELD(field, 2, 22, scale_exp & 3);
+    SET_REG_FIELD(field, 8, 24, val * 3 + 6);
     GXFIFO.u8 = 0x61;
     GXFIFO.s32 = field;
 
+    mtx[1] = (int)(1024.0f * offset[1]) & 0x7FF;
+    mtx[4] = (int)(1024.0f * offset[4]) & 0x7FF;
     field = 0;
-    GX_BITFIELD_SET(field, 21, 11, 1024.0f * offset[1]);
-    GX_BITFIELD_SET(field, 10, 11, 1024.0f * offset[4]);
-    GX_BITFIELD_SET(field, 8, 2, (scale_exp >> 2) & 3);
-    GX_BITFIELD_SET(field, 0, 8, val * 3 + 7);
+    SET_REG_FIELD(field, 11, 0, mtx[1]);
+    SET_REG_FIELD(field, 11, 11, mtx[4]);
+    SET_REG_FIELD(field, 2, 22, (scale_exp >> 2) & 3);
+    SET_REG_FIELD(field, 8, 24, val * 3 + 7);
     GXFIFO.u8 = 0x61;
     GXFIFO.s32 = field;
 
+    mtx[2] = (int)(1024.0f * offset[2]) & 0x7FF;
+    mtx[5] = (int)(1024.0f * offset[5]) & 0x7FF;
     field = 0;
-    GX_BITFIELD_SET(field, 21, 11, 1024.0f * offset[2]);
-    GX_BITFIELD_SET(field, 10, 11, 1024.0f * offset[5]);
-    GX_BITFIELD_SET(field, 8, 2, (scale_exp >> 4) & 3);
-    GX_BITFIELD_SET(field, 0, 8, val * 3 + 8);
+    SET_REG_FIELD(field, 11, 0, mtx[2]);
+    SET_REG_FIELD(field, 11, 11, mtx[5]);
+    SET_REG_FIELD(field, 2, 22, (scale_exp >> 4) & 3);
+    SET_REG_FIELD(field, 8, 24, val * 3 + 8);
     GXFIFO.u8 = 0x61;
     GXFIFO.s32 = field;
 
@@ -162,15 +170,47 @@ void GXSetTevDirect(GXTevStageID stage) {
                      GX_ITW_OFF, FALSE, FALSE, GX_ITBA_OFF);
 }
 
-void __GXUpdateBPMask(void) {}
+void GXSetTevIndWarp(GXTevStageID tevStage, GXIndTexStageID texStage, GXBool signedOffsets,
+                     GXBool replaceMode, GXIndTexMtxID mtxID) {
+    GXIndTexWrap wrap = replaceMode ? GX_ITW_0 : GX_ITW_OFF;
 
-void __GXSetIndirectMask(u32 mask) {
-    GXData* data = gx;
+    GXSetTevIndirect(tevStage, texStage, GX_ITF_8, signedOffsets ? GX_ITB_STU : GX_ITB_NONE, mtxID,
+                     wrap, wrap, FALSE, FALSE, GX_ITBA_OFF);
+}
 
-    GX_BITFIELD_SET(data->bpMask, 24, 8, mask);
-    GXFIFO.u8 = 0x61;
-    GXFIFO.s32 = data->bpMask;
-    data->bpSentNot = 0;
+void __GXUpdateBPMask(void) {
+    u32 nIndStages;
+    u32 i;
+    u32 tmap;
+    u32 nBPMask = 0;
+
+    nIndStages = GX_BITGET(gx->genMode, 13, 3);
+
+    for (i = 0; i < nIndStages; i++) {
+        switch (i) {
+        case 0:
+            tmap = GX_BITGET(gx->iref, 29, 3);
+            break;
+        case 1:
+            tmap = GX_BITGET(gx->iref, 23, 3);
+            break;
+        case 2:
+            tmap = GX_BITGET(gx->iref, 17, 3);
+            break;
+        case 3:
+            tmap = GX_BITGET(gx->iref, 11, 3);
+            break;
+        }
+
+        nBPMask |= 1 << tmap;
+    }
+
+    if ((gx->bpMask & 0xFF) != nBPMask) {
+        GX_BITFIELD_SET(gx->bpMask, 24, 8, nBPMask);
+        GXFIFO.u8 = 0x61;
+        GXFIFO.s32 = gx->bpMask;
+        gx->bpSentNot = 0;
+    }
 }
 
 void __GXFlushTextureState(void) {

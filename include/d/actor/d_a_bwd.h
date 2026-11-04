@@ -28,7 +28,7 @@ struct bwd_class {
     /* 0x02D4 */ J3DModel* mpBodyModel[20];
     /* 0x0324 */ J3DModel* m0324[20];
     /* 0x0374 */ mDoExt_brkAnm* mpBodyMorf[20];
-    /* 0x0374 */ f32 m03C4[20];
+    /* 0x3C4 */ f32 m03C4[20];
     /* 0x0414 */ s32 m0414;
     /* 0x0418 */ cXyz m0418[20];
     /* 0x0508 */ cXyz m0508[256];
@@ -129,7 +129,7 @@ struct bwd_class {
     /* 0x3B0A */ u8 m3B0A[0x3B0C - 0x3B0A];
     /* 0x3B0C */ cXyz m3B0C[2];
     /* 0x3B24 */ mDoExt_McaMorf* mpGspMorf[2];
-    /* 0x3B34 */ mDoExt_btkAnm* mpGspBtkAnm[2];
+    /* 0x3B2C */ mDoExt_btkAnm* mpGspBtkAnm[2];
     /* 0x3B34 */ mDoExt_brkAnm* mpGspBrkAnm[2];
     /* 0x3B3C */ f32 m3B3C;
     /* 0x3B40 */ f32 m3B40;

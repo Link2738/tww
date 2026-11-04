@@ -3424,7 +3424,9 @@ void daNpc_Ji1_c::battleSubActionNockBackInit(int param_1) {
 
 /* 0000A5FC-0000A744       .text battleSubActionNockBack__11daNpc_Ji1_cFv */
 BOOL daNpc_Ji1_c::battleSubActionNockBack() {
-    /* Nonmatching - retail-only regalloc */
+    // Not byte-exact: register-only (identical with registers masked). s16 matches the other
+    // battleSubAction* functions; `int` drops the register count but adds an extsh the target
+    // does not have.
     s16 temp = cLib_targetAngleY(&current.pos, &dComIfGp_getPlayer(0)->current.pos);
     if(mpOrcaMorf->checkFrame(1.0f)) {
         setAnm(5, 4.0f, 0);

@@ -65,7 +65,7 @@ public:
     /* 0x570 */ J3DModel* M_mdl;
     /* 0x574 */ J3DAnmTransform* M_bck;
     /* 0x578 */ mDoExt_bckAnm mBckAnm;
-    /* 0x5A8 */ f32 m588;
+    /* 0x588 */ f32 m588;
     /* 0x58C */ J3DAnmTevRegKey* M_brk;
     /* 0x590 */ mDoExt_brkAnm mBrkAnm;
     /* 0x5A8 */ f32 m5A8;
