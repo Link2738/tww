@@ -4,8 +4,8 @@
 //
 // Runs the timed freeze of Fire Mountain or the timed melt of Ice Ring Isle, using a switch and a
 // countdown. [inferred] Placement: params bits 0-5 treasure chest bit, bits 6-7 type, bits 8-15 switch,
-// bits 16-23 time * 10. Type 0 goes on the island. Other types go inside and set the saved event bit
-// when the chest is opened: 0x1902 for type 1, 0x1901 otherwise. On create, type 0 checks those bits
+// bits 16-23 time * 10. Type 0 runs the timer. Presumably other types are placed inside [inferred]: they set the saved
+// event bit when the chest is opened, 0x1902 for type 1 and 0x1901 otherwise. On create, type 0 checks those bits
 // (0x1902 in room 20, Fire Mountain, 0x1901 elsewhere) and keeps the switch on for good if set. A
 // restart at point 2 in this room turns the switch on for 10 frames. [asm]
 
