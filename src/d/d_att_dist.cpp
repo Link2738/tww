@@ -6,6 +6,9 @@
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/d_attention.h"
 
+// Indexed by attention_info.distances[type] on each actor. See DistTbl in d_attention.h for the
+// columns, and calcWeight for how they are used. The defaults set in fopAc_Create are 1 for MISC, 2
+// for TALK, 3 for BATTLE, 7 for SPEAK, 8 for CARRY, 15 for SHIP and 16 for DOOR and TREASURE. [asm]
 dAttention_c::DistTbl dAttention_c::dist_table[] = {
     /* 0x00 */ {     0.0f,     0.0f,    0.0f,     0.0f,      0.0f,  0.01f, 0x0000 },
     /* 0x01 */ {   250.0f,   375.0f,  500.0f,   400.0f,   -400.0f,  0.50f, 0x0000 },

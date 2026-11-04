@@ -19,6 +19,7 @@ dPnt* dPath_GetPnt(dPath* path, int pnt_index) {
         return &path->m_points[pnt_index];
 }
 
+// A room_no of -1 reads the stage's paths instead of a room's. [asm]
 /* 8008010C-80080218       .text dPath_GetRoomPath__Fii */
 dPath* dPath_GetRoomPath(int path_index, int room_no) {
     dStage_dPath_c * pd;
@@ -62,6 +63,9 @@ dPath* dPath_GetNextRoomPath(dPath* path, int room_no) {
     }
 }
 
+// Used for flows such as currents and conveyors: a polygon names a room path and point, in word 2
+// of its attributes, and the result is the vector from that point to the next. A path's switch
+// turns the flow off when set, and a path's last point wraps to its first. [asm]
 /* 80080340-800804A4       .text dPath_GetPolyRoomPathVec__FR13cBgS_PolyInfoP4cXyzPi */
 bool dPath_GetPolyRoomPathVec(cBgS_PolyInfo& polyInfo, cXyz* pDstPos, int* pDstArg0) {
     int room_no = dComIfG_Bgsp()->GetRoomId(polyInfo);
