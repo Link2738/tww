@@ -43,6 +43,8 @@
 static const int PRELOAD_RES_MAX = 0x23;
 static const int PRELOAD_DYL_MAX = 0x1B;
 
+// Per-stage lists of RELs and archives loaded in advance by phase_5 and phase_6, so that later
+// actor creation does not have to wait on the disc. [inferred]
 struct PreLoadInfoT_s {
     const char* stageName;
     const s16* dylKeyTbl;
@@ -1072,6 +1074,9 @@ static void dScnPly_devtools() {
 }
 #endif
 
+// Per-frame work for the play scene itself. Actors are separate processes. Skips everything
+// while the pause timer runs, unless an overlap is holding. Demo, event manager and attention stop
+// while the menu is up. [asm]
 /* 80234FD0-802350B4       .text dScnPly_Execute__FP13dScnPly_ply_c */
 static BOOL dScnPly_Execute(dScnPly_ply_c* i_this) {
 #ifdef TWW_DEVTOOLS
@@ -1221,6 +1226,8 @@ BOOL heapSizeCheck() {
 }
 #endif
 
+// First load step. A scene other than the play scene reinitializes all save data here and
+// resets the console if heapSizeCheck fails; the play scene only warns. [asm]
 /* 802355A8-802356B0       .text phase_00__FP13dScnPly_ply_c */
 cPhs_State phase_00(dScnPly_ply_c* i_this) {
 #if VERSION == VERSION_DEMO
@@ -1278,6 +1285,8 @@ cPhs_State phase_01(dScnPly_ply_c* i_this) {
 
 static mDoDvdThd_mountXArchive_c* l_lkDemoAnmCommand;
 
+// The player's demo animation archive, LkD00 or LkD01, is chosen by event bit UNK_2D01 and is
+// swapped only when the choice changes. [asm]
 /* 802356E0-802357F4       .text phase_0__FP13dScnPly_ply_c */
 cPhs_State phase_0(dScnPly_ply_c* i_this) {
     if (mDoAud_checkAllWaveLoadStatus()) {
@@ -1302,6 +1311,7 @@ cPhs_State phase_0(dScnPly_ply_c* i_this) {
     }
 }
 
+// Commits the pending stage name and starts loading the Stage archive. [asm]
 /* 802357F4-802359DC       .text phase_1__FP13dScnPly_ply_c */
 cPhs_State phase_1(dScnPly_ply_c* i_this) {
     if (l_lkDemoAnmCommand != NULL) {
@@ -1501,6 +1511,7 @@ cPhs_State phase_4(dScnPly_ply_c* i_this) {
     return rt;
 }
 
+// Preloads from PreLoadInfoT for this stage. preLoadNo is -1 for stages without an entry. [asm]
 /* 80236334-80236444       .text phase_5__FP13dScnPly_ply_c */
 cPhs_State phase_5(dScnPly_ply_c* i_this) {
     if (preLoadNo >= 0) {
@@ -1552,6 +1563,8 @@ cPhs_State phase_compleate(void* i_this) {
     return cPhs_COMPLEATE_e;
 }
 
+// Load phases, run in order through dComLbG_PhaseHandler. They also serve the opening scenes,
+// which share this method table. [asm]
 /* 8023655C-8023658C       .text dScnPly_Create__FP11scene_class */
 static cPhs_State dScnPly_Create(scene_class* i_this) {
     static request_of_phase_process_fn l_method[] = {
