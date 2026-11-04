@@ -181,6 +181,21 @@ void dComIfG_play_c::itemInit() {
 #endif
 }
 
+// Chooses the stage layer, which layerLoader in d_stage uses to pick actors. A start layer of 0
+// or above is used as given. Otherwise bit 0 is the time of day, 0 from hour 6 to 17 and 1 at
+// night or during a night-stop event, and story progress adds to it per stage: [asm]
+//   sea, Outset      bit 0x520: | 4, else bit 0xE20: | 2, else bit 0x101: exactly 9
+//   sea, Windfall    bit 0x2D01: | 4, else night-stop event: | 2
+//   sea, Forsaken F. exactly 3 with bit 0x1820, otherwise exactly 1
+//   A_mori           MET_KORL: | 2
+//   Asoko            bit 0x520: | 2
+//   Hyrule           8 Triforce pieces: | 4, else bit 0x3280: | 2
+//   Hyroom           8 pieces without bit 0x2C01: | 4, else 0x3280: | 2, else 0x3B40: | 6
+//   kenroom          see the code; | 6, | 4 or | 2 by story state
+//   M2tower          bit 0x2D01: | 2
+//   GanonK           exactly 8 until bit 0x3B02
+//   GTower           exactly 8 until bit 0x4002
+// Bit names above are the current UNK_ values in dSv_event_flag_c, without the prefix.
 /* 80052400-8005286C       .text getLayerNo__14dComIfG_play_cFi */
 int dComIfG_play_c::getLayerNo(int i_roomNo) {
     int stageLayer = dComIfGp_getStartStageLayer();
