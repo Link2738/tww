@@ -504,8 +504,8 @@ dScnKy_env_light_c g_env_light;
 // Time only moves if the Endless Night event is not active, the player owns the Wind Waker
 // (isGetItem(2, 0), slot 2 being dInvSlot_WIND_WAKER_e), and no event is running. In rooms where
 // time does not pass, it creeps forward only below hour 11 by day, and from hour 18 to hour 23 by
-// night, so it settles there. It does not advance at all on layers 2 and 3 of some sea rooms on later
-// versions. A wrap past 360 advances the weekday and runs dKankyo_DayProc. [asm]
+// night, so it settles there. After JPN it also stops on layers 2 and 3 of sea room 14, the Flight
+// Control Platform. A wrap past 360 advances the weekday and runs dKankyo_DayProc. [asm]
 /* 80190848-80190A18       .text setDaytime__18dScnKy_env_light_cFv */
 void dScnKy_env_light_c::setDaytime() {
     /* Nonmatching on JPN - JAIZelBasic offsets */
