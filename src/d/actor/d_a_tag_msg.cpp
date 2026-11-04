@@ -41,6 +41,9 @@ u32 daTag_Msg_c::getType2() {
     return (fopAcM_GetParam(this) >> 6) & 3;
 }
 
+// Possible bug: the bounds test is num < eventNo, so eventNo == num passes and reads one entry past
+// the stage's event list. setParam in d_event uses >= for the same test. Effect depends on stage
+// data, and is not tested. [asm]
 /* 000000A8-0000015C       .text myDemoName__11daTag_Msg_cFv */
 const char* daTag_Msg_c::myDemoName() {
     dStage_EventInfo_c *pEventInfo;
@@ -247,6 +250,9 @@ BOOL daTag_Msg_c::execute() {
     return TRUE;
 }
 
+// Message 0x9C5 goes straight to the wait action once event bit 0x502 is set, and so does any tag
+// whose switch is set. Message 0x836 keeps its attention point at the tag's base; all others raise it
+// 150 units. [asm]
 cPhs_State daTag_Msg_c::create() {
     int swBit;
     fopAcM_ct(this, daTag_Msg_c);
