@@ -23,6 +23,8 @@ BOOL fopVw_Delete(view_class* i_this) {
     return fpcMtd_Delete(&i_this->sub_method->base, i_this);
 }
 
+// Unlike the other frameworks there is no first-call guard, so this setup repeats if the
+// subclass create method is called again. [asm]
 cPhs_State fopVw_Create(void* i_this) {
     view_class* _this = (view_class*)i_this;
 

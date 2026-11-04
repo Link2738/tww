@@ -19,6 +19,7 @@ static BOOL fopScn_IsDelete(void* i_this) {
     return fpcMtd_IsDelete((process_method_class*)((scene_class*)i_this)->mpMtd, i_this);
 }
 
+// Calls mDoHIO_root.update() on every call, whether or not the delete finished. [asm]
 static BOOL fopScn_Delete(void* i_this) {
     scene_class* scene = static_cast<scene_class*>(i_this);
     BOOL ret = fpcMtd_Delete((process_method_class*)scene->mpMtd, scene);

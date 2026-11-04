@@ -17,6 +17,7 @@ BOOL fopScnPause_Enable(scene_class* i_scene) {
     return 0;
 }
 
+// Will not unpause a scene while its parent node is paused on the same bit. [asm]
 BOOL fopScnPause_Disable(scene_class* i_scene) {
     if (i_scene) {
         process_node_class* process_node = fpcM_Layer(i_scene);

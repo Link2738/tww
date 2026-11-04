@@ -2,6 +2,7 @@
  * f_op_actor_tag.cpp
  *
  */
+// g_fopAcTg_Queue is a global list of all actors, used by fopAcIt_Executor and fopAcIt_Judge. [asm]
 
 #include "f_op/f_op_actor_tag.h"
 #include "SSystem/SComponent/c_list.h"

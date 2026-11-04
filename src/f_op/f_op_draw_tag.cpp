@@ -2,6 +2,9 @@
  * f_op_draw_tag.cpp
  *
  */
+// The draw queue is 1000 lists, one per draw priority, separate from the layer tree. Scene draw
+// methods such as the one in d_s_play walk it with fopDwIt_Begin and fopDwIt_Next, in priority
+// order. [asm]
 
 #include "f_op/f_op_draw_tag.h"
 #include "SSystem/SComponent/c_list.h"

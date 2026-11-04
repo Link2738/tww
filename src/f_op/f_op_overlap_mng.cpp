@@ -2,6 +2,8 @@
  * f_op_overlap_mng.cpp
  * Overlap Process Manager
  */
+// Screen transition manager. Only one overlap request can be active, and the scene request
+// system drives it. fapGm_After steps it once a frame. [asm]
 
 #include "f_op/f_op_overlap_mng.h"
 #include "SSystem/SComponent/c_request.h"

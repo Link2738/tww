@@ -15,6 +15,7 @@ BOOL fopMsg_Draw(void* i_this) {
     return fpcLf_DrawMethod((leafdraw_method_class*)_this->sub_method, i_this);
 }
 
+// Stops for a pause but not for the menu, unlike actors. [asm]
 /* 8002A6B0-8002A6E8       .text fopMsg_Execute__FPv */
 BOOL fopMsg_Execute(void* i_this) {
     msg_class* _this = static_cast<msg_class*>(i_this);

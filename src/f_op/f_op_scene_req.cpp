@@ -2,6 +2,10 @@
  * f_op_scene_req.cpp
  * Scene Process Request
  */
+// Scene requests, built on fpcNdRq, with an optional transition. A fade name of 0x7FFF means
+// none. With a fade: wait for the overlap to start, wait until it reports ready, run the create,
+// delete or change, release the overlap, wait for it to finish, then unpause. A new scene starts
+// paused, set in fopScnRq_PostMethod, and is unpaused in fopScnRq_phase_Done. [asm]
 
 #include "f_op/f_op_scene_req.h"
 #include "f_op/f_op_overlap_mng.h"

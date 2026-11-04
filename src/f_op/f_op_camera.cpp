@@ -20,6 +20,8 @@ BOOL fopCam_Draw(camera_class* camera) {
     return cam_proc;
 }
 
+// ret is left uninitialized when skipped by the menu or a pause. fopKy_Draw and fopKy_Execute
+// have the same shape. [asm]
 /* 800292CC-80029328       .text fopCam_Execute__FP12camera_class */
 BOOL fopCam_Execute(camera_class* camera) {
     BOOL ret;

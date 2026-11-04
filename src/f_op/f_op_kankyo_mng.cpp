@@ -91,6 +91,7 @@ fpc_ProcID fopKyM_createWpillar(cXyz const* i_pos, f32 scaleXZ, f32 scaleY, int 
     return fopKyM_Create(fpcNm_WPILLAR_e, NULL, params);
 }
 
+// Despite the name this makes no process: it spawns a particle and returns -1. [asm]
 /* 8002AB40-8002ABB4       .text fopKyM_createMpillar__FPC4cXyzf */
 int fopKyM_createMpillar(cXyz const* i_pos, f32 i_size) {
     cXyz scale;

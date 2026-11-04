@@ -1,3 +1,6 @@
+// Message system helpers: creating message processes, looking up text, and measuring and
+// formatting it through fopMsgM_msgDataProc_c. Overview only so far; the tag handling in this
+// unit has not been documented yet.
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "f_op/f_op_msg_mng.h"
 #include "JSystem/JKernel/JKRArchive.h"

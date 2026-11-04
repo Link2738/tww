@@ -2,6 +2,14 @@
  * f_op_overlap_req.cpp
  * Overlap Process Request
  */
+// Phases of one transition: [asm]
+//   Create, IsCreated  start the overlap process, which is created in the root layer
+//   IsComplete         wait for it to report its fade-in done
+//   WaitOfFadeout      hold until fopOvlpReq_OverlapClr was called and mPeektime reached 0, then
+//                      tell the process to fade out. mIsPeek is 1 during this phase.
+//   IsWaitOfFadeout    wait for the fade-out
+//   IsDone             hold mDelay more frames
+//   Done               delete the process
 
 #include "SSystem/SComponent/c_request.h"
 #include "f_op/f_op_overlap_req.h"

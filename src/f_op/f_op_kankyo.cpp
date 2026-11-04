@@ -22,6 +22,8 @@ static BOOL fopKy_Draw(void* i_ky) {
     return ret;
 }
 
+// Environment processes stop while the menu is up, except ENVSE and LEVEL_SE, so ambient sound
+// keeps running. [inferred]
 /* 8002A4A4-8002A514       .text fopKy_Execute__FPv */
 static BOOL fopKy_Execute(void* i_ky) {
     BOOL ret;

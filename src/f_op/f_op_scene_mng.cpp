@@ -15,6 +15,8 @@ scene_class* fopScnM_SearchByID(fpc_ProcID id) {
 
 static uint l_scnRqID = -1;
 
+// Only this request type records its ID for fopScnM_ReRequest. The ID is never cleared, but a
+// finished request is no longer in the queue, so ReRequest then returns 0. [asm]
 BOOL fopScnM_ChangeReq(scene_class* i_scene, s16 procName, s16 fadeProcName, u16 fadePeekTime) {
     uint sceneRequestID = fopScnRq_Request(2, i_scene, procName, 0, fadeProcName, fadePeekTime);
 
