@@ -2,6 +2,7 @@
  * d_a_npc_zl1.cpp
  * NPC - Tetra
  */
+// Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_zl1.h"

@@ -2,6 +2,25 @@
  * d_a_npc_gk1.cpp
  * NPC - Mila's Father (poor)
  */
+// Reference for the common NPC template, called family A in these notes. Files using it are copies of
+// one another, so most of what is written here applies to them too. [asm]
+//
+// Parts of the template:
+//   decideType      picks the variant and archive from params. 0 false stops creation
+//   CreateHeap      body, item and hat models, each in the actor's solid heap
+//   createInit      event IDs, attention setup, and a story check that can refuse to spawn: here,
+//                   init_GK1_0 needs event bit 0x2D01, otherwise the NPC does not exist at all
+//   wait_action1    action function, set with set_action. Its phase byte (field_0x7B4) is 0 on entry,
+//                   1-3 while running and 9 on exit. mStt selects the behavior inside, through setStt
+//   getMsg          chooses the first line from story flags
+//   next_msgStatus  chooses the following line; returning 0x10 ends the talk
+//   talk_1          sets flags as lines finish, and restores the previous mStt
+//   field_0x7AE     what to ask the event system for: 0 nothing, 1 talk by itself, 2 offer a talk, 3 and
+//                   up a scripted event from mEvtIDTbl
+//   m_jnt           head and backbone turning, applied by the node callbacks
+//
+// Message numbers and event bits in each NPC's getMsg and talk functions are the most useful part for
+// tracing story state. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_gk1.h"
@@ -31,6 +50,9 @@ static char* l_evn_tbl[] = {
     "dummy",
 };
 
+// Joint callbacks run while the model's matrices are computed, so they can read and change one joint.
+// This one records the head position, and eyePos through a fixed offset. The neck and backbone versions
+// add the m_jnt angles. They find the actor through the model's user area, set in bodyCreateHeap. [asm]
 /* 00000198-000001E4       .text nodeCB_Head__FP7J3DNodei */
 static BOOL nodeCB_Head(J3DNode* i_node, int i_arg1) {
     daNpc_Gk1_c* user_area;
@@ -238,6 +260,8 @@ bool daNpc_Gk1_c::init_texPttrnAnm(signed char param_1, bool param_2) {
     return setBtp(param_1, param_2);
 }
 
+// Pattern 0 is blinking: it plays, then waits 60 to 90 frames at random. Other patterns hold their
+// last frame. [asm]
 /* 00000A7C-00000B18       .text play_btp_anm__11daNpc_Gk1_cFv */
 void daNpc_Gk1_c::play_btp_anm() {
     u8 frame_max = mBtpAnm.getBtpAnm()->getFrameMax();
@@ -321,6 +345,8 @@ void daNpc_Gk1_c::setAnm_ATR() {
     setAnm_anm(&a_anm_prm_tbl[mAnimationNum]);
 }
 
+// Message text can drive the NPC's animation. On status 6 the message's animation attribute and tag
+// are read and applied. Status 14 resets this for the next line. [asm]
 /* 00000CD8-00000D94       .text anmAtr__11daNpc_Gk1_cFUs */
 void daNpc_Gk1_c::anmAtr(unsigned short param_1) {
     u8 uVar1;
@@ -419,6 +445,8 @@ u32 daNpc_Gk1_c::getMsg() {
     return msg;
 }
 
+// Runs every frame after execution. The value set in field_0x7AE has to stay set until the event
+// starts, because a request only lasts one frame. See dEvt_control_c. checkOrder clears it. [asm]
 /* 00000F8C-00001018       .text eventOrder__11daNpc_Gk1_cFv */
 void daNpc_Gk1_c::eventOrder() {
     char event_state = field_0x7AE;
@@ -433,6 +461,8 @@ void daNpc_Gk1_c::eventOrder() {
     }
 }
 
+// Command 1 is the talk starting, which sets field_0x7A5, and wait_1 then moves to the talk state.
+// Command 2 is a scripted event starting. [asm]
 /* 00001018-000010CC       .text checkOrder__11daNpc_Gk1_cFv */
 void daNpc_Gk1_c::checkOrder() {
     u16 command = eventInfo.getCommand();
@@ -492,6 +522,8 @@ fopAc_ac_c* daNpc_Gk1_c::searchByID(fpc_ProcID i_actor, int* i_searchFailed) {
     return search_actor;
 }
 
+// field_0x7B1 picks what to look at: 1 the player's eyes, 2 a saved point, 3 a fixed angle, 4 another
+// actor, and 0 straight ahead. [asm]
 /* 000011F8-000013BC       .text lookBack__11daNpc_Gk1_cFv */
 void daNpc_Gk1_c::lookBack() {
     mLookBackHeadY = m_jnt.getHead_y();
@@ -673,6 +705,7 @@ bool daNpc_Gk1_c::chk_attn() {
     }
 }
 
+// Further than 300 units from the player, the NPC turns back to its home angle. [asm]
 /* 000019E0-00001B74       .text wait_1__11daNpc_Gk1_cFv */
 BOOL daNpc_Gk1_c::wait_1() {
     field_0x7A7 = (current.pos - dComIfGp_getPlayer(0)->current.pos).absXZ() > 300.0f;
@@ -701,6 +734,7 @@ BOOL daNpc_Gk1_c::wait_1() {
     return TRUE;
 }
 
+// Status 19 is the message being closed for good, the point to record what was said. [asm]
 /* 00001B74-00001C74       .text talk_1__11daNpc_Gk1_cFv */
 BOOL daNpc_Gk1_c::talk_1() {
     msg_class* pmVar3;
@@ -765,6 +799,8 @@ int daNpc_Gk1_c::wait_action1(void* arg0) {
     return 1;
 }
 
+// While a cutscene controls this actor through demoActorID, normal behavior is skipped and head angles
+// are zeroed. dDemo_setDemoData applies the cutscene's animation. [asm]
 /* 00001D30-00001E70       .text demo__11daNpc_Gk1_cFv */
 u8 daNpc_Gk1_c::demo() {
     J3DAnmTexPattern* pJVar2;
@@ -825,6 +861,8 @@ void daNpc_Gk1_c::shadowDraw() {
     }
 }
 
+// The unused colors only put their values in the constant pool and must stay. dSnap_RegistFig is what
+// makes the NPC count for the picto box. [asm]
 /* 00001F48-00002064       .text _draw__11daNpc_Gk1_cFv */
 BOOL daNpc_Gk1_c::_draw() {
     J3DModelData* model_data;
@@ -863,6 +901,9 @@ BOOL daNpc_Gk1_c::_draw() {
     return 1;
 }
 
+// Frame order: check event commands, then either the cutscene, the event cut or the current action,
+// then look, move, terrain collision and animation, then post event requests and update matrices and
+// collision. [asm]
 /* 00002064-00002280       .text _execute__11daNpc_Gk1_cFv */
 BOOL daNpc_Gk1_c::_execute() {
     int iVar3;
@@ -927,6 +968,8 @@ BOOL daNpc_Gk1_c::_delete() {
     return 1;
 }
 
+// Loads the archive named by decideType, waiting across frames, then builds the heap. a_siz_tbl of 0
+// means no size estimate, so fopAcM_entrySolidHeap takes the slower path. [asm]
 /* 000022D4-00002520       .text _create__11daNpc_Gk1_cFv */
 cPhs_State daNpc_Gk1_c::_create() {
     static u32 a_siz_tbl[2] = {0x0, 0x0};
