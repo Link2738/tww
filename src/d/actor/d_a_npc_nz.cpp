@@ -2,6 +2,10 @@
  * d_a_npc_nz.cpp
  * NPC - Rat (shopkeeper)
  */
+// The trader rat that comes out of a hole for bait, placed as NpcNz. Not d_a_nz, the enemy rats. Hidden
+// until event DEFAULT_NPC_NZ_ESA runs its SHOW cut, and that event starts from throwing All-Purpose
+// Bait, see daNpc_Nz_XyCheckCB. His cuts are in d_a_npc_nz_cut.inc. field_0x6C4 is the placed spot, and
+// home is pushed back 50 from it, into the hole. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_nz.h"
@@ -100,6 +104,8 @@ BOOL daNpc_Nz_c::TailNodeCallBack(J3DNode* node, int calcTiming) {
     return true;
 }
 
+// The tail is a 10-point line (mDoExt_3DlineMat), simulated here. Each point follows the last, with
+// momentum, held above the floor at home height + 5. [asm]
 /* 000003A4-00000978       .text TailControl__10daNpc_Nz_cFv */
 void daNpc_Nz_c::TailControl() {
     int i;
@@ -229,6 +235,7 @@ daNpc_Nz_HIO_c::daNpc_Nz_HIO_c() {
     field_0x24 = 250.0f;
 }
 
+// Bait only counts when the point 250 ahead of the player lands within 250 of the hole. [asm]
 /* 00001010-000011A0       .text daNpc_Nz_XyCheckCB__FPvi */
 static s16 daNpc_Nz_XyCheckCB(void* i_actor, int i_itemBtn) {
     daNpc_Nz_c* i_this = static_cast<daNpc_Nz_c*>(i_actor);
@@ -521,6 +528,8 @@ void daNpc_Nz_c::modeProc(daNpc_Nz_c::Proc_e proc, int newMode) {
     }
 }
 
+// Refusals first. Items the player already has get charged and added here, and return 0x3403. New ones
+// return 0, and the caller charges and runs DEFAULT_NPC_NZ_GETITEM. [asm]
 /* 000019DC-00001B38       .text daNpcNz_getShopBoughtMsg__FUc */
 static u32 daNpcNz_getShopBoughtMsg(u8 itemNo) {
     int messageRupee = dComIfGp_getMessageRupee();
@@ -601,6 +610,10 @@ void daNpc_Nz_c::deleteShopItem() {
     }
 }
 
+// 0x33F6 rolls which menu to offer: bait, potions, bombs or arrows, in that order. The roll covers the
+// first 1 + (has bottle) + (has bomb bag) + (has bow) rows. It counts what is owned but does not match
+// it, so a player with only a bow rolls bait or potions, never arrows, and can be offered potions with
+// no bottle. [asm]
 /* 00001CF0-00002038       .text next_msgStatus__10daNpc_Nz_cFPUl */
 u16 daNpc_Nz_c::next_msgStatus(u32* pMsgNo) {
     u16 msgStatus = fopMsgStts_MSG_CONTINUES_e;

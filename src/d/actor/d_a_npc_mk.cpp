@@ -2,6 +2,16 @@
  * d_a_npc_mk.cpp
  * NPC - Ivan
  */
+// Ivan, leader of the Killer Bees kids, and the host of their hide and seek. Two placements share this
+// class: type 0 "Mk" wanders town and offers the game, type 1 "Mk2" is the hidden one during the game.
+// Temp bit 0x40 means a game is running, and temp bit 0x20 that he has been caught. Each type hides
+// itself (flag 0x10, no draw or collision) when the other is active. [asm] [data] The game: answer yes
+// at 0x26CA and MK_GAMESTART runs, also setting bit 0x2201 for good. Type 1 waits in climb01, up a tree.
+// Rolling into the tree shakes him out [tested]: a roll crash within 200 orders MK_DROP (temp bit 2
+// keeps him down), and he runs through mMkStatic. Touching the player is the catch: runAwayProc returns
+// 4, and he jumps and stamps. The talk after a catch ends the game with MK_GAMESET only once all four
+// kids are caught (chkGameSet), the other three being d_a_npc_uk. A MAKEITEM cut gives a Piece of Heart
+// and sets bit 0x1340. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_mk.h"
@@ -222,6 +232,8 @@ u16 daNpc_Mk_c::next_msgStatus(u32* pMsgNo) {
     return msgStatus;
 }
 
+// Bit 0x1340 is the win, 0x1380 is checked next, and bit 0x1210 is set by the first talk. 0x26B5 plays if a
+// game is under way, and 0x26B1 is the catch line. [asm] [data]
 /* 00000750-000008A8       .text getMsg__10daNpc_Mk_cFv */
 u32 daNpc_Mk_c::getMsg() {
     u32 msgNo = 0;
@@ -484,6 +496,9 @@ u8 daNpc_Mk_c::getPath() {
     return fopAcM_GetParam(this) >> 8 & 0xFF;
 }
 
+// Town behavior. He walks field_0x688. With the player within 400 and inside path field_0x698 he
+// notices, runs over, and circles at 150-180 while the player stays inside field_0x690. Saying no at
+// 0x26CA sets field_0x6A4, so he runs off for 100 frames then ignores the player for 600. [asm]
 /* 00001294-00001574       .text nextVisitMode__10daNpc_Mk_cFv */
 u8 daNpc_Mk_c::nextVisitMode() {
     cXyz dist;
@@ -691,6 +706,7 @@ void daNpc_Mk_c::aroundLink() {
     mMkStatic.aroundWalk(this, pLink, mRunAroundLinkTimer);
 }
 
+// Flags the other kid through his params, for event cuts with RM_Um2. [asm]
 /* 00001A14-00001A68       .text remove_Um2__10daNpc_Mk_cFv */
 void daNpc_Mk_c::remove_Um2() {
     daNpc_Uk_c* ac = (daNpc_Uk_c*)fopAcM_searchFromName("Um2", 0, 0);
@@ -1089,6 +1105,8 @@ bool daNpc_Mk_c::talk02() {
     return mpMorf->isMorf();
 }
 
+// Two talks replace the usual one. MK_TALK3 needs bit 0x1F80 without 0x1E02. MK_TALK2 needs bit 0x1208
+// and no Picto Box of either kind. See visitSetEvent. [asm]
 /* 00002AC0-00002BB4       .text visitTalkInit__10daNpc_Mk_cFv */
 u8 daNpc_Mk_c::visitTalkInit() {
     if (dComIfGs_isEventBit(dSv_event_flag_c::UNK_1F80) && !dComIfGs_isEventBit(dSv_event_flag_c::UNK_1E02)) {
@@ -1124,6 +1142,9 @@ void daNpc_Mk_c::visitSetEvent() {
     eventInfo.setEventName("MK_TALK");
 }
 
+// temp is only set for animations 4 and 5, but this also runs in the notice and left-path modes, which
+// use animation 0, so those chase speedF toward an uninitialized value. [asm] In-game effect not tested.
+// While he circles the player, a talk also needs the player facing him, within 0x1800.
 /* 00002C90-00002F2C       .text visit01__10daNpc_Mk_cFv */
 bool daNpc_Mk_c::visit01() {
     f32 temp;

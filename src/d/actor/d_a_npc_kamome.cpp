@@ -2,6 +2,13 @@
  * d_a_npc_kamome.cpp
  * Player - Hyoi Seagull
  */
+// The seagull the player possesses with a Hyoi Pear. Wandering NPC until then, using npcAction, and
+// after the swap becomes the player actor through changePlayer, using playerAction. Only one exists at a
+// time (l_act). Placed scale times 1000 is its range: scale.x around home, scale.y above and below.
+// [asm] The swap: the pear's XY check needs a clear approach (callDemoStartCheck), event kamome_call
+// flies the bird in along that line to above the player's head, and its "change" cut takes the pear and
+// swaps. Back to Link through OPTION_CHAR_END, on R or Start, on damage, or when something else calls
+// returnLink.
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_kamome.h"
@@ -129,6 +136,8 @@ s16 daNpc_kam_c::XyCheckCB(int i_itemBtn) {
     }
 }
 
+// Runs once a frame at most, and l_demo_start_chk_cnt caches the answer. The loop steps 0x2000, which
+// covers all eight directions in 8 passes, so its other 8 repeat the same tests. [asm]
 /* 000002A4-000004F0       .text callDemoStartCheck__11daNpc_kam_cFv */
 BOOL daNpc_kam_c::callDemoStartCheck() {
     if (l_demo_start_chk_cnt != 0) {
@@ -560,6 +569,7 @@ BOOL daNpc_kam_c::returnLinkCheck() {
     return FALSE;
 }
 
+// Room 41 on the sea stage is a hardcoded exception, with its own center and radius 1300. [asm]
 /* 00002100-0000235C       .text changeAreaCheck__11daNpc_kam_cFv */
 BOOL daNpc_kam_c::changeAreaCheck() {
     // Determine if Link is allowed to take control of a Hyoi Seagull depending on his current position.
@@ -595,6 +605,7 @@ BOOL daNpc_kam_c::areaOutCheck() {
     return delta.absXZ() > scale.x ? TRUE : FALSE;
 }
 
+// Walls only steer when the stick is centered. The stick always wins. [asm]
 /* 00002450-000025B0       .text getStickAngY__11daNpc_kam_cFPsPs */
 BOOL daNpc_kam_c::getStickAngY(s16* pTargetAngleY, s16* pTargetAngleZ) {
     BOOL isTurning = FALSE;
@@ -768,6 +779,9 @@ int daNpc_kam_c::waitNpcAction(void*) {
     return 1;
 }
 
+// A flaps for 30 frames per press, at higher speed and turn rate. mFlapEnergyTimer counts down while
+// flapping and back up while gliding, from a full 150. Running out locks flapping for 150 frames and
+// refills it. [asm]
 /* 00002AF4-00002C04       .text keyProc__11daNpc_kam_cFv */
 BOOL daNpc_kam_c::keyProc() {
     if (cLib_calcTimer(&mFlapExhaustedTimer) == 0) {
@@ -803,6 +817,8 @@ BOOL daNpc_kam_c::keyProc() {
     return TRUE;
 }
 
+// Leaving the range orders kamome_out_turn, which turns back with collision off, and a hit from mTgSph ends
+// the possession through damagePlayerAction. [asm]
 /* 00002C04-00002F08       .text waitPlayerAction__11daNpc_kam_cFPv */
 int daNpc_kam_c::waitPlayerAction(void*) {
     if (mActionStatus == ACTION_STARTING) {
@@ -1236,6 +1252,8 @@ void daNpc_kam_c::setAnm(int anmIdx) {
     }
 }
 
+// Only while possessed. It attacks with type sword: a sphere at the body and a capsule 200 wide across the
+// wings, so the bird can hit things as it flies. [asm]
 /* 00003B14-00003C80       .text setCollision__11daNpc_kam_cFv */
 void daNpc_kam_c::setCollision() {
     J3DModel* model = mpMorf->getModel();

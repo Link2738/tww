@@ -518,6 +518,9 @@ current.pos = (m7BC->actor.current.pos - (local_64 *dVar8));
 }
 
 
+// Niko swings on the d_a_himo3 rope with his own pendulum math while talking. The talk can only end at
+// the top of a forward swing, when m7A0 and m7A4 are both positive with animation 0xB, and that is when
+// he lets go. [asm]
 /* 00006B08-00007314       .text cutRopeTalkProc__10daNpc_P2_cFi */
 void daNpc_P2_c::cutRopeTalkProc(int i_param_1) {
 
@@ -955,6 +958,8 @@ void daNpc_P2_c::cutSwOffProc(int i_param_1) {
     dComIfGp_evmng_cutEnd(i_param_1);    
 }
 
+// The Omamori cuts are the Pirate's Charm: these only play its sounds, and the talk itself is in event
+// data. [asm]
 /* 00008254-000082CC       .text cutSurpriseStart__10daNpc_P2_cFi */
 void daNpc_P2_c::cutSurpriseStart(int) {
     mDoAud_seStart(JA_SE_ITM_OMAMORI_BLINK);

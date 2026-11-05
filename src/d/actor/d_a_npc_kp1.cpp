@@ -2,6 +2,10 @@
  * d_a_npc_kp1.cpp
  * NPC - Maggie (rich)
  */
+// Maggie after her family's rise. createInit refuses to spawn without the fortune flag, bit 0x2D01, so
+// she exists only after Forsaken Fortress 2. See d_a_npc_kf1.
+// Her talk drives a two-part letter sidequest: she gives Maggie's Letter, GET_MAGYS_LTTR, and pays a
+// Piece of Heart, GET_KAKERA_HRT, for the Moblin's Letter. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -393,6 +397,8 @@ void daNpc_Kp1_c::setStt(signed char param_1) {
     }
 }
 
+// Line chains. 0x1E8F is a choice: option 0 leads to 0x1E91, which queues the letter demo, and option 1
+// to 0x1E90, which remembers the refusal for getMsg. 0x1E9D queues the Piece of Heart demo. [asm]
 /* 00000EE0-0000102C       .text next_msgStatus__11daNpc_Kp1_cFPUl */
 u16 daNpc_Kp1_c::next_msgStatus(u32* i_msgNo) {
     /* Nonmatching */
@@ -471,6 +477,14 @@ u16 daNpc_Kp1_c::next_msgStatus(u32* i_msgNo) {
     return result;
 }
 
+// First line, by priority: [asm]
+//   showing an item   Moblin's Letter 0x1E96, Skull Necklace 0x1EA0, anything else 0x1E9F
+//   just got a demo   0x1E92 after her letter, 0x1E9E after the Piece of Heart
+//   reserve bit 0xF set and no Moblin's Letter held   0x1E84 once the day counter is 1 or more, else 0x1E83
+//   reserve bit 0xE set   0x1E87 or 0x1E88, depending on isBeast(0)
+//   refused earlier   0x1E93
+//   otherwise         0x1E8A, which leads to the choice
+// The day counter is event register UNK_CCFF, advanced in d_kankyo_dayproc and reset when she pays.
 /* 0000102C-00001178       .text getMsg__11daNpc_Kp1_cFv */
 u32 daNpc_Kp1_c::getMsg() {
     u8 msg = mPreItemNo;
@@ -781,6 +795,7 @@ BOOL daNpc_Kp1_c::wait01() {
     return TRUE;
 }
 
+// Message 0x1E9D ending calls setReserveItemEmpty, which takes the letter from the player. [inferred]
 /* 00001378-00001408       .text talk01__11daNpc_Kp1_cFv */
 BOOL daNpc_Kp1_c::talk01() {
     talk(1);
@@ -885,6 +900,8 @@ void daNpc_Kp1_c::shadowDraw() {
     }
 }
 
+// field_0x6D8 picks which held item shows, set by message animation attributes 2 and 3 in chngAnmAtr.
+// Both item models follow the left hand. [asm]
 /* 00001E9C-00001FA4       .text _draw__11daNpc_Kp1_cFv */
 BOOL daNpc_Kp1_c::_draw() {
     GXColor unused_red = {0xFF, 0x00, 0x00, 0x80};

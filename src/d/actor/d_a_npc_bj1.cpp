@@ -2,6 +2,20 @@
  * d_a_npc_bj1.cpp
  * NPC - Generic Koroks
  */
+// The Koroks. One class serves nine actor names, BJ1 through BJ9. mType is the name's index and sets
+// the face, body scale and materials. Params byte 2 is the path index, 0xFF for none. Params byte 0 picks
+// a form: 1 gives the second form, anything else the first. BJ7 has only one. [asm]
+//   First form   before Farore's Pearl, once bit 0x1801 is set, which d_a_npc_de1 does when the Deku
+//                Tree's "contact" event starts. Stands and talks.
+//   Second form  with Farore's Pearl, no other check. The Forest Water errand, see getMsg_Corog.
+// First forms with something extra: [asm]
+//   BJ1, BJ8  coach the Deku Leaf flight to the Forbidden Woods, by wind. See getMsg_BJ1_0. [data]
+//   BJ3       teaches the Baba Bud (d_a_jbo), partnered with one of a nonzero type. See getMsg_BJ3_0.
+//   BJ4       flies a propeller circuit, the only form with flight values in the HIO table. See wait_2.
+//   BJ6       orders the event Calling once the player has the Deku Leaf, see wait_4.
+// BJ7 is Hollo, the potion maker, who gives his name in message 0x1416. [data] It needs bit 0x1801 and
+// does not
+// care about the pearl. See getMsg_BJ7_0.
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -464,6 +478,9 @@ void daNpc_Bj1_c::nodeBj1Control(J3DNode* i_node, J3DModel* i_model) {
     i_model->setAnmMtx(jntNo, mDoMtx_stack_c::get());
 }
 
+// The propeller is its own model. nodeBj1Control saves the armR2 joint's matrix, nodePrpControl fixes
+// the stalk to it at a set offset, and spins the center joint by field_0x6F0, which _execute advances by
+// field_0x6F2 each frame. The rolling sound's argument follows that speed. [asm]
 /* 00000500-0000054C       .text nodeCallBack_Prp__FP7J3DNodei */
 static BOOL nodeCallBack_Prp(J3DNode* i_node, int i_calcTiming) {
     if (i_calcTiming == 0) {
@@ -549,6 +566,8 @@ bool daNpc_Bj1_c::init_BJX_1() {
     return ret;
 }
 
+// l_bj1_prm_tbl is per mType: head scale, backbone scale, then the eye offset from the head joint, which
+// is how one body model gives nine builds. [asm]
 /* 00000998-00000CA0       .text createInit__11daNpc_Bj1_cFv */
 bool daNpc_Bj1_c::createInit() {
     static Vec l_bj1_prm_tbl[][3] = {
@@ -660,6 +679,9 @@ bool daNpc_Bj1_c::createInit() {
     return true;
 }
 
+// Animation 7 is the potion maker's dance. When it stops, and 30 more frames have passed, the potion is
+// done: sound, the shock animation, and the last pot particle. m888 only records that this has fired. The
+// emitter pointer in it is never used as one. [asm]
 /* 00000CA0-00000E10       .text setMtx_anmProc__11daNpc_Bj1_cFv */
 void daNpc_Bj1_c::setMtx_anmProc() {
     switch (mAnmNum) {
@@ -901,6 +923,8 @@ void daNpc_Bj1_c::anmAtr(u16 i_param_1) {
     control_anmAtr();
 }
 
+// Same request scheme as d_a_npc_bm1: m8B0 1 talks now, 2 allows a prompt, 3 or more orders l_evn_tbl
+// entry m8B0 - 3. Only the potion maker accepts a shown item. [asm]
 /* 0000149C-00001540       .text eventOrder__11daNpc_Bj1_cFv */
 void daNpc_Bj1_c::eventOrder() {
     s8 condition = m8B0;
@@ -958,6 +982,10 @@ bool daNpc_Bj1_c::chk_drct(f32 i_deg) {
     return cmp < cM_deg2s(i_deg);
 }
 
+// The name says the opposite of what this does: TRUE means the head or backbone did move. The function of
+// the same name in d_a_npc_bm1 is TRUE when nothing moved. talk_1 returns this for mbSetEyePos, so the
+// two
+// families update eyePos at opposite times during a talk. [asm] In-game effect not tested.
 /* 00001728-00001758       .text chk_partsNotMove__11daNpc_Bj1_cFv */
 BOOL daNpc_Bj1_c::chk_partsNotMove() {
     BOOL ret = FALSE;
@@ -1013,6 +1041,9 @@ void daNpc_Bj1_c::lookBack() {
     m_jnt.lookAtTarget(&current.angle.y, dstPos_p, src_pos, desiredYrot, mHeadLookAtMaxVel, headOnlyFollow);
 }
 
+// One bit per second-form Korok in each of registers 0x96FF to 0x9AFF and 0x9EFF. d_a_obj_ftree uses the
+// same bits by tree number in 0x9AFF and 0x9EFF, so these numbers only work if each Korok is placed with
+// the tree that shares its bit. [asm]
 /* 00001908-000019AC       .text getMaskInf__11daNpc_Bj1_cFPUc */
 bool daNpc_Bj1_c::getMaskInf(u8* o_mask) {
     bool ret = o_mask != NULL;
@@ -1258,6 +1289,9 @@ u16 daNpc_Bj1_c::next_msgStatus(u32* pMsgNo) {
     return msgStatus;
 }
 
+// After the first talk, the lines depend on dKyw_get_windsdir, which sorts the wind into eight sectors.
+// Sector 1 is the northwest wind this Korok wants for the updraft to the Forbidden Woods, and BJ8's
+// sector 7 the southwest wind toward Olivio's plateau. [data] Each has first-time and repeat lines. [asm]
 /* 00001E24-00001EB4       .text getMsg_BJ1_0__11daNpc_Bj1_cFv */
 u32 daNpc_Bj1_c::getMsg_BJ1_0() {
     if (!dComIfGs_isEventBit(0x604)) {
@@ -1274,6 +1308,8 @@ u32 daNpc_Bj1_c::getMsg_BJ2_0() {
     return dComIfGs_isEventBit(0x920) ? 0x13F4 : 0x13F2;
 }
 
+// m84B is copied from the partner's m2BA each time a talk starts. d_a_jbo sets that when a type 2 bud
+// has launched the player, so this line needs a launch since the room loaded. [asm]
 /* 00001EF4-00001F48       .text getMsg_BJ3_0__11daNpc_Bj1_cFv */
 u32 daNpc_Bj1_c::getMsg_BJ3_0() {
     if (m84B != 0) {
@@ -1297,6 +1333,16 @@ u32 daNpc_Bj1_c::getMsg_BJ6_0() {
     return dComIfGs_isEventBit(0xC02) ? 0x1405 : 0x1402;
 }
 
+// The potion maker. First line, by priority: [asm]
+//   just finished Mak_Drg     0x142B, whose end orders Get_Blu_Btl
+//   just finished Get_Blu_Btl 0x142C
+//   showing a Boko Baba Seed  0x1424 if the deal is known (bit 0x1B80), else 0x1422 which explains it
+//   showing anything else     0x1421
+//   otherwise the long speech 0x1416, or 0x1433 into the same chain with the pearl, once (bit 0xD08).
+//   Then, with the pearl, 0x1431 once (bit 0x1C80). After that 0x141E or 0x141F, by bit 0x1B80.
+// In next_msgStatus, 0x1423 and 0x1424 test the trade. Under 4 seeds gives 0x1425, later 0x1427. With 4
+// or more and an empty bottle, 0x1428. No bottle gives 0x142E, later 0x1430. "Later" is m840 and m841,
+// which are not saved. 0x1429 ending takes the 4 seeds and orders Mak_Drg.
 /* 00002008-00002164       .text getMsg_BJ7_0__11daNpc_Bj1_cFv */
 u32 daNpc_Bj1_c::getMsg_BJ7_0() {
     if (m842 != 0) {
@@ -1344,6 +1390,14 @@ u32 daNpc_Bj1_c::getMsg_BJ9_0() {
     return dComIfGs_isEventBit(0xC10) ? 0x13F0 : 0x13ED;
 }
 
+// The Forest Water errand. This Korok's bit in 0x9AFF says its tree has ever been watered, its bit in
+// 0x9EFF that it counts now. Running out of time clears all of 0x9EFF, in daPy_lk_c::execute, and bit
+// 0x102 means all eight are done. First line, by priority: [asm]
+//   not watered yet       first talk 0x148A, or the shorter 0x1497 once any Korok has explained (0x2E10).
+//                         Repeat 0x1494. Ending the first talk also sets bit 0x1D40.
+//   all eight done        0x1485 once (0x99FF), then 0x1486
+//   bit gone from 0x9EFF  0x1487 once (0x98FF), then 0x149E
+//   otherwise             0x1482 once (0x96FF), with the trees left as a text number, then 0x1484
 /* 00002234-000023CC       .text getMsg_Corog__11daNpc_Bj1_cFv */
 u32 daNpc_Bj1_c::getMsg_Corog() {
     if (chkReg(0x9AFF)) {
@@ -1570,6 +1624,8 @@ block_18c:
     return o_retval;
 }
 
+// m8A8 is the propeller stage: 0 none, 6 open, 7 spin up, 1 fly the path, 2 descend, 3 spin down, 4 fold,
+// 5 fall under gravity. m849 marks a stage finishing and holds the Korok still that frame. [asm]
 /* 00002B5C-00002EB8       .text bj_flyMove__11daNpc_Bj1_cFv */
 bool daNpc_Bj1_c::bj_flyMove() {
     if (m8A8 == 0) {
@@ -1698,6 +1754,8 @@ void daNpc_Bj1_c::bj_nMove() {
     }
 }
 
+// The pot's particles sit at the room's map translation, not at any actor. Event look type 7 aims at the
+// same point. [asm]
 /* 00003064-000031B4       .text setPrtcl_drugPot_1__11daNpc_Bj1_cFv */
 void daNpc_Bj1_c::setPrtcl_drugPot_1() {
     f32 transX, transZ;
@@ -1776,6 +1834,8 @@ void daNpc_Bj1_c::setPrtcl_peraProOpen() {
     m878 = (u32)dComIfGp_particle_set(dPa_name::ID_AK_SN_PERAPROOPEN00, &m86C, &current.angle, NULL, 0xFF, NULL, fopAcM_GetRoomNo(this));
 }
 
+// Four small seed items thrown from the right hand on frame 20 of the throw animation. The event deletes
+// them through ActNo 7. The real seeds were already taken from the count in talk_1. [asm]
 /* 00003554-00003734       .text createSeed__11daNpc_Bj1_cFv */
 bool daNpc_Bj1_c::createSeed() {
     fopAc_ac_c* a_seed[4];
@@ -2053,6 +2113,8 @@ void daNpc_Bj1_c::eInit_ATTENTION_(int* i_prm_0_p, int* i_prm_1_p, int* i_prm_2_
     eInit_setEvTimer(i_timer_p);
 }
 
+// Sets the player's walk goal: 120 in front of this Korok if the player stands more than 0x1000 off its
+// facing, measured from its home, else where the player already is. [asm]
 /* 00003C80-00003D68       .text eInit_PLYER_MOV_1___11daNpc_Bj1_cFv */
 void daNpc_Bj1_c::eInit_PLYER_MOV_1_() {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -2152,6 +2214,8 @@ void daNpc_Bj1_c::eInit_SET_ANM_(int* i_anmno_p, f32* i_morf_p) {
     }
 }
 
+// ActNo in event data: 0 look, 1 set the player's goal, 2 and 8 walk, 3 jump, 4 change path, 5 stop
+// walking, 6 throw seeds ("tane"), 7 delete seeds, 9 animate. [asm]
 /* 000040C0-00004428       .text event_actionInit__11daNpc_Bj1_cFi */
 void daNpc_Bj1_c::event_actionInit(int arg0) {
     int* act_no_p = dComIfGp_evmng_getMyIntegerP(arg0, "ActNo");
@@ -2321,6 +2385,8 @@ BOOL daNpc_Bj1_c::isEventEntry() {
     return dComIfGp_evmng_getMyStaffId(mEventCut.getActorName(), NULL);
 }
 
+// Mak_Drg and Get_Blu_Btl each end by forcing a talk through m842 or m843, which chains them with 0x142B
+// in between. Calling saves bit 0x2902 so it plays once. [asm]
 /* 00004770-0000484C       .text event_proc__11daNpc_Bj1_cFi */
 void daNpc_Bj1_c::event_proc(int arg0) {
     if (dComIfGp_evmng_endCheck(mEventIdTable[mEventIdx])) {
@@ -2434,6 +2500,9 @@ BOOL daNpc_Bj1_c::wait_1() {
     return TRUE;
 }
 
+// BJ4's ground state. After 90 frames with no attention on it, it takes off. flyMov then flies for at
+// least 90 frames (HIO m20), and lands when the player is within m48 (250). m4C is 0x7FFF, so the angle
+// test passes almost anywhere. fall01 brings it down, and back here. [asm]
 /* 00004B68-00004C48       .text wait_2__11daNpc_Bj1_cFv */
 BOOL daNpc_Bj1_c::wait_2() {
     if (m8B0 == 1 || m8B0 >= 3) {
@@ -2461,6 +2530,7 @@ BOOL daNpc_Bj1_c::wait_2() {
     return TRUE;
 }
 
+// The potion maker only looks at the player within 46 degrees of its facing. [asm]
 /* 00004C48-00004D64       .text wait_3__11daNpc_Bj1_cFv */
 BOOL daNpc_Bj1_c::wait_3() {
     cLib_addCalcAngleS(&current.angle.y, m7B8.y, l_HIO.children[mType].hio_prm.m4E, l_HIO.children[mType].hio_prm.m50, 0);
@@ -2488,6 +2558,7 @@ BOOL daNpc_Bj1_c::wait_3() {
     return TRUE;
 }
 
+// isGetItem(6, 0) is the Deku Leaf's inventory slot, and it tests ever having had the item. [asm]
 /* 00004D64-00004E80       .text wait_4__11daNpc_Bj1_cFv */
 BOOL daNpc_Bj1_c::wait_4() {
     if (m8B0 == 1 || m8B0 >= 3) {
@@ -2643,6 +2714,8 @@ BOOL daNpc_Bj1_c::talk_1() {
     return ret;
 }
 
+// The potion maker starts each load at path point 0 and walks to the path's end, which becomes its
+// home for wait_3. [asm]
 /* 00005440-00005508       .text walk_1__11daNpc_Bj1_cFv */
 BOOL daNpc_Bj1_c::walk_1() {
     m84A = 0;
@@ -2825,6 +2898,8 @@ void daNpc_Bj1_c::shadowDraw() {
     }
 }
 
+// Nothing sets m844 or m845 to nonzero, and no other unit names this class, so this early return and the
+// matching one in _execute never run. They look like leftovers from the template. [asm]
 /* 000059E4-00005D58       .text _draw__11daNpc_Bj1_cFv */
 BOOL daNpc_Bj1_c::_draw() {
     GXColor unused_red = {0xFF, 0x00, 0x00, 0x80};

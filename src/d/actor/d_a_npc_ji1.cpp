@@ -2,6 +2,13 @@
  * d_a_npc_ji1.cpp
  * NPC - Orca / 爺さん (Jiisan)
  */
+// Orca, on Outset. Three stages by story, chosen in CreateInit and getMsg: [asm] [data]
+//   before bit 0x1    unarmed until the rolling attack: he shows it, the player crashes a roll, the shelves
+//                     fall and his brother shouts from upstairs (bit 0x501). Then lessons up to the thrust.
+//   bit 0x1           Aryll taken. All six lessons, ending with the Hero's Sword (bit 0x2F10).
+//   bit 0x520         back from the sea. The hit-count duel, and the Hurricane Spin for 10 Knight's Crests.
+// field_0xD70 changes meaning with the action: lesson number in teachAction, hit count in battleAction.
+// field_0xD84 is the spear: 0 none, 1 in hand, 2 dropped and bouncing (harpoonMove).
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_ji1.h"
@@ -322,6 +329,8 @@ static void daJi1_TgHitCallback(fopAc_ac_c* i_this, dCcD_GObjInf*, fopAc_ac_c* a
     }
 }
 
+// The spear reaching the player. Unblocked adds to field_0xC3C, the three lives that d_meter draws from
+// game_life_point, and l_cpsAt_src has attack power 0. A shield block knocks him back. [asm]
 /* 00000424-000004A0       .text daJi1_AtHitCallback__FP10fopAc_ac_cP12dCcD_GObjInfP10fopAc_ac_cP12dCcD_GObjInf */
 static void daJi1_AtHitCallback(fopAc_ac_c* i_this, dCcD_GObjInf* param_2, fopAc_ac_c* actor, dCcD_GObjInf*) {
     if(fopAcM_IsActor(actor)) {
@@ -354,6 +363,7 @@ BOOL daNpc_Ji1_c::isAttackAnim() {
     return false;
 }
 
+// -1 before the swing's active frames, 0 during, 1 after. See battleGuardCheck. [asm]
 /* 000004F8-0000056C       .text isAttackFrame__11daNpc_Ji1_cFv */
 int daNpc_Ji1_c::isAttackFrame() {
     f32 frame = mpOrcaMorf->getFrame();
@@ -391,6 +401,8 @@ BOOL daNpc_Ji1_c::isItemWaitAnim() {
     return false;
 }
 
+// The duel's rank is register 0xD003, with thresholds in HIO field_0x60: 100, 300, 500, 1000 hits. A run
+// earns a reward only by reaching the threshold of the saved rank, and bit 0xF20 ends that. [asm]
 /* 000005A0-00000630       .text isClearRecord__11daNpc_Ji1_cFs */
 BOOL daNpc_Ji1_c::isClearRecord(s16 param_1) {
     if(dComIfGs_isEventBit(dSv_event_flag_c::UNK_0F20)) {
@@ -405,6 +417,9 @@ BOOL daNpc_Ji1_c::isClearRecord(s16 param_1) {
     return FALSE;
 }
 
+// 1000 hits makes newLevel 4, but the register is two bits. setEventReg clears those two and ORs in 4,
+// so the rank reads back 0 and bit 0x04 of the save byte stays set. No other flag names that byte, and
+// it does no harm: bit 0xF20 stops isClearRecord, and createItem falls through its rank checks. [asm]
 /* 00000630-000006F8       .text setClearRecord__11daNpc_Ji1_cFs */
 void daNpc_Ji1_c::setClearRecord(s16 hits) {
     u8 oldLevel = dComIfGs_getEventReg(dSv_event_flag_c::UNK_D003);
@@ -422,6 +437,8 @@ void daNpc_Ji1_c::setClearRecord(s16 hits) {
     }
 }
 
+// At the door with its prompt up. Callers play Ji1_pl_backroom to call the player back, and
+// evn_talk_init picks the line by which lesson is running. [asm] [data]
 /* 000006F8-00000864       .text daNpc_Ji1_plRoomOutCheck__Fv */
 static BOOL daNpc_Ji1_plRoomOutCheck() {
     cXyz plyrPos = daPy_getPlayerActorClass()->current.pos;
@@ -435,6 +452,8 @@ static BOOL daNpc_Ji1_plRoomOutCheck() {
     return false;
 }
 
+// Hitting him outside a lesson. field_0xD74 counts the hits, and at 3, 5 and more than 5 he runs
+// Ji1_NormAng, Ji1_NormAng2 and Ji1_NormAngFin, after which the count restarts. [asm]
 /* 00000864-00000E98       .text normalSubActionHarpoonGuard__11daNpc_Ji1_cFs */
 void daNpc_Ji1_c::normalSubActionHarpoonGuard(s16 param_1) {
     if(field_0xD6C == 0) {
@@ -509,6 +528,8 @@ void daNpc_Ji1_c::normalSubActionHarpoonGuard(s16 param_1) {
     }
 }
 
+// The unarmed copy of the function above. Nothing here adds to field_0xD74, so these branches only see a
+// count left by the spear version, and the last one no longer clears it. [asm]
 /* 00000E98-00001294       .text normalSubActionGuard__11daNpc_Ji1_cFs */
 void daNpc_Ji1_c::normalSubActionGuard(s16 param_1) {
     if(field_0xD6C == 0) {
@@ -605,6 +626,9 @@ BOOL daNpc_Ji1_c::normalAction(void*) {
     return true;
 }
 
+// His entrance: animation 0x10 twice, with smoke and a rumble on the second, then 0x11. It also plays on
+// the first return from the sea, unarmed, and talkAction tells the two apart by 0x963 and 0x98A. [asm]
+// [data]
 /* 000015E4-000019B0       .text kaitenExpAction__11daNpc_Ji1_cFPv */
 BOOL daNpc_Ji1_c::kaitenExpAction(void*) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -686,6 +710,8 @@ BOOL daNpc_Ji1_c::kaitenspeakAction(void*) {
     return true;
 }
 
+// The rolling test passes on any crashed roll, anywhere the player can do one. set_quake is the shake, and
+// kaitenAction plays the scene with his brother. [asm]
 /* 00001B9C-0000214C       .text kaitenwaitAction__11daNpc_Ji1_cFPv */
 BOOL daNpc_Ji1_c::kaitenwaitAction(void*) {
     daPy_py_c* player = (daPy_py_c*)daPy_getPlayerActorClass();
@@ -866,6 +892,9 @@ BOOL daNpc_Ji1_c::kaitenAction(void*) {
     return true;
 }
 
+// Before the journey. field_0xD79, the crash just now, and field_0xD78 are not saved, so after a room
+// reload the talk starts again at 0x978 instead of 0x977. With bit 0x1, 0x965 plays once (bit 0x108),
+// and 0x973 replaces the usual opening after the sword. [asm] [data]
 /* 00002738-00002870       .text getMsg1stType__11daNpc_Ji1_cFv */
 u32 daNpc_Ji1_c::getMsg1stType() {
     if(!dComIfGs_isEventBit(dSv_event_flag_c::UNK_0001)) {
@@ -915,6 +944,11 @@ u32 daNpc_Ji1_c::getMsg1stType() {
     return 0x94D;
 }
 
+// After the journey. Register 0xCF03 counts days since the last talk, raised in d_kankyo_dayproc and
+// capped at 3, and picks the long greeting. Showing a crest gives 0x9AE once (bit 0xD80). JPN and USA
+// then test the crest count before bit 0xB20, so someone who has learned the Spin, and so spent the 10,
+// is told to collect ten (0x9BB) and not 0x9BC. PAL swaps the tests. The demo asks for 3. [asm] [data]
+// In-game effect not tested.
 /* 00002870-00002A08       .text getMsg2ndType__11daNpc_Ji1_cFv */
 u32 daNpc_Ji1_c::getMsg2ndType() {
     u32 msgNo;
@@ -1120,6 +1154,9 @@ u16 daNpc_Ji1_c::next_msgStatus(u32* pMsgNo) {
     return status;
 }
 
+// 0x94E, 0x967, 0x98A, 0x9AB, 0x9AD and 0x9B4 are still current on closing only when the player said
+// yes, since next_msgStatus moves on for no. Each starts plmoveAction, and 0x9B4 also marks the Spin
+// (field_0xD7B). [asm]
 /* 00002C64-000033D0       .text talkAction__11daNpc_Ji1_cFPv */
 BOOL daNpc_Ji1_c::talkAction(void*) {
     if(field_0xC78 == 0) {
@@ -1207,6 +1244,9 @@ BOOL daNpc_Ji1_c::talkAction(void*) {
     return TRUE;
 }
 
+// One line per lesson. field_0xC90 is the outcome: 1 a good hit (first time only, field_0xC94), 3
+// passed, anything else the wrong move. Passing lesson 3 turns on battle lock-on for the parry, and
+// passing lesson 4 turns it off. [asm] [data]
 /* 000033D0-000039AC       .text speakAction__11daNpc_Ji1_cFPv */
 BOOL daNpc_Ji1_c::speakAction(void*) {
     if(field_0xC78 == 0) {
@@ -1495,6 +1535,10 @@ void daNpc_Ji1_c::initPos(int param_1) {
     current.angle = csXyz(home.angle.y, 0, 0);
 }
 
+// Hero's Sword (field_0xD7C), Hurricane Spin (field_0xD7B), then by rank: 1 purple rupee, 2 orange. Rank
+// 3, or 1000 hits without the Piece of Heart, gives the Piece of Heart (bit 0xF10). 1000 hits with it
+// gives a silver rupee. A run that jumps ranks pays only the highest, so the rupees can be skipped but
+// the Piece of Heart cannot. [asm]
 /* 00004138-00004268       .text createItem__11daNpc_Ji1_cFv */
 void daNpc_Ji1_c::createItem() {
     u8 itemNo;
@@ -1649,6 +1693,9 @@ u32 daNpc_Ji1_c::evn_setAnm_init(int staffIdx) {
     return 1;
 }
 
+// Event data names one message and the code swaps it: 0x9A4 and 0x9A1 for a repeat 1000-hit run
+// (field_0xC38 2), 0x9A4 for the Piece of Heart (item 7), and 0x9B7 by which lesson the player tried to
+// leave. [asm] [data]
 /* 00004838-000049AC       .text evn_talk_init__11daNpc_Ji1_cFi */
 u32 daNpc_Ji1_c::evn_talk_init(int staffIdx) {
     int* pMsgNo = dComIfGp_evmng_getMyIntegerP(staffIdx, "MsgNo");
@@ -1899,6 +1946,8 @@ u32 daNpc_Ji1_c::evn_RollAtControl_init(int staffIdx) {
     return 1;
 }
 
+// Moves the event goal in a spiral around him, closing from radius 400, and 20 frames in he takes the
+// first of three hits. By its name, this is the Spin's demonstration. [asm] [inferred]
 /* 00005078-00005314       .text evn_RollAtControl__11daNpc_Ji1_cFv */
 u32 daNpc_Ji1_c::evn_RollAtControl() {
     static cXyz hit_scale(1.25f, 1.25f, 1.25f);
@@ -1945,6 +1994,8 @@ u32 daNpc_Ji1_c::evn_RollAtControl() {
     return false;
 }
 
+// Case 1 has no break. It falls into ending game 2, and endMiniGame zeroes the type, so the 6 just set
+// is cleared while its flag bit stays on. Whether any event uses prm 1 was not checked. [asm]
 /* 00005314-000053F8       .text evn_game_mode_init__11daNpc_Ji1_cFi */
 u32 daNpc_Ji1_c::evn_game_mode_init(int staffIdx) {
     int* data = dComIfGp_evmng_getMyIntegerP(staffIdx, "prm");
@@ -2484,6 +2535,8 @@ BOOL daNpc_Ji1_c::reiAction(void*) {
     return TRUE;
 }
 
+// Ji1_linkmove. Starts mini game 6 for the duel, 2 for lessons, and neither for the Spin, then
+// startspeakAction gives the opening line for the rank. [asm] [data]
 /* 00006728-00006C1C       .text plmoveAction__11daNpc_Ji1_cFPv */
 BOOL daNpc_Ji1_c::plmoveAction(void*) {
     int staffIdx = dComIfGp_evmng_getMyStaffId("Ji1");
@@ -2553,6 +2606,8 @@ BOOL daNpc_Ji1_c::plmoveAction(void*) {
     return TRUE;
 }
 
+// He keeps 150 from the player, drifting to a point between the player and home. In lesson 3 he stands
+// off at 280 unless the player is charging. [asm]
 /* 00006C1C-00007140       .text teachMove__11daNpc_Ji1_cFf */
 BOOL daNpc_Ji1_c::teachMove(f32 param_1) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -2665,6 +2720,9 @@ f32 daNpc_Ji1_c::calcBgCorrectValue() {
     return field_0xC50;
 }
 
+// Walking up to scold. Pushed back more than 200 by the player's body, he stamps (animation 0xE) and
+// field_0x910, a bomb-type cylinder, knocks them away, then he pauses 20 frames. Held back by a wall, he
+// just gives up. [asm]
 /* 00007548-00007A80       .text MoveToPlayer__11daNpc_Ji1_cFfUc */
 BOOL daNpc_Ji1_c::MoveToPlayer(f32 param_1, u8 param_2) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -2817,6 +2875,10 @@ BOOL daNpc_Ji1_c::teachSubActionJump() {
     return TRUE;
 }
 
+// Lessons, by field_0xD70: 0 side cut, 1 vertical, 2 thrust, 3 spin, 4 parry, 5 jump attack. HIO
+// field_0x54 gives the passes needed (9, 9, 9, 2, 2, 2), and checkCutType which moves count. In lesson 4
+// he lunges every 90 frames, to give the player something to parry. A spin hit defers its talk through
+// field_0xD34 until the cut ends. [asm] [data]
 /* 00007F14-00009070       .text teachAction__11daNpc_Ji1_cFPv */
 BOOL daNpc_Ji1_c::teachAction(void*) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -3103,6 +3165,9 @@ BOOL daNpc_Ji1_c::teachAction(void*) {
     return true;
 }
 
+// The Hurricane Spin. Magic stays full (the demo refills once) and temp bit 0x402 lets d_a_player_sword
+// perform it before bit 0xB20. Performing it level with him, hit or not, sets bit 0xB20 and takes the 10
+// crests. The demo has no height check, and took 3 at 0x9AF. A plain spin plays Ji1_SpRollFail. [asm]
 /* 00009070-00009B64       .text teachSPRollCutAction__11daNpc_Ji1_cFPv */
 BOOL daNpc_Ji1_c::teachSPRollCutAction(void*) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -3287,6 +3352,11 @@ static u32 playerCutAtCheck() {
     return daPy_getPlayerActorClass()->getCutAtFlg();
 }
 
+// Frames between attacks: a base plus a random part, blended across each rank band. Each band starts
+// easier than the one before ended. The bands step through the HIO fields two at a time, except the
+// last, which starts at field_0x8C and field_0x98 where field_0x90 and field_0x9C would continue, so the
+// pause past 500 hits is longer than the pattern gives. Looks like a copy slip. [asm] [inferred] In-game
+// effect not tested.
 /* 00009B7C-00009F1C       .text battleGameSetTimer__11daNpc_Ji1_cFv */
 void daNpc_Ji1_c::battleGameSetTimer() {
     f32 temp1;
@@ -3883,6 +3953,10 @@ BOOL daNpc_Ji1_c::battleAtSet() {
     return TRUE;
 }
 
+// Scoring. A parry cut (BT_) always counts 2, or 1 at 999. Other cuts count 1 unless he is mid-attack:
+// in the wind-up they do nothing, and in the active frames he recoils. 1000 hits ends with
+// Ji1_ItemGetTalkEnd. Three hits on the player end with Ji1_ItemGetEnd if the rank rises, otherwise
+// endspeakAction. [asm]
 /* 0000BFE0-0000C7E4       .text battleGuardCheck__11daNpc_Ji1_cFv */
 BOOL daNpc_Ji1_c::battleGuardCheck() {
     &daNpc_Ji1_c::battleSubActionNockBack; // seems super fake, needed to match .data
@@ -4253,6 +4327,8 @@ BOOL daNpc_Ji1_c::checkCutType(int cutType, int param_2) {
     return ret;
 }
 
+// 0x9AE is his shock at the crest, and animation 0x16 drops the spear. 0x9B9 wipes his tears and has it
+// back in hand at once (field_0xD84 = 1). [asm] [data]
 /* 0000CC28-0000CF28       .text setAnimFromMsgNo__11daNpc_Ji1_cFUl */
 void daNpc_Ji1_c::setAnimFromMsgNo(u32 msgNo) {
     if(l_msg) {
@@ -4334,6 +4410,7 @@ void daNpc_Ji1_c::setAnimFromMsgNo(u32 msgNo) {
     }
 }
 
+// The guard sound's test below can never pass, because mAnimation was just set to param_1. [asm]
 /* 0000CF28-0000DAB0       .text setAnm__11daNpc_Ji1_cFifi */
 BOOL daNpc_Ji1_c::setAnm(int param_1, f32 param_2, int param_3) {
     if(param_3 == 0 & mAnimation - param_1 == 0) {
@@ -4782,6 +4859,8 @@ BOOL daNpc_Ji1_c::CreateHeap() {
     return true;
 }
 
+// Kmon is his child, and talking to it runs Ji1_KmonTalk on this actor, field_0xC84 0x10. 0x95F, about
+// the crest, is presumably that talk. [asm] [inferred]
 /* 0000F324-0000FB0C       .text CreateInit__11daNpc_Ji1_cFv */
 BOOL daNpc_Ji1_c::CreateInit() {
     cXyz temp(190.0f, 230.0f, -1100.0f);
@@ -5086,6 +5165,8 @@ BOOL daNpc_Ji1_c::_draw() {
 static cXyz l_head_front(0.0f, 1.0f, 0.0f);
 static cXyz l_head_top(1.0f, 0.0f, 0.0f);
 
+// Three hair joints as a chain, each passing its motion to the next. The line adding field_0xBB6 runs
+// twice, so only the first joint's up-down swing gets double velocity. Looks copied. [asm] [inferred]
 /* 0001031C-00010E3C       .text daNpc_Ji1_setHairAngle__FP11daNpc_Ji1_c */
 static BOOL daNpc_Ji1_setHairAngle(daNpc_Ji1_c* i_this) {
     f32 wind = *dKyw_get_wind_power() * *dKyw_get_wind_power() * 25.0f;

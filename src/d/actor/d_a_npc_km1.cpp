@@ -2,6 +2,12 @@
  * d_a_npc_km1.cpp
  * NPC - Mila (rich)
  */
+// Mila before her family's fall. Its HIO name translates as rich Muur. She only really appears in the
+// Forsaken Fortress cutscenes: on entering the Helmaroc King's room in the first visit, and before the
+// fight in the second. [tested] That fits this unit, a cut-down copy of the template with one action and
+// one animation. It has no story check, so stage data decides where she is: "Km1" is in the object name
+// table in d_stage. getMsg always returns 0 and next_msgStatus always ends, so she has no real dialogue,
+// though wait01 still offers a talk through field_0x7CF. demo() is what lets a cutscene drive her. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -611,6 +617,8 @@ u8 daNpc_Km1_c::demo() {
     return field_0x7C7;
 }
 
+// Real shadow from field_0x6D4, a second copy of the model made only for this, and a simple shadow if
+// no real shadow slot is free. [asm]
 /* 00001548-000016AC       .text _draw__11daNpc_Km1_cFv */
 BOOL daNpc_Km1_c::_draw() {
     J3DModel *model = mpMorf->getModel();
@@ -694,6 +702,7 @@ static BOOL CheckCreateHeap(fopAc_ac_c* actor) {
     return ((daNpc_Km1_c*)actor)->CreateHeap();
 }
 
+// The large heap estimate, 0x272E0, covers that second model as well as the first. [inferred]
 /* 000018AC-00001A1C       .text _create__11daNpc_Km1_cFv */
 cPhs_State daNpc_Km1_c::_create() {
     fopAcM_RegisterCreateID(this);

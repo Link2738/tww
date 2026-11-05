@@ -2,6 +2,11 @@
  * d_a_npc_uk.cpp
  * NPC - Jin, Jan, & Jun-Roberto
  */
+// The other three Killer Bees, by params bits 16-19: shape 0, 1 or 2 changes head, materials, and speed.
+// Boss is d_a_npc_mk, and this follows it closely. Type 0 follows Ivan around town, type 1 hides during
+// the game. Params byte 0 is the type, byte 1 the path. Each kid has its own bits, see getCaughtFlag and
+// getFoundFlag. [asm] Unlike Ivan, each is found by the player walking into a set zone, see warningB.
+// Caught the same way, by touch.
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_uk.h"
@@ -96,6 +101,8 @@ BOOL daNpc_Uk_c::chkPositioning(f32 i_dist, f32 i_minY, f32 i_maxY, s16 i_angleM
     return FALSE;
 }
 
+// Town behavior follows Ivan's visit mode: close in on him while he walks, stand around when he talks, and
+// join in around the player when he runs over. If Ivan's process is gone this restarts its search. [asm]
 u8 daNpc_Uk_c::nextVisitMode() {
     u8 mkMode;
     daPy_lk_c* pLink;
@@ -221,6 +228,8 @@ void daNpc_Uk_c::aroundWalk(fopAc_ac_c* i_target) {
     mMkStatic.aroundWalk(this, i_target, field_0x6BD);
 }
 
+// Steps aside when Ivan walks into it, within 85 and in front of him. Flag 8 uses the full speed vector.
+// [asm]
 /* 00000964-00000AD4       .text surrender__10daNpc_Uk_cFv */
 void daNpc_Uk_c::surrender() {
     fopAc_ac_c* mk = fopAcM_SearchByID(mMkProcId);
@@ -492,6 +501,7 @@ u16 daNpc_Uk_c::next_msgStatus(u32* pMsgNo) {
     return msgStatus;
 }
 
+// Message numbers are offsets by shape, so each line exists as a set of three. [asm]
 /* 00001464-000015E0       .text getMsg__10daNpc_Uk_cFv */
 u32 daNpc_Uk_c::getMsg() {
     u32 msgNo = 0;
@@ -1073,6 +1083,9 @@ bool daNpc_Uk_c::visit01() {
     return true;
 }
 
+// Found when the player is in range and on the right side, varying per kid: 300 for shape 0, 180 for
+// shape 1, 150 on either side for shape 2. The event differs too, so each discovery plays out its own
+// way. [asm]
 /* 00002C80-00002D20       .text warningB__10daNpc_Uk_cFv */
 bool daNpc_Uk_c::warningB() {
     if (chkPositioning(300.0f, -10.0f, 80.0f, 15000, -15000)) {

@@ -2,6 +2,19 @@
  * d_a_npc_cb1.cpp
  * Player - Makar
  */
+// Makar, as an NPC and as a body the player can control. Params give one of six placements, by the
+// code's names: 0 BossDie, 1 Forest, 2 WaterFall, 3 Ekaze, 4 Kaze, 5 KazeBoss. 1, 2 and 5 hold the
+// cello. Kaze is wind (kaze), the Wind Temple, and KazeBoss its boss room. [inferred] Ekaze is the
+// entrance outside the temple, where he plays to clear the obstacle before the player drops down the
+// hole. [tested] create spawns only the one matching the story, top down: [asm] [data]
+//   Master Sword 3    type 5
+//   bit 0x2910        type 4
+//   bit 0x2E02        type 3
+//   bit 0x1610        sea only, with bit 0x1604: riding the ship's figurehead
+//   Master Sword 2    type 2
+//   bit 0x1820        nothing
+//   Farore's Pearl    type 1
+// Type 0 skips this ladder. Actions come in two sets, npcAction and playerAction, like d_a_npc_kamome.
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_cb1.h"
@@ -382,6 +395,7 @@ static BOOL nodeCallBack(J3DNode* node, int calcTiming) {
     return TRUE;
 }
 
+// The nut on the bow swings on a fixed-length spring with gravity, so it dangles while he plays. [asm]
 /* 00000984-00000CF4       .text nutNodeCallBack__FP7J3DNodei */
 static BOOL nutNodeCallBack(J3DNode* node, int calcTiming) {
     if (calcTiming == J3DNodeCBCalcTiming_In) {
@@ -704,6 +718,10 @@ void daNpc_Cb1_c::breaking() {
     cLib_addCalc(&speedF, 0.0f, l_HIO.mDecelScale, l_HIO.mMaxDecel, l_HIO.mDecel);
 }
 
+// His flight: m8F0 runs 1 opening, 2 flying, 3 and up landing. m8F8 is the propeller's spin, climbing on
+// input while the flying timer lasts, and lift comes from it. Wind can push him: a wind-type hit is
+// strong, otherwise the world wind is mixed in, and body tilt follows his acceleration. The timer gives
+// the player 450 frames, or the NPC 60 when thrown. [asm]
 /* 00001B68-0000270C       .text flyAction__11daNpc_Cb1_cFifsi */
 BOOL daNpc_Cb1_c::flyAction(BOOL param_1, f32 param_2, s16 param_3, BOOL param_4) {
     bool isMakarPlayer = dComIfGp_getPlayer(0) == this;
@@ -930,6 +948,9 @@ BOOL daNpc_Cb1_c::isFlyAction() {
     return chkPlayerAction(&daNpc_Cb1_c::flyPlayerAction) || chkNpcAction(&daNpc_Cb1_c::flyNpcAction);
 }
 
+// As the player, A on a target flagged fopAc_Attn_UNK10000000_e starts a talk with it, which is how he
+// sows a tree with event cb_sow (see evInitSow), and the rumble marks the prompt's first frame.
+// Otherwise A flies. [asm]
 /* 00002914-00002A2C       .text sowCheck__11daNpc_Cb1_cFv */
 BOOL daNpc_Cb1_c::sowCheck() {
 #if VERSION > VERSION_DEMO
@@ -1384,6 +1405,8 @@ void daNpc_Cb1_c::evInitTact(int) {
     setAnm(ANM_08);
 }
 
+// Conducting the song in event prm0 gets 0x1526, which he finds strangely familiar. Anything else gets
+// 0x1523 and cancelling gets 0x1525. [asm] [data]
 /* 000038FC-00003A2C       .text evActTact__11daNpc_Cb1_cFi */
 BOOL daNpc_Cb1_c::evActTact(int staffIdx) {
     int* pPrm0 = dComIfGp_evmng_getMyIntegerP(staffIdx, "prm0");
@@ -1480,6 +1503,7 @@ BOOL daNpc_Cb1_c::evActTurn(int staffIdx) {
     return FALSE;
 }
 
+// Plays the nut throw and tells the talk partner, a d_a_obj_vmc, to grow when it lands. [asm]
 /* 00003C0C-00003CEC       .text evInitSow__11daNpc_Cb1_cFi */
 void daNpc_Cb1_c::evInitSow(int staffIdx) {
     setAnm(ANM_0C);
@@ -1577,6 +1601,7 @@ BOOL daNpc_Cb1_c::evActWarp(int) {
     return FALSE;
 }
 
+// 0x1526 is what moves the story: Otkura next, and bits 0x1610 and 0x1604 set, so he now rides along. [asm]
 /* 0000405C-00004174       .text evInitEnd__11daNpc_Cb1_cFi */
 void daNpc_Cb1_c::evInitEnd(int staffIdx) {
     int* pEndMode = dComIfGp_evmng_getMyIntegerP(staffIdx, "EndMode");
@@ -1801,6 +1826,8 @@ BOOL daNpc_Cb1_c::talkNpcAction(void*) {
     return TRUE;
 }
 
+// Being carried, the pose follows the player's frame when standing still, and setRestart updates his
+// restart point. Dropped with speed he goes to flyNpcAction. [asm]
 /* 000047B0-00004B74       .text carryNpcAction__11daNpc_Cb1_cFPv */
 BOOL daNpc_Cb1_c::carryNpcAction(void*) {
     if(m8F0 == 0) {
@@ -1911,6 +1938,7 @@ void daNpc_Cb1_c::routeAngCheck(cXyz& param_1, s16* param_2) {
     *param_2 = angle;
 }
 
+// Steers around a wall ahead along its plane, toward the player's height. See routeAngCheck. [asm]
 /* 00004D88-00004FEC       .text routeWallCheck__11daNpc_Cb1_cFR4cXyzR4cXyzPs */
 void daNpc_Cb1_c::routeWallCheck(cXyz& param_1, cXyz& param_2, s16* param_3) {
     dBgS_LinChk lin_chk;
@@ -1949,6 +1977,7 @@ f32 daNpc_Cb1_c::checkWallJump(s16 param_1) {
     return -1.0f;
 }
 
+// If mAcch reports a wall but neither circle does, temp is used uninitialized. Unlikely to occur. [asm]
 /* 000058C8-0000593C       .text chkWallHit__11daNpc_Cb1_cFv */
 BOOL daNpc_Cb1_c::chkWallHit() {
     if(mAcch.ChkWallHit()) {
@@ -2016,6 +2045,9 @@ BOOL daNpc_Cb1_c::routeCheck(f32 param_1, s16* param_2) {
     return TRUE;
 }
 
+// Following the player while called: speed scales with distance, wobbling side to side, and routeCheck
+// handles ledges and low walls, with a jump (checkWallJump) under 80 high. He gives up and shouts if the
+// route is blocked, the player is hanging or locked on, or going through a door. [asm]
 /* 00005F0C-000062F4       .text searchNpcAction__11daNpc_Cb1_cFPv */
 BOOL daNpc_Cb1_c::searchNpcAction(void*) {
     f32 temp2;
@@ -2522,6 +2554,9 @@ daNpc_Cb1_c::AnmData daNpc_Cb1_c::anmTblData[] = {
 };
 s8 daNpc_Cb1_c::anmPrmData[] = {0, 1, 2, 3, 4, 5, 4, 6, 7, 0x10, 8, 0xA, 0xB, 0xC, 0xE, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x09};
 
+// Animation 9 is his cello practice, and it keeps playing through pause (fopAcStts_NOPAUSE_e). Negative
+// file numbers in anmTblData mark the cello animations, and initAnm turns the instrument models on from
+// them. [asm]
 /* 000072EC-00007390       .text setAnm__11daNpc_Cb1_cFUc */
 BOOL daNpc_Cb1_c::setAnm(u8 param_1) {
     if(m8DB == param_1) {
@@ -3091,6 +3126,8 @@ BOOL daNpc_Cb1_c::draw() {
     return TRUE;
 }
 
+// Past 30 frames over no ground, or special ground code 4, he resets to home, or restarts the room if
+// the player is him. This is why a thrown Makar cannot simply be lost. [asm] [inferred]
 /* 000084A4-00009090       .text execute__11daNpc_Cb1_cFv */
 BOOL daNpc_Cb1_c::execute() {
     cLib_offBit<u32>(actor_status, fopAcStts_SHOWMAP_e);

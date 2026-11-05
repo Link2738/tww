@@ -2,6 +2,29 @@
  * d_a_npc_bm1.cpp
  * NPC - Generic Ritos
  */
+// The Ritos. One class serves five actor names, and params byte 0 picks the Rito within each: [asm]
+//   BM1  Quill forms 0-4
+//   BM2  Akoot, Skett
+//   BM3  Basht, Bisht, Hoskit
+//   BM4  Ilari forms A, B and C, Pashli
+//   BM5  Namali, Kogoli
+// Params byte 1 is the story phase (see chk_appCnd), byte 2 the path index, 0xFF for none.
+// What each form is for: [asm unless marked]
+//   Quill 0  Outset telescope scene, driven by d_a_npc_ls1. See demo_action1.
+//   Quill 1  stands and talks: sorry he cannot go for you, come to his island. [data]
+//            Takes d_a_npc_zl1 (Tetra) as its partner.
+//   Quill 2  meets the player once, event Met_Ryu_Islnd. See wait_5.
+//   Quill 3  before Din's Pearl, once d_a_npc_md has set bit 0x1102.
+//   Quill 4  hidden until Endless Night, then appears at Greatfish after it is destroyed. [tested]
+//            Event Skn_Islnd, Sunken Island. See wait_2.
+//   Akoot, Skett  a double act that talks as a pair. See chk_manzai.
+//   Hoskit   trades 20 Golden Feathers for his girlfriend's letter. See getMsg_BMB_2.
+//   Ilari A  talks, then flies off. Nothing saves this, so it is back on the next load.
+//   Ilari B  stands facing d_a_npc_gp1 during the letter quarrel, with no dialogue. See init_BMC_1.
+//   Ilari C  apologizes for the scene at Maggie's house, gives a letter for her. [data] See getMsg_BMC_2.
+//   Pashli, Namali  walk a path with a binder, stopping where the path says. See walk_1.
+//   Basht, Bisht, Kogoli  stand and talk by phase. Kogoli is gone once d_a_npc_md sets bit 0x1620.
+// Maggie's side of the letter story is in d_a_npc_kp1.
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -405,6 +428,9 @@ static void* searchActor_Bm_Kkt(void* i_param_1, void*) {
     return NULL;
 }
 
+// A Rito is three animated models: body, head, and either wings or arms. anm_prm_c.hasArms picks which
+// limb model plays and draws. The limb models have no shoulder of their own: nodeBm1Control saves the
+// body's armL and armR matrices, and these callbacks copy them onto the limb's root joint. [asm]
 /* 00000460-000004AC       .text nodeCallBack_Wng__FP7J3DNodei */
 static BOOL nodeCallBack_Wng(J3DNode* i_param_1, int i_param_2) {
     if (i_param_2 == 0) {
@@ -508,6 +534,14 @@ static char* l_evn_tbl[] = {
     "Skn_Islnd",
 };
 
+// Story phases, from params byte 1 plus one: [asm]
+//   0  always (a byte 1 outside 0-3)
+//   1  before Din's Pearl
+//   2  with the pearl, before bit 0x1A80
+//   3  with the pearl and bit 0x1A80, by day
+//   4  with the pearl and bit 0x1A80, by night
+// d_s_room sets 0x1A80 when a room that loaded with the pearl already held unloads with no stage change,
+// so phase 2 ends at the first such unload. [asm]
 /* 0000093C-00000A9C       .text chk_appCnd__11daNpc_Bm1_cFv */
 bool daNpc_Bm1_c::chk_appCnd() {
     switch (mSpawnCondition) {
@@ -619,6 +653,9 @@ bool daNpc_Bm1_c::init_BMC_0() {
     return true;
 }
 
+// The same test as dNpc_chkArasoi, "arasoi" being a quarrel: Maggie's Letter was posted (bit 0x1220, set
+// in d_a_obj_toripost) and d_a_npc_gp1 has not finished its event, which sets bit 0x1808. Both sides
+// turn to face each other in partner_srch. [asm]
 /* 00000E5C-00000F04       .text init_BMC_1__11daNpc_Bm1_cFv */
 bool daNpc_Bm1_c::init_BMC_1() {
     bool result = false;
@@ -631,6 +668,8 @@ bool daNpc_Bm1_c::init_BMC_1() {
     return result;
 }
 
+// Reserve slot 0xF is also what d_a_npc_kp1 checks along with the Moblin's Letter, so this Rito stays
+// until that letter has been handed over. [inferred]
 /* 00000F04-00000FB0       .text init_BMC_2__11daNpc_Bm1_cFv */
 bool daNpc_Bm1_c::init_BMC_2() {
     bool result = false;
@@ -881,6 +920,11 @@ char* daNpc_Bm1_c::wingAnmNum_toResID(int i_anmNum) {
     return strcat(l_BCKName, ".bck");
 }
 
+// Takes mBtpNum, not the Rito. Only setBtp calls this, and mBtpNum is 0 whenever it does: CreateHeap
+// sets 0, and every row of the three anm_prm_c tables has btpNum 0 or a -1 that setAnm skips. demo() sets
+// 1 but installs the pattern itself. So every Rito blinks with bmhead01.btp, though the archive has one
+// per head and a_BTPName_TBL_2 lists them. That table also disagrees with a_headBDLName_TBL at forms 0xA
+// and 0xF, 03 against 04. [asm] In-game effect not tested.
 /* 00001898-00001948       .text btpNum_toResID__11daNpc_Bm1_cFi */
 char* daNpc_Bm1_c::btpNum_toResID(int i_param_1) {
     static const char* a_BTPName_TBL[] = {"bmhead01"};
@@ -1141,6 +1185,7 @@ void daNpc_Bm1_c::setAnm_ATR(int i_param_1) {
     setAnm_anm(&a_anm_prm_tbl[m8F7]);
 }
 
+// In a double act only the Rito the message camera is on takes animation changes from the text. [asm]
 /* 00001FD0-000020D8       .text anmAtr__11daNpc_Bm1_cFUs */
 void daNpc_Bm1_c::anmAtr(u16 i_param_1) {
     dComIfG_MesgCamInfo_c* caminfo = dComIfGp_getMesgCameraInfo();
@@ -1173,6 +1218,8 @@ void daNpc_Bm1_c::anmAtr(u16 i_param_1) {
     control_anmAtr();
 }
 
+// m8FD is the event request: 1 start talking now, 2 allow a talk prompt, 3 or more order l_evn_tbl entry
+// m8FD - 3. Only Hoskit accepts a shown item. [asm]
 /* 000020D8-0000217C       .text eventOrder__11daNpc_Bm1_cFv */
 void daNpc_Bm1_c::eventOrder() {
     s8 condition = m8FD;
@@ -1209,6 +1256,10 @@ void daNpc_Bm1_c::checkOrder() {
     }
 }
 
+// Manzai is a comedy double act. The Rito spoken to flags its partner and returns 0 until the partner
+// has entered status 9, and only then opens the talk, with both in the message camera. So the talk
+// starts a frame or more late. If a partner was found and has since been deleted this returns 0 forever
+// and the talk never opens. No partner found at all means a solo talk. [asm]
 /* 00002234-00002304       .text chk_manzai__11daNpc_Bm1_cFv */
 u8 daNpc_Bm1_c::chk_manzai() {
     u8 o_retval = 1;
@@ -1230,6 +1281,8 @@ u8 daNpc_Bm1_c::chk_manzai() {
     return o_retval;
 }
 
+// For a talk started with a shown item, holds the talk until the show has finished, and stores the item
+// in m87D. 0xFF means no item. [asm]
 /* 00002304-000023A0       .text chk_talk__11daNpc_Bm1_cFv */
 bool daNpc_Bm1_c::chk_talk() {
     bool uVar3 = true;
@@ -1471,6 +1524,10 @@ u16 daNpc_Bm1_c::next_msgStatus(u32* i_msg_no) {
     return msg_status;
 }
 
+// Each talkative Rito owns a bit of event register 0xB8FF: clear gives its first line for the phase, set
+// its repeat line. d_s_room zeroes the register whenever Dragon Roost's room loads, so this means first
+// talk this visit, not first talk ever. d_a_npc_ac1 uses the same register with mask 0x10, the same bit
+// as Kogoli, so if both were present each would mark the other. Not checked whether they ever are. [asm]
 /* 00002A58-00002AC4       .text getBitMask__11daNpc_Bm1_cFv */
 s8 daNpc_Bm1_c::getBitMask() {
     s8 o_retval = 0;
@@ -1504,6 +1561,9 @@ u32 daNpc_Bm1_c::getMsg_PST_3() {
     return dComIfGs_isEventBit(dSv_event_flag_c::UNK_2202) ? 0x18A3 : 0x18A1;
 }
 
+// Akoot and Skett say nothing before Din's Pearl. Afterward there are four sets of lines, moving on with
+// bit 0x1A80, then 0x1820, which d_a_warpdm20 sets once Zelda has awakened, then 0x2E04, which is also
+// set on arrival at Headstone (d_a_tag_island). [asm]
 /* 00002B40-00002BE8       .text getMsg_SKT_0__11daNpc_Bm1_cFv */
 u32 daNpc_Bm1_c::getMsg_SKT_0() {
     if (dComIfGs_isSymbol(dSymbol_DIN_e)) {
@@ -1618,6 +1678,17 @@ u32 daNpc_Bm1_c::getMsg_BMB_1() {
     return var_r29;
 }
 
+// Hoskit. First line, by priority: [asm]
+//   showing a Golden Feather  0x199D once traded; else after the first showing the count check, 0x19A1
+//                             for 20 or more and 0x19A0 for fewer; the first showing is 0x199E
+//   showing anything else     0x19A5
+//   no item                   0x199B traded, 0x199A refused the trade, 0x1998 met before, 0x1996 new
+// 0x19A1 is the choice. Yes takes the 20 feathers in next_msgStatus, and 0x19A4 ending orders Get_Rupee.
+// That event's end sends LETTER_HOSKITS_GIRLFRIEND and sets the traded flag, bit 0x2180.
+// This branch for 0x199C never runs: m87C is set only when event 0 ends, and only Ilari C orders it.
+// [asm]
+// Its text is his excited thanks and says he will write the letter now. [data] The event's own data could
+// still show it. Not checked.
 /* 00002EE8-00003010       .text getMsg_BMB_2__11daNpc_Bm1_cFv */
 u32 daNpc_Bm1_c::getMsg_BMB_2() {
     if (m87C != 0) {
@@ -1666,6 +1737,9 @@ u32 daNpc_Bm1_c::getMsg_BMC_0() {
     return 0;
 }
 
+// Ilari C. Choice 0x1EF5: option 0 leads to 0x1EF6, whose end orders Get_Mo3_Ltr, then a forced talk
+// through m87C says 0x1EF7. Option 1 leads to 0x1EF8, which sets bit 0x1908, so the next offer skips the
+// first two lines. [asm]
 /* 00003058-000030D0       .text getMsg_BMC_2__11daNpc_Bm1_cFv */
 u32 daNpc_Bm1_c::getMsg_BMC_2() {
     if (m87C != 0) {
@@ -1928,6 +2002,10 @@ void daNpc_Bm1_c::partner_srch() {
     }
 }
 
+// Returns 1 on reaching a point, 2 at the end of an open path. A closed path loops and tests by passing
+// the point, an open one by distance m858. On an open path the last point is never targeted: arriving at
+// the second to last returns 2, which turns flight into descent. With no path, getPoint returns zero
+// vectors, so the uninitialized point_idx does no harm. [asm]
 /* 00003818-00003A24       .text bm_movPass__11daNpc_Bm1_cFb */
 u32 daNpc_Bm1_c::bm_movPass(bool i_param_1) {
     cXyz cmpCoords;
@@ -2019,6 +2097,10 @@ void daNpc_Bm1_c::bm_clcMovSpd() {
     cLib_chaseF(&speedF, mTargetFlySpeed, mTargetFlyStep);
 }
 
+// m8F4 is the flight stage: 0 none, 1 and 2 the two takeoff animations, 5 cruise, 3 descent, 4 landing.
+// m88A marks a milestone, and while set the Rito holds still that frame, m887 skipping the move. Plain
+// fly cuts clear it every frame. eMove_KMA_FLY_ instead ends its cut on it, so an event can step from
+// one waypoint to the next. [asm]
 /* 00003C64-00003ED4       .text bm_flyMove__11daNpc_Bm1_cFv */
 bool daNpc_Bm1_c::bm_flyMove() {
     s32 temp_r3;
@@ -2332,6 +2414,8 @@ void daNpc_Bm1_c::delPrtcl_Hane1() {
     }
 }
 
+// Quill 0 alone loads archive Bm2. Everyone else uses Bm. The staff names in createInit are separate
+// strings and do not follow this. [asm]
 /* 000046BC-000049B8       .text decideType__11daNpc_Bm1_cFii */
 bool daNpc_Bm1_c::decideType(int i_type_param, int i_spawn_cond_param) {
     mSpawnCondition = 0;
@@ -2777,6 +2861,8 @@ void daNpc_Bm1_c::eInit_MOV_PTH_POINT_(int* i_prm_0_p, int* i_anm_no_p, int* i_i
     }
 }
 
+// ActNo in event data: 4 delete, 0x10 next path, 0x14 show (Quill 4), 0x15 jump to a path point, 0x16
+// and 0x17 fly, 0x18 set the player's goal, 0x19 look, 0x1A animate, 0x1B walk. Others do nothing. [asm]
 /* 00005368-00005650       .text event_actionInit__11daNpc_Bm1_cFi */
 void daNpc_Bm1_c::event_actionInit(int arg0) {
     cXyz* offset_p = dComIfGp_evmng_getMyXyzP(arg0, "Offst");
@@ -2976,6 +3062,8 @@ BOOL daNpc_Bm1_c::isEventEntry() {
     return dComIfGp_evmng_getMyStaffId(mEventCut.getActorName(), NULL);
 }
 
+// What finishing each l_evn_tbl event does. Met_Ryu_Islnd and Skn_Islnd save a flag and delete Quill,
+// which is why those forms appear only once. [asm]
 /* 00005A38-00005B60       .text event_proc__11daNpc_Bm1_cFi */
 void daNpc_Bm1_c::event_proc(int arg0) {
     short sVar1;
@@ -3269,6 +3357,8 @@ BOOL daNpc_Bm1_c::flyawy() {
     return 1;
 }
 
+// Quill 2 waits, looking up, until the player is within m48 (870) on the ground plane and -40 to 300
+// above, then orders Met_Ryu_Islnd. [asm]
 /* 0000647C-000065B8       .text wait_5__11daNpc_Bm1_cFv */
 BOOL daNpc_Bm1_c::wait_5() {
     if (m8FD == 0) {
@@ -3388,6 +3478,8 @@ BOOL daNpc_Bm1_c::wait_8() {
     return TRUE;
 }
 
+// Quill 4 is not drawn (m888) and has no gravity. Once the Endless Night flag is on it orders Skn_Islnd,
+// and the event's ActNo 0x14 makes it visible. [asm]
 /* 0000692C-0000699C       .text wait_2__11daNpc_Bm1_cFv */
 BOOL daNpc_Bm1_c::wait_2() {
     if (m8FD == 1 || m8FD >= 3) {
@@ -3399,6 +3491,8 @@ BOOL daNpc_Bm1_c::wait_2() {
     return TRUE;
 }
 
+// On reaching a point whose pointArg is nonzero, stops for CHKwai: 60 frames looking toward the next
+// point, with the bm_check animation. [asm]
 /* 0000699C-00006A94       .text walk_1__11daNpc_Bm1_cFv */
 BOOL daNpc_Bm1_c::walk_1() {
     if (m895) {
@@ -3452,6 +3546,10 @@ BOOL daNpc_Bm1_c::CHKwai() {
     return 1;
 }
 
+// Quill 0's half of the telescope scene. It stays hidden and idle (mbInitPostman0) until d_a_npc_ls1
+// calls setTelescopeDemo. d_wait then holds until ls1 calls setFocus, once the player has zoomed in far
+// enough. lookup plays once, and entering orooro ("flustered") sets getOdoroki's flag, which ls1 and
+// d_a_npc_yw1 both read. Bit 0x1 deletes it. [asm]
 /* 00006B74-00006C4C       .text demo_action1__11daNpc_Bm1_cFPv */
 BOOL daNpc_Bm1_c::demo_action1(void*) {
     switch (m904) {
@@ -3509,6 +3607,7 @@ BOOL daNpc_Bm1_c::wait_action1(void*) {
     return TRUE;
 }
 
+// Kogoli faces another way by day once bit 0x1820 is set, -0x6000 from where it was placed. [asm]
 /* 00006D08-00006E28       .text wait_action2__11daNpc_Bm1_cFPv */
 BOOL daNpc_Bm1_c::wait_action2(void*) {
     switch (m904) {
@@ -4262,6 +4361,8 @@ J3DModelData* daNpc_Bm1_c::create_arm_Anm() {
     return a_mdl_dat;
 }
 
+// Props: binder for Pashli and Namali, bag for Quill, Ilari and Pashli, knife for Akoot and Skett, stick
+// for Basht, Bisht and Hoskit. The knife and stick group also draw with bm02.bmt, see _draw. [asm]
 /* 00008E6C-00009174       .text create_itm_Mdl__11daNpc_Bm1_cFv */
 bool daNpc_Bm1_c::create_itm_Mdl() {
     mpBinderModel = NULL;

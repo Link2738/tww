@@ -2,6 +2,9 @@
  * d_a_npc_tt.cpp
  * NPC - Tott
  */
+// Tott, who teaches the Song of Passing. The first talk asks about the rhythm (bit 0xB08), which opens
+// the Wind Waker through the XY callbacks. TACT_TT10 is the song, and bit 0xC40 means it is learned.
+// After that he dances for good, and his line is that the dancing does nothing to the sky. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_tt.h"
@@ -151,6 +154,9 @@ u16 daNpc_Tt_c::next_msgStatus(u32* pMsgNo) {
 }
 
 
+// Flag 0x20 keeps him facing home while he talks, too absorbed to notice. talk01 clears it when the
+// player advances 0x22C6, so he turns on that line. 0x5B3 is the conducting prompt, shown with this
+// melody. [asm] [data]
 /* 000004F4-000005D0       .text getMsg__10daNpc_Tt_cFv */
 u32 daNpc_Tt_c::getMsg() {
     u32 msgNo;
@@ -226,6 +232,7 @@ void daNpc_Tt_c::msgAnm() {
     }
 }
 
+// With msgContinue, this sends 0x22D5 on its own, 15 frames after the line before it. [asm]
 /* 00000718-00000730       .text msgPushButton__10daNpc_Tt_cFv */
 void daNpc_Tt_c::msgPushButton() {
     if ((s32)mCurrMsgNo != 0x22C6) {
@@ -303,6 +310,8 @@ void daNpc_Tt_c::demoInitChange() {
     }
 }
 
+// getTactTimerCancel is 1 if the conducting timer ran out, and 2 if the player cancelled. Each has its
+// own event. Anything else counts as played, and sets bit 0xC40. [asm]
 /* 000009EC-00000B1C       .text demoProcTact1__10daNpc_Tt_cFv */
 bool daNpc_Tt_c::demoProcTact1() {
     switch(daPy_getPlayerLinkActorClass()->getTactTimerCancel()) {
@@ -368,6 +377,8 @@ bool daNpc_Tt_c::demoProcPatten() {
     return FALSE;
 }
 
+// Event data names the night version of the line, and this swaps to the day one when it is already
+// night, since the song flips the time. [asm] [data]
 /* 00000D40-00000E04       .text demoInitSpeak__10daNpc_Tt_cFv */
 void daNpc_Tt_c::demoInitSpeak() {
     talkInit();
@@ -689,6 +700,8 @@ BOOL daNpc_Tt_c::wait_action(void*) {
     return TRUE;
 }
 
+// Hair (ke): 10-point chains, each point pulled by gravity and its old motion, kept 7.875 from the point
+// above and above the floor height passed in. [asm]
 /* 00001970-00001BAC       .text ke_control__7tt_ke_sFf */
 void tt_ke_s::ke_control(f32 param_1) {
     int i;
@@ -731,6 +744,7 @@ void tt_ke_s::ke_pos_set(cXyz* i_param) {
     }
 }
 
+// Each side's four strands take roots spaced evenly along a joint pair. [asm]
 /* 00001BE4-00001D48       .text set_ke_root__10daNpc_Tt_cFiii */
 void daNpc_Tt_c::set_ke_root(int param_1, int param_2, int param_3) {
     cXyz temp(0.0f, 0.0f, 0.0f);
@@ -789,6 +803,8 @@ BOOL daNpc_Tt_c::_draw() {
     return TRUE;
 }
 
+// The ground test below is inverted compared with other NPCs, so the sound material is only read when he
+// is off the ground. Standing, it stays 0. [asm] In-game effect not tested.
 /* 00001F84-00002158       .text _execute__10daNpc_Tt_cFv */
 BOOL daNpc_Tt_c::_execute() {
     m_jnt.setParam(

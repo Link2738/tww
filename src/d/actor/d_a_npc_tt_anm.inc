@@ -106,6 +106,8 @@ void daNpc_Tt_c::playTexPatternAnm() {
     }
 }
 
+// Slots 7 and up start a timer for a voice clip that demoProcPatten plays, and the table's slots from 11
+// up all point at POSE_CC. Slot 2 is TALK01 frozen at speed 0. [asm]
 /* 00002E78-00002F94       .text setAnm__10daNpc_Tt_cFi */
 void daNpc_Tt_c::setAnm(int newAnmIdx) {
     if (mTexPatternIdx != 0) {
@@ -175,6 +177,9 @@ BOOL daNpc_Tt_c::danceProc() {
     return danceNext();
 }
 
+// One dance is center, right, center, left, turn, down, then a step with no animation before it wraps.
+// Returning true on the wrap is what counts a pass for demoProcPatten. Nothing sets flag 0x100, so its
+// sound here never plays. [asm]
 /* 000030B0-00003210       .text danceNext__10daNpc_Tt_cFv */
 BOOL daNpc_Tt_c::danceNext() {
     if (mDanceStep < 6) {

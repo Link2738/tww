@@ -2,6 +2,13 @@
  * d_a_npc_kg1.cpp
  * NPC - Salvatore (Squid-Hunt/"Sploosh Kaboom" Minigame)
  */
+// Salvatore, host of the squid hunt. Its HIO name translates as sea battle game shop. This actor is only
+// the host: talk, payment and prizes. The game itself is d_a_mgameboard. wait_action's mWaitMode runs
+// the whole sequence. [asm] Prizes, by register: [asm] [data]
+//   0xFE07 counts wins   1st Piece of Heart, 2nd treasure chart (COLLECT_MAP_51), then a purple rupee
+//   0xFF07 counts records  1st treasure chart (COLLECT_MAP_14), then an orange rupee
+// A new record pays out after the win prize, in the same sequence. d_save_init seeds the record register
+// 0xBEFF from m_highscore. Fewer shots is better, and f_op_msg_mng prints this register.
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_kg1.h"
@@ -102,6 +109,7 @@ static const int l_btp_ix_tbl[] = {
     dRes_INDEX_KG_BTP_RADIO_e,
 };
 
+// Joint 8 is hardcoded here and in CreateHeap as the one holding the plate model. [asm]
 /* 000001E0-00000428       .text daNpc_Kg1_nodeCallBack__FP7J3DNodei */
 static BOOL daNpc_Kg1_nodeCallBack(J3DNode* node, int calcTiming) {
     if (calcTiming == J3DNodeCBCalcTiming_In) {
@@ -270,6 +278,8 @@ BOOL daNpc_Kg1_c::CreateHeap() {
     return TRUE;
 }
 
+// Staff name "Auc0" here does not match the "Kg1" used in wait_action, and looks copied from an auction
+// actor. [inferred]
 /* 00000D34-00000EF0       .text CreateInit__11daNpc_Kg1_cFv */
 cPhs_State daNpc_Kg1_c::CreateInit() {
     mStts.Init(0xFF, 0xFF, this);
@@ -357,6 +367,9 @@ void daNpc_Kg1_c::wait_action_init() {
     setAction(&daNpc_Kg1_c::wait_action);
 }
 
+// mWaitMode: 0 idle, 1 talk and pay, 2 start the board, 3 wait for it to end, 4 wait for A on the result,
+// 5 result talk, 6-8 win prize and its talk, 9-11 record prize and its talk. Replies at 5 can restart the
+// game through m772 without going back to idle. [asm]
 /* 000011D4-00001858       .text wait_action__11daNpc_Kg1_cFv */
 void daNpc_Kg1_c::wait_action() {
     int staffIdx = dComIfGp_evmng_getMyStaffId("Kg1");
@@ -561,6 +574,8 @@ void daNpc_Kg1_c::clr_seq_flag() {
     m777 = 0;
 }
 
+// The record check runs here, only after the win prize has played (m775). A score below 0xBEFF replaces it,
+// sets bit 0xE04, advances 0xFF07, and sets m777 to queue the record prize. [asm]
 /* 00001878-000019B4       .text getMsg__11daNpc_Kg1_cFv */
 u32 daNpc_Kg1_c::getMsg() {
     u32 msgNo;
@@ -596,6 +611,10 @@ u32 daNpc_Kg1_c::getMsg() {
     return msgNo;
 }
 
+// 0x1D4D picks a greeting: without bit 0xE04 straight to the offer. Otherwise under 4 days since
+// dLib_getIplDaysFromSaveTime's saved date gets 0x1D4F, and later 0x1D51 once per temp bit 0x101, then
+// 0x1D50. A game costs 10 rupees. 0x1D56 to 0x1D5B is the optional briefing, which m771 skips after the
+// first hearing until the room reloads. [asm]
 /* 000019B4-00001C7C       .text next_msgStatus__11daNpc_Kg1_cFPUl */
 u16 daNpc_Kg1_c::next_msgStatus(u32* pMsgNo) {
     u16 status = fopMsgStts_MSG_CONTINUES_e;

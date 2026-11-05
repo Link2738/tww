@@ -2,6 +2,15 @@
  * d_a_npc_ds1.cpp
  * NPC - Doc Bandam (Windfall Potion Shop shopkeeper)
  */
+// Doc Bandam, the potion shop. He sells from a normal shelf, and takes Chu Jelly through the XY
+// callbacks: [asm] [data]
+//   known color     red always, green with bit 0xD04, blue with bit 0xD02.
+//                   5 jellies and an empty bottle for a potion.
+//   unknown color   15 jellies (20 in the demo) starts CREATE_DRUG and takes them.
+//                   On finishing he gives a bottle of it.
+//                   Without an empty bottle the new recipe is still learned, and the stage
+//                   reloads (Pdrgsh).
+// The demo also charges 10 per known potion against the retail 5.
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_ds1.h"
@@ -140,6 +149,8 @@ static s16 daNpc_Ds1_XyEventCB(void* i_this, int i_itemBtn) {
     return ((daNpc_Ds1_c*)i_this)->XyEventCB(i_itemBtn);
 }
 
+// Red is always known, so its branch here and its -10 in normal_talk never run. PUT_ITEM starts a new
+// recipe and PUT_ITEM_FAIL turns away too few. [asm]
 /* 00000318-00000550       .text XyEventCB__11daNpc_Ds1_cFi */
 s16 daNpc_Ds1_c::XyEventCB(int itemBtn) {
     s16 ret = -1;
@@ -362,6 +373,7 @@ void daNpc_Ds1_c::eventOrder() {
     }
 }
 
+// Two talk setups, by whether the first speech is done (bit 0x1120): the shop camera, or his own. [asm]
 /* 00000EAC-000011F8       .text checkOrder__11daNpc_Ds1_cFv */
 void daNpc_Ds1_c::checkOrder() {
     if(eventInfo.checkCommandDemoAccrpt()){
@@ -1158,6 +1170,8 @@ BOOL daNpc_Ds1_c::evn_setAnm_init(int staffIdx) {
     return TRUE;
 }
 
+// The brew: particles track his left hand, a rumble and a flash at frame 135 through mLightInfluence,
+// and at frames 10 and 128 he takes the jar and flask in hand. [asm]
 /* 00002E00-000030A0       .text evn_Anm__11daNpc_Ds1_cFv */
 BOOL daNpc_Ds1_c::evn_Anm() {
     if(mpMorf->checkFrame(mpMorf->getEndFrame() - 1.0f)){
@@ -1468,6 +1482,7 @@ BOOL daNpc_Ds1_c::dummy_action(void*) {
     return TRUE;
 }
 
+// The shop's ambience belongs to him: lamp, smoke and three boiling pots, all at room coordinates. [asm]
 /* 00003C0C-00003EE4       .text RoomEffectSet__11daNpc_Ds1_cFv */
 void daNpc_Ds1_c::RoomEffectSet() {
     cXyz particlePos[] = {

@@ -2,6 +2,14 @@
  * d_a_npc_pm1.cpp
  * NPC - Maggie (poor)
  */
+// Maggie before her family's rise. Its HIO name translates as poor Maggie. Like Mila's rich version,
+// d_a_npc_km1, she only really appears in the Forsaken Fortress cutscenes: on entering the Helmaroc
+// King's room in the first visit, and before the fight in the second. [tested]
+// Almost the same code as d_a_npc_km1. No story check, so stage data decides where she is: "Pm1" is in
+// the object name table in d_stage. getMsg always returns 0 and next_msgStatus always ends, so she has
+// no real dialogue, and demo() lets a cutscene drive her. A TALK01 animation exists in anmResID, but
+// every table here only selects WAIT01. Her picto box entry is DSNAP_TYPE_NPC_MAGGIE, shared with
+// d_a_npc_kp1. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

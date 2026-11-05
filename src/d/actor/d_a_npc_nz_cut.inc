@@ -48,6 +48,8 @@ static void* searchNzAndBomb_CB(void* param_1, void*) {
     return NULL;
 }
 
+// Second test is TSUBO again where it means Obj_Barrel, so a barrel's pos_init never runs and any barrel
+// within 300 of the hole is deleted, where a pot is put back. [asm] In-game effect not tested.
 /* 00003528-0000377C       .text searchTsuboAndBarrel_CB__FPvPv */
 static void* searchTsuboAndBarrel_CB(void* param_1, void* param_2) {
     fopAc_ac_c* pActor1 = static_cast<fopAc_ac_c*>(param_1);
@@ -248,6 +250,8 @@ void daNpc_Nz_c::cutEatesaFirstProc() {
     }
 }
 
+// Clears the stage for the trade: deletes every d_a_nz and bomb, resets nearby pots, lines the bait up
+// in front of the hole, and puts the player 250 in front of it. [asm]
 /* 00003F54-0000404C       .text cutKillAllStart__10daNpc_Nz_cFv */
 void daNpc_Nz_c::cutKillAllStart() {
     fopAcM_Search(&searchNzAndBomb_CB, this);

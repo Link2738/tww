@@ -2,6 +2,15 @@
  * d_a_npc_p2.cpp
  * NPC - Zuko, Niko, & Mako
  */
+// Tetra's crew on her ship: Zuko (telescope), Niko (the rope test) and Mako (book). One class, by params
+// bits 0-1. Most of this file is Niko. Params bits 2-9 pick which rope course he is at, bits 10-17 a
+// switch for cuts. Each draws with its own head and materials, see drawP2a to drawP2c. His cuts are in
+// d_a_npc_p2_cut.inc. [asm] Course 0, on stage Asoko before Forsaken Fortress: entering the circle plays
+// P2B_INTRO, he rides the switch and lifts, swings the rope and waits on the far side while the player
+// follows. Landing in the goal circle stops d_a_obj_timer and gives P2B_GOAL. Taking the treasure
+// (DEFAULT_TREASURE) runs P2B_ARRIVE_MAJYU, which sets ARRIVE_MAJYU and jumps the time to 300. Course 1
+// is the later visit for bombs: P2B_INTRO_2, goal, then P2B_BOMB_GET sets GOT_NIKO_BOMBS. His lines
+// there react to the player's Pirate's Charm. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_p2.h"
@@ -236,6 +245,8 @@ void daNpc_P2_c::playTexPatternAnm() {
 }
 
 
+// Each NPC has its own row mapping one animation slot to a file, -1 where it has none, and the morph
+// table is overwritten from the HIO every call. [asm]
 void daNpc_P2_c::setAnm() {
 
     static s8 a_anm_num_tbl[3][0x18] = 
@@ -953,6 +964,8 @@ void daNpc_P2_c::demo_jump() {
     return;
 }
 
+// Niko comes to the edge to talk while the player is more than 300 below him, and walks back to the goal
+// spot once they are up. All of these goal states check the same landing circle. [asm]
 /* 00001EC8-000021C4       .text goal_goalpos_to_talkpos__10daNpc_P2_cFv */
 void daNpc_P2_c::goal_goalpos_to_talkpos() {
 
@@ -1216,6 +1229,8 @@ void daNpc_P2_c::zukotelescope() {
     }
 }
 
+// Mako follows the parent's facing (m748 is the offset, from a ship actor) and every 200-300 frames plays a
+// page turn, keeping the book model's frame in step. [asm]
 /* 00002BE8-00002D78       .text moccowait__10daNpc_P2_cFv */
 void daNpc_P2_c::moccowait() {
 
@@ -1252,6 +1267,7 @@ void daNpc_P2_c::moccowait() {
     }
 }
 
+// 0x808 here is ARRIVE_MAJYU: Zuko goes back to his telescope until they reach Forsaken Fortress. [asm]
 /* 00002D78-00002E38       .text talk01__10daNpc_P2_cFv */
 void daNpc_P2_c::talk01() {
 

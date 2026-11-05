@@ -2,6 +2,16 @@
  * d_a_npc_fa1.cpp
  * Item - Fairy / 回復妖精 (Recovery fairy)
  */
+// The fairy. Params hold the type, and anything unlisted becomes normal: [asm]
+//   0 normal     placed as Sfairy (params 255). Wanders, heals on touch, can be bottled.
+//   1 timer      from item drops in f_op_actor_mng. Starts at a random heading and flies off after a time.
+//   2 link       released from a bottle by d_a_player_bottle.inc. Spirals around the player,
+//                heals at the end.
+//   3 baba       the player pours it out for Grandma (d_a_player_dproc.inc). See init_bottle_baba_move2.
+//   4 area       from d_a_bigelf. Wanders within 500 of home.
+//   5 link down  a bottle saving the player from death (d_a_player_main). Same flight, heals at the start.
+//   6 hover      from d_a_bigelf. Holds still and faces the player, until init_bigelf_change sends it away.
+// Only normal_move can be caught, through checkBinCatch.
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_fa1.h"
@@ -402,6 +412,8 @@ void daNpc_Fa1_c::init_normal_move() {
     }
 }
 
+// Touching starts get_player_move, which spirals around the player and heals through execItemGet at the
+// end. Only timer fairies (status 1) escape, and they delete after a further timer if not touched. [asm]
 /* 800FB988-800FBA68       .text normal_move__11daNpc_Fa1_cFv */
 void daNpc_Fa1_c::normal_move() {
     speedF = l_HIO.prm.m08;
@@ -776,6 +788,9 @@ void daNpc_Fa1_c::bottle_baba_move() {
     }
 }
 
+// Grandma's fairy in two steps: it circles up around the player until 180 above, then bottle_baba_move
+// jumps it next to d_a_npc_ba1 to circle up from her, and it deletes at 150 above her. It carries a
+// point light. [asm]
 /* 800FCA94-800FCAF4       .text init_bottle_baba_move2__11daNpc_Fa1_cFv */
 void daNpc_Fa1_c::init_bottle_baba_move2() {
     setMode(Mode_BOTTLE_BABA_MOVE2_e);

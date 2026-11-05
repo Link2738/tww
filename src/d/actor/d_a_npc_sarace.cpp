@@ -2,6 +2,10 @@
  * d_a_npc_sarace.cpp
  * NPC - Loot the Sailor (Boating Course)
  */
+// The sailor who runs the boat course. 30 rupees a game, and a talk offers the rules, a game, or no. The
+// race is run on stage Ocean by d_a_goal_flag, which, with d_a_player_main, writes the result to
+// ship_race_result: 1 timeout, 2 finish, 3 fell in. [asm] Register 0xAAFF counts paid wins up to 12, and
+// d_a_goal_flag takes 10 seconds off the limit for each. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_sarace.h"
@@ -249,6 +253,8 @@ void daNpc_Sarace_c::checkOrder() {
     }
 }
 
+// Bit 0x2820 means the limit just got shorter, and adds the warning 0xFAA to the rules. It is set when a
+// win raises the count, and cleared on paying. [asm] [data]
 /* 000008E8-00000A6C       .text next_msgStatus__14daNpc_Sarace_cFPUl */
 u16 daNpc_Sarace_c::next_msgStatus(u32* i_msg_no) {
     u16 msg_status = fopMsgStts_MSG_CONTINUES_e;
@@ -317,6 +323,8 @@ u16 daNpc_Sarace_c::next_msgStatus(u32* i_msg_no) {
     return msg_status;
 }
 
+// Bit 0x2810 changes nothing here, since both of its branches can give 0xFA1. The shorter 0xFA2 needs bit
+// 0x2840, set on the first game started. [asm]
 /* 00000A6C-00000B50       .text getMsg__14daNpc_Sarace_cFv */
 u32 daNpc_Sarace_c::getMsg() {
     u32 msgNo;
@@ -348,6 +356,8 @@ u32 daNpc_Sarace_c::getMsg() {
     return msgNo;
 }
 
+// The dRes_ID names here are misleading. They are just the numbers 0, 1 and 2, used as indexes into
+// l_bck_ix_tbl: wait, talk 1, talk 2. [asm]
 /* 00000B50-00000BEC       .text anmAtr__14daNpc_Sarace_cFUs */
 void daNpc_Sarace_c::anmAtr(u16) {
     switch(dComIfGp_getMesgAnimeAttrInfo()) {
@@ -483,6 +493,9 @@ void daNpc_Sarace_c::wait01() {
     mEventState = 2;
 }
 
+// The rules (0xFA4) spawn two demo barrels at world positions and run SARACE_EXPCAM. Starting a game
+// sends the player to Ocean and puts the sail on Y if no button has it. Winnings are paid as the player
+// advances 0xFB6. [asm]
 /* 00001024-000014B8       .text talk01__14daNpc_Sarace_cFv */
 void daNpc_Sarace_c::talk01() {
     if(talk(1) == fopMsgStts_BOX_CLOSED_e) {

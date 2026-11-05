@@ -2,6 +2,13 @@
  * d_a_npc_bmsw.cpp
  * NPC - Koboli (Rito mail sorter)
  */
+// Koboli, the Rito who runs the letter sorting game. SwMail_c and SwCam_c below are a copy of what
+// d_a_npc_btsw has as SwMail2_c and SwCam2_c. Register 0xC203 is the player's rank, and bit 0x2701 is
+// Baito's win. Together they decide who is at the desk: [asm]
+//   rank 0-2                 Koboli alone. Passing a rank raises it.
+//   rank 3, no 0x2701        Koboli does not spawn, and spawns d_a_npc_btsw in his place. This is also when
+//                            d_a_npc_btsw2 stops appearing, so Baito has been hired. [Tested]
+//   0x2701                   Koboli spawns at a fixed spot with Baito as his child, and plays for a record.
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_bmsw.h"
@@ -189,6 +196,8 @@ static BOOL nodeCallBackArm(J3DNode* node, int calcTiming) {
     return TRUE;
 }
 
+// "rupees" is letters sorted. To pass: 10 at rank 0, 20 at rank 1, 25 at rank 2. After Baito's win, beating
+// register 0x8AFF, shared with d_a_npc_btsw, sets a new record. [asm]
 /* 00000550-000006F4       .text daNpc_Bmsw_getGameEndMsg__Fs */
 static u32 daNpc_Bmsw_getGameEndMsg(s16 rupees) {
     u8 reg_val = dComIfGs_getEventReg(dSv_event_flag_c::UNK_C203);
@@ -353,6 +362,8 @@ void daNpc_Bmsw_c::checkOrder() {
     field_0x9B9 = 1;
 }
 
+// 0x1A38, 0x1A4D and 0x1A58 are where a pass raises the rank, while the pay line plays. The no answer at
+// 0x1A2E has a different line once Dragon Roost Cavern's boss is beaten. [asm]
 /* 00000B68-00000EF8       .text next_msgStatus__12daNpc_Bmsw_cFPUl */
 u16 daNpc_Bmsw_c::next_msgStatus(u32* currMsgNo) {
     u16 ret = fopMsgStts_MSG_CONTINUES_e;
@@ -514,6 +525,8 @@ u16 daNpc_Bmsw_c::next_msgStatus(u32* currMsgNo) {
     return ret;
 }
 
+// Temp bit 0x320 picks the greeting after Baito's win. d_s_room clears it on leaving a room in the sea
+// stage, so the longer greeting returns after sailing. [asm]
 /* 00000EF8-0000102C       .text getMsg__12daNpc_Bmsw_cFv */
 u32 daNpc_Bmsw_c::getMsg() {
     u32 msg = field_0x9C0;
@@ -573,6 +586,7 @@ void daNpc_Bmsw_c::anmAtr(u16 i_msgStatus) {
     dComIfGp_setMesgAnimeAttrInfo(0xFF);
 }
 
+// After Baito's win, Baito takes the placed position and Koboli moves to a hardcoded spot. [asm]
 /* 000010C0-00001340       .text CreateInit__12daNpc_Bmsw_cFv */
 BOOL daNpc_Bmsw_c::CreateInit() {
     field_0x97E = current.angle;
@@ -651,6 +665,7 @@ void daNpc_Bmsw_c::setAttention() {
     attention_info.position.set(mAttPos.x, mAttPos.y + l_HIO.mNpc.mAttnYOffset, mAttPos.z);
 }
 
+// With no player to look at after Baito's win, Koboli watches Baito. [asm]
 /* 00001534-000016EC       .text lookBack__12daNpc_Bmsw_cFv */
 void daNpc_Bmsw_c::lookBack() {
     cXyz vec2;
@@ -726,6 +741,7 @@ void daNpc_Bmsw_c::wait01() {
     }
 }
 
+// Pay is added when the player advances past the closing line of each result. [asm]
 /* 0000184C-00001A84       .text talk01__12daNpc_Bmsw_cFv */
 void daNpc_Bmsw_c::talk01() {
     u16 talk_res = talk(1);
@@ -804,6 +820,11 @@ BOOL daNpc_Bmsw_c::checkNextMailThrowOK() {
     return ret;
 }
 
+// Pay per letter sorted: [asm]
+//   rank 0   half, from 10
+//   rank 1   half from 15, one each from 20
+//   rank 2   one each from 20, three each from 25
+//   record play   one each, at any score
 /* 00001C70-00001DA4       .text setGameGetRupee__12daNpc_Bmsw_cFs */
 void daNpc_Bmsw_c::setGameGetRupee(s16 rupees) {
     u8 reg_val = dComIfGs_getEventReg(dSv_event_flag_c::UNK_C203);
@@ -1323,6 +1344,7 @@ BOOL SwMail_c::MailCreateInit(cXyz* param_1, cXyz* param_2) {
     return TRUE;
 }
 
+// Same logic and same caveat as SwMail2_c::getNextNo in d_a_npc_btsw. [asm]
 /* 00003DBC-00003FE8       .text getNextNo__8SwMail_cFUc */
 u8 SwMail_c::getNextNo(u8 previous_no) {
     f32 random = cM_rndF(10.0f);

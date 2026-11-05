@@ -2,6 +2,10 @@
  * d_a_npc_bs1.cpp
  * NPC - Beedle / ボ−トショップ店員 (Boat shopkeeper)
  */
+// Beedle. mType, params bits 20-23: 0 his shop ship, 1 the masked one with the closing sale (Bs2, helmet
+// model, HIO m2C). The shop ship also buys spoils, and tracks membership points. Param byte 0 picks
+// which of its three item sets and camera data it uses. Item prices and text come from d_shop's set
+// data, not from here. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_bs1.h"
@@ -143,6 +147,8 @@ daNpc_Bs1_HIO_c::daNpc_Bs1_HIO_c() {
 static s16 daNpc_Bs1_XyEventCB(void* i_this, int value) {
     return ((daNpc_Bs1_c*)i_this)->XyEventCB(value);
 }
+// Using the Complimentary ID or Fill-Up Coupon, shop ship only. Their events run PRAISE, which refills
+// life, or MANTAN, which refills life, magic, bombs and arrows, and GETTICKET takes the item. [asm]
 /* 000002E4-00000490       .text XyEventCB__11daNpc_Bs1_cFi */
 s16 daNpc_Bs1_c::XyEventCB(int i_itemBtn) {
     s16 eventIdx = -1;
@@ -387,6 +393,9 @@ void daNpc_Bs1_c::checkOrder() {
     }
 }
 
+// How many of a spoil he will buy: what the player holds, capped at what fits under the wallet limit,
+// rounding up so the last sale can overflow. daNpc_Bs1_setPayRupee then clamps the pay to the room left.
+// [asm]
 /* 00000F8C-00001088       .text daNpc_Bs1_getBuyItemMax__Fii */
 static u32 daNpc_Bs1_getBuyItemMax(int i_itemCost, int i_itemNo) {
     int beastIdx;
@@ -440,6 +449,11 @@ static void daNpc_Bs1_setPayRupee(int unknownParam1, int unknownParam2) {
     daNpc_Bs1_c::setPayRupee(paymentTotal);
 }
 
+// A purchase ends in 0xF4C or 0xF4E here, which adds a point to register 0x86FF, capped at 255. Exactly
+// 30 sends the Silver Membership letter, and exactly 60 the Gold. Knight's Crests sold are counted
+// separately in 0x7F0F, and at 10 he pays more, shown by 0xFD4 in getMsg. [asm] [data] Bait bag and, on
+// Bs2, bottle, Piece of Heart and chart are one-time buys: SoldOutItem marks them, with bits 0x2020,
+// 0x2010 and 0x2008 to remember across loads.
 /* 000010EC-00001F7C       .text next_msgStatus__11daNpc_Bs1_cFPUl */
 u16 daNpc_Bs1_c::next_msgStatus(u32* pMsgNo) {
     u16 msgStatus = fopMsgStts_MSG_CONTINUES_e;
@@ -973,6 +987,9 @@ u16 daNpc_Bs1_c::next_msgStatus(u32* pMsgNo) {
     return msgStatus;
 }
 
+// Bs2's greeting walks a closing-sale countdown through register 0xBB07, until bit 0x1F08 means he has
+// reopened. The final `if` here sets a bit only if it is already set, so does nothing. On either ship,
+// first sight of bombs for sale with a bomb bag gets a one-time line, bit 0x1F20. [asm] [data]
 /* 00001F7C-000024B8       .text getMsg__11daNpc_Bs1_cFv */
 u32 daNpc_Bs1_c::getMsg() {
     u32 msgNo;
@@ -1422,6 +1439,10 @@ u16 daNpc_Bs1_c::talk() {
     return status;
 }
 
+// Stock is fixed three-item sets, with swaps. A bait bag already owned shows the next item, and Hyoi
+// Pears become 30 bombs once the player has a bomb bag. Bs2 fills sold one-time slots from a list that
+// puts usable items first. Bombs without a bag and arrows without a bow show sold-out signs (m76C).
+// [asm]
 /* 00002C10-00003018       .text createShopList__11daNpc_Bs1_cFv */
 void daNpc_Bs1_c::createShopList() {
     static __shop_items_set_data* Item_set_data3[] = {

@@ -2,6 +2,13 @@
  * d_a_npc_bms1.cpp
  * NPC - Bomb-Master Cannon (Windfall Bomb Shop shopkeeper)
  */
+// The Bomb Shop keeper, placed as Bms1 (type 0) or Bms2 (type 1). The raw bit 0xA02 throughout this file
+// is ENDLESS_NIGHT. He has three states, and Nayru's Pearl ends the middle one: [asm]
+//   before Endless Night    type 0, gruff. The shop shows bombs at an absurd price and never sells. [data]
+//   Endless Night, no pearl type 1 only: a second body, a mask model and struggling cries, with no talk.
+//   with Nayru's Pearl      type 0, polite, shorter hair (scale 0.4), and bombs really for sale. [data]
+// Type 0 sits in a barrel (ptaru), his model raised 100 and pushed forward 35 in set_mtx. Which of the two
+// exists is decided in _create, and field_0x8A5 tells _delete that nothing was loaded. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_bms1.h"
@@ -176,6 +183,8 @@ static BOOL nodeCallBack_Bms(J3DNode* node, int calcTiming) {
     return TRUE;
 }
 
+// Springy hair. Each side's tip chases its animated position with acceleration field_0x40 and damping
+// field_0x44, the joint turns toward it, and the length stretches with velocity, limited to 0.5-1.5. [asm]
 /* 000004C4-00000A00       .text nodeCallBack_BmsHead__FP7J3DNodei */
 static BOOL nodeCallBack_BmsHead(J3DNode* node, int calcTiming) {
     if (calcTiming == 0) {
@@ -398,6 +407,8 @@ void daNpc_Bms1_c::setAnmFromMsgTag() {
     dComIfGp_setMesgAnimeAttrInfo(0xff);
 }
 
+// Unlike the usual version this only tests distance along his facing, and ignores the angle argument. So a
+// player anywhere behind him also passes. [asm]
 /* 00001100-000011D8       .text chkAttention__12daNpc_Bms1_cF4cXyzs */
 bool daNpc_Bms1_c::chkAttention(cXyz pos, s16 angle) {
     fopAc_ac_c* player = dComIfGp_getPlayer(0);
@@ -421,6 +432,7 @@ void daNpc_Bms1_c::eventOrder() {
     }
 }
 
+// Starting a talk moves the player to a fixed spot, (-70, 0, 150), and switches to the shop camera. [asm]
 /* 00001278-000014AC       .text checkOrder__12daNpc_Bms1_cFv */
 void daNpc_Bms1_c::checkOrder() {
     if (eventInfo.checkCommandDemoAccrpt()) {
@@ -448,6 +460,9 @@ void daNpc_Bms1_c::checkOrder() {
     }
 }
 
+// Two shop chains. 0x277A to 0x277F is the first state, where saying yes only leads to 0x2780 and back, so
+// nothing can be bought. 0x2788 to 0x278D is the real one: too little money 0x278E, no room 0x278F, else
+// pay. An item not owned yet goes through BMS_GET_DEMO, an owned one is just added. [asm]
 /* 000014AC-000017FC       .text next_msgStatus__12daNpc_Bms1_cFPUl */
 u16 daNpc_Bms1_c::next_msgStatus(u32* pMsgNo) {
     u16 msgStatus = fopMsgStts_MSG_CONTINUES_e;
@@ -785,6 +800,9 @@ void daNpc_Bms1_c::setAttention(bool attn) {
     attention_info.position.set(mAttPos.x, mAttPos.y + l_HIO.mChild[0].mNpc.mAttnYOffset, mAttPos.z);
 }
 
+// A drop of over 200 while not flying counts as coming in through the roof. wait_action then orders
+// BMS_LAND_DEMO, type 0 only, where he complains about not using the door. The line depends on the state,
+// see evn_talk_init. [asm] [data]
 /* 00002144-000021F4       .text checkPlayerLanding__12daNpc_Bms1_cFv */
 BOOL daNpc_Bms1_c::checkPlayerLanding() {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -989,6 +1007,11 @@ BOOL daNpc_Bms1_c::evn_continue_talk_init(int staffIdx) {
     return TRUE;
 }
 
+// The jelly branches look copied from d_a_npc_ds1, the potion shop that owns 0x1DC4 and 0x1DCA. Nothing
+// here sets mDrugChuchuNo. Only event data can pick these numbers, and it would have to use another
+// NPC's lines, so this is probably dead. [inferred] Its amounts (10, 20, 30, and 10) match neither
+// retail d_a_npc_ds1 (10, 15, 15, and 5) nor the demo (10, 20, 20, and 10), so the copy predates both.
+// [asm]
 /* 00002BFC-00002DD8       .text evn_talk__12daNpc_Bms1_cFv */
 BOOL daNpc_Bms1_c::evn_talk() {
     if (l_msgId == fpcM_ERROR_PROCESS_ID_e) {

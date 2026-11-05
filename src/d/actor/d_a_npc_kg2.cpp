@@ -2,6 +2,12 @@
  * d_a_npc_kg2.cpp
  * NPC - Salvatore (Cannon Minigame)
  */
+// Salvatore at the cannon game, the other job of d_a_npc_kg1, with the same archive. The game itself is
+// d_a_canon, which reports back through canon_game_result and uses l_kg2_pointer as a sound source. Sinking
+// all 5 ships wins. A game costs 50 rupees. [asm] [data]
+// Prizes by register 0xB703, counted before the prize event: 1st Piece of Heart, 2nd treasure chart
+// (COLLECT_MAP_40), then an orange rupee. Outside time 105 to 300 he sleeps and only mumbles. [asm]
+// Events chain through m754: KG2_START_DEMO, CANON_GAME, then on a win KG2_CLEAR_DEMO and KG2_GETDEMO.
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_kg2.h"
@@ -164,6 +170,8 @@ BOOL daNpc_Kg2_c::initTexPatternAnm(bool modify) {
     return TRUE;
 }
 
+// Pattern 4 is sleep: it holds each frame 150-300 ticks, longer when closed, and subAnm plays the snoring
+// voice while it is active. [asm]
 /* 000005A0-000006EC       .text playTexPatternAnm__11daNpc_Kg2_cFv */
 void daNpc_Kg2_c::playTexPatternAnm() {
     if (m738 == 1 && mBtpIdx == 0 && mBtpFrame == 2) {
@@ -303,6 +311,10 @@ void daNpc_Kg2_c::checkOrder() {
     }
 }
 
+// m74C comes from event data, and some numbers are swapped here: the rules speech for the short version,
+// and the mid-game taunts by prior wins, since he plays pirates over the radio. [asm] [data] 0x3140
+// plays once after the player has finished a game at d_a_npc_kg1 (bit 0x2540), and is him starting to
+// recognize the player. [inferred]
 /* 00000CC4-00000E38       .text getMsg__11daNpc_Kg2_cFv */
 u32 daNpc_Kg2_c::getMsg() {
     u32 msgNo;
@@ -867,6 +879,7 @@ int daNpc_Kg2_c::wait_action(void*) {
     return 1;
 }
 
+// Each event's end starts the next. A loss goes to the talk 0x314E, which offers another game. [asm] [data]
 /* 00002334-00002590       .text event_wait_action__11daNpc_Kg2_cFPv */
 int daNpc_Kg2_c::event_wait_action(void*) {
     if (mActionStatus == 0) {

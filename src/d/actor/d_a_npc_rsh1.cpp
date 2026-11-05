@@ -2,6 +2,17 @@
  * d_a_npc_rsh1.cpp
  * NPC - Zunari
  */
+// Zunari, the Windfall stall owner, and the trading chain's first step. getMsg gives the order of the
+// story: [asm] [data]
+//   no sail          sells the sail, first for the player's rupees (0x2889), RSH_GET_DEMO gives it
+//   no Delivery Bag  a line about settling here
+//   then             at 3 or more stock slots, he gives the Magic Armor (0x285F) once.
+//                    See daNpc_Rsh1_countShop
+//   otherwise        the partner pitch, ending in the Town Flower (0x2856) and bit 0x1108
+// Stock is the 12 reserve item slots, shown in order, 3 to a stall across 4 stalls. See createShopList.
+// Slot 0 counts as held if the player has the Delivery Bag. The stall positions here are world
+// coordinates, so this actor only works in its own spot. Far from the camera (5000), _execute does
+// nothing.
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_rsh1.h"
@@ -142,6 +153,8 @@ daNpc_Rsh1_HIO_c::daNpc_Rsh1_HIO_c() {
     m08 = -1;
 }
 
+// Two quads of the shop floor. If the room loads with the player inside, and behind Zunari, RSH_SHOP_OUT
+// sends them back out. The test is all cross products the same sign, one quad at a time. [asm]
 /* 0000021C-0000045C       .text checkCreateInShopPlayer__12daNpc_Rsh1_cFv */
 BOOL daNpc_Rsh1_c::checkCreateInShopPlayer() {
     cXyz* curr_tbl;
@@ -237,6 +250,7 @@ static int daNpc_Rsh1_countShop() {
     return result;
 }
 
+// Bought trading items wait in the bag, and it holds 3 at most. See 0x2884 in next_msgStatus. [asm] [data]
 /* 000007A0-0000080C       .text daNpc_Rsh1_RotenItemNumInBag__Fv */
 static int daNpc_Rsh1_RotenItemNumInBag() {
     int result = 0;
@@ -475,6 +489,7 @@ void daNpc_Rsh1_c::eventOrder() {
     }
 }
 
+// Talking from outside the counter's angle gets the 0x2883 scolding instead. [asm] [data]
 /* 00001038-0000126C       .text checkOrder__12daNpc_Rsh1_cFv */
 void daNpc_Rsh1_c::checkOrder() {
     if (eventInfo.checkCommandDemoAccrpt()) {
@@ -696,6 +711,9 @@ u16 daNpc_Rsh1_c::next_msgStatus(u32* o_pMsgNo) {
     return msg_status;
 }
 
+// Bit 0x2D01 is the Windfall fortune swap: once it is set, a partner who has not been through 0xE08
+// hears about someone at his safe (0x2859). [asm] [data] 0x283E is the 8-slot line, 0x2840 the 2-slot
+// one. 0x2842 sends the player toward the next trader. [data]
 /* 00001650-00001808       .text getMsg__12daNpc_Rsh1_cFv */
 u32 daNpc_Rsh1_c::getMsg() {
     u32 msg_no;
@@ -1274,6 +1292,9 @@ BOOL daNpc_Rsh1_c::pathMove(int* param_1) {
     return FALSE;
 }
 
+// He walks along the path to the stall nearest the player, up to the last one with stock
+// (getAimShopPosIdx). Running into him scolds, then pl_shop_out_action pushes the player out, using its
+// own larger collision cylinder. [asm]
 /* 00002E00-00002F5C       .text wait01__12daNpc_Rsh1_cFv */
 bool daNpc_Rsh1_c::wait01() {
     if (m771) {
@@ -1685,6 +1706,8 @@ BOOL daNpc_Rsh1_c::_draw() {
     return TRUE;
 }
 
+// Demo version only: the HIO can force the 12 reserve slots and three flags, a test harness left behind.
+// [asm]
 /* 00004040-0000427C       .text _execute__12daNpc_Rsh1_cFv */
 BOOL daNpc_Rsh1_c::_execute() {
 #if VERSION == VERSION_DEMO

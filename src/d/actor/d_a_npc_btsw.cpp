@@ -2,6 +2,12 @@
  * d_a_npc_btsw.cpp
  * NPC - Baito
  */
+// Baito at the post office, who runs the letter sorting game. Its HIO name translates as sorting
+// part-timer. Not the common NPC template: it has its own actions, and SwMail2_c and SwCam2_c below are
+// the
+// game's letters and camera. d_a_npc_btsw2 is Baito before this job. [asm]
+// Winning here is one-way: the Note to Mom is handed over and bit 0x2701 set, after which the talk chain
+// no longer offers the game. d_a_npc_bmsw reads that bit and the same record register. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_btsw.h"
@@ -168,6 +174,8 @@ static BOOL nodeCallBack(J3DNode* node, int calcTiming) {
     return TRUE;
 }
 
+// The game counts its score in the minigame rupee counter, so "rupees" here is letters sorted, not money.
+// 25 is the winning score. [asm]
 /* 00000430-0000046C       .text daNpc_Btsw_getGameEndMsg__Fs */
 static u32 daNpc_Btsw_getGameEndMsg(s16 rupees) {
     u32 msgNo;
@@ -312,6 +320,9 @@ void daNpc_Btsw_c::checkOrder() {
     field_0x9A9 = 1;
 }
 
+// The return-visit chain ends on 0x1AA4 to 0x1AA6. Before winning it offers the game. After winning, by
+// priority: letter to his mother not yet sent, no Din's Pearl yet, her reply not yet read, one line about
+// her reply, then a fixed line. [asm]
 /* 00000AC4-00000CBC       .text next_msgStatus__12daNpc_Btsw_cFPUl */
 u16 daNpc_Btsw_c::next_msgStatus(u32* currMsgNo) {
     u16 ret = fopMsgStts_MSG_CONTINUES_e;
@@ -384,6 +395,10 @@ u16 daNpc_Btsw_c::next_msgStatus(u32* currMsgNo) {
     return ret;
 }
 
+// field_0x9B0 is a pending message number, despite its process ID type. Showing an item gets 0x1AA3. The
+// first talk is 0x1A91, or 0x1AB5 on a save with a clear count, recognizing the player by his outfit.
+// [data] Register 0xAB03 counts days since the last talk, up to 3 (d_kankyo_dayproc), and 3 picks the
+// long-time-no-see greeting. Every plain talk resets it. [asm]
 /* 00000CBC-00000DF0       .text getMsg__12daNpc_Btsw_cFv */
 u32 daNpc_Btsw_c::getMsg() {
     u32 msg;
@@ -496,6 +511,7 @@ BOOL daNpc_Btsw_c::CreateInit() {
     return TRUE;
 }
 
+// His idle sorting animations pass a letter between hands at frame 19, with offsets fixed by hand. [asm]
 /* 00001110-00001324       .text set_mtx__12daNpc_Btsw_cFv */
 void daNpc_Btsw_c::set_mtx() {
     J3DModel* model = mpMorf->getModel();
@@ -680,6 +696,7 @@ BOOL daNpc_Btsw_c::dummy_event_action(void*) {
     return TRUE;
 }
 
+// Three letter objects take turns. A throw has to wait until the next one in the rotation is free. [asm]
 /* 00001A40-00001B0C       .text checkNextMailThrowOK__12daNpc_Btsw_cFv */
 BOOL daNpc_Btsw_c::checkNextMailThrowOK() {
     u8 mailIdx = field_0x92C;
@@ -711,6 +728,9 @@ void daNpc_Btsw_c::TimerCountDown() {
     }
 }
 
+// The sorting game. A timer of 30 from the HIO, six boxes in a 3 by 2 grid, one letter in hand at a time.
+// Box and cursor positions are world coordinates in these tables, so the game only works in its own room.
+// Past 25, event BTSW_TALK_SUGOI then GETMOTHERLETTER. Under that, a message by score. [asm]
 /* 00001BF0-000026EC       .text shiwake_game_action__12daNpc_Btsw_cFPv */
 BOOL daNpc_Btsw_c::shiwake_game_action(void*) {
     static cXyz aim_pos_data[2][3] = {
@@ -865,6 +885,7 @@ BOOL daNpc_Btsw_c::shiwake_game_action(void*) {
     return TRUE;
 }
 
+// After the win: marks it with bit 0x2701 and sets the record register 0x8AFF to 25. [asm]
 /* 000026EC-00002844       .text getdemo_action__12daNpc_Btsw_cFPv */
 BOOL daNpc_Btsw_c::getdemo_action(void*) {
     if (mActionStatus == ACTION_STARTING) {
@@ -1122,6 +1143,12 @@ BOOL SwMail2_c::MailCreateInit(cXyz* param_1, cXyz* param_2) {
     return TRUE;
 }
 
+// Picks the next letter's box. Staying in the same box starts at 25% and loses 12.5 points per repeat in
+// a
+// row. One step away is 25%, and the rest is a farther box. previous_no is this object's own last number,
+// and with three objects in rotation that is three letters back, not the letter before. m_no_buff stores
+// the result but nothing reads it, and m_same_count is shared by all three. So the repeat limit does not
+// see actual neighbors. [asm] In-game effect not tested.
 /* 00003838-00003A64       .text getNextNo__9SwMail2_cFUc */
 u8 SwMail2_c::getNextNo(u8 previous_no) {
     f32 random = cM_rndF(10.0f);
@@ -1324,6 +1351,8 @@ void SwMail2_c::ThrowInit(cXyz param_1, u8 param_2) {
     SetProc(&SwMail2_c::Throw);
 }
 
+// The letter's number is also its texture frame, see draw, so what the player reads is the answer. A
+// wrong box gives a rumble, and End lets the letter bounce out and fall. [asm]
 /* 000040EC-000043D0       .text Throw__9SwMail2_cFv */
 void SwMail2_c::Throw() {
     if (field_0x56 == 0) {
