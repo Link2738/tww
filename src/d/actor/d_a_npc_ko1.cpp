@@ -2,6 +2,19 @@
  * d_a_npc_ko1.cpp
  * NPC - Joel & Zill (Outset Island)
  */
+// Which variant exists at each story point. The init_ functions refuse to spawn unless their flags
+// match, so each variant only appears in its phase: [asm]
+//   Variant  Spawns when                           Staff
+//   HNA_0    bit 0x2A80 set, bit 0xE20 clear       Ko1
+//   HNA_1    bit 0xE20 set                         Ko1
+//   HNA_2    bit 0x2A80 clear                      Ko1
+//   HNA_3    bit 0x520 set, day                    Ko1
+//   HNA_4    bit 0x520 set, night                  Ko1
+//   BOU_0    bit 0xE20 clear                       Ko2
+//   BOU_1    bit 0xE20 set                         Ko2
+//   BOU_2    bit 0x520 set, day                    Ko2
+//   BOU_3    bit 0x520 set, night                  Ko2
+// Bits 0xE20 and 0x520 also pick Outset's stage layer; see dComIfG_play_c::getLayerNo.
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
