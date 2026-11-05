@@ -2,6 +2,22 @@
  * d_a_npc_ah.cpp
  * NPC - Old Man Ho Ho
  */
+// Reference for the table-driven NPC template, called family B in these notes, and the simplest
+// example of it. Where d_a_npc_gk1's family A uses hand-written if chains and one action function, this
+// one uses tables: [asm]
+//   l_npc_dat                          tuning block: head and backbone limits, attention and eye
+//                                      offsets, ranges
+//   l_execute_init, moveProc           one init and one run function per mode. executeSetMode switches
+//   l_msg_*_tbl                        message lists, each ended by 0, read through mpMsgNo
+//   sAhAnmDat                          animation steps: index (0xFF ends a list), morf, repeat count (0 or less loops)
+//   cut_name_tbl, privateCut           named event cuts with an init and a run, here MES_SET and GET_ITEM
+// Create goes through phases: phase_1 decides whether to exist at all, phase_2 loads and builds.
+//
+// This NPC: Old Man Ho Ho. Params bits 0-7 are a placement index from 0 to 9, and anything larger counts as 0.
+// Each placement says one fixed line, 0x36B1 + index. Index 2 needs event bit 0x520 and goes away with
+// switch 0x6C, index 5 goes away with switch 0x10, and index 9 with the switch from getSwBit. [asm]
+// getSwBit is params bits 8-15. Nothing in this unit sets field_0x748, so eventMesSet never picks an
+// item for the GET_ITEM cut. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_ah.h"
@@ -158,6 +174,8 @@ static BOOL CheckCreateHeap(fopAc_ac_c* i_this) {
     return ((daNpcAh_c*)i_this)->createHeap();
 }
 
+// STOP means do not exist and is not an error. _execute deletes the actor if the same switch is set
+// later. [asm]
 /* 000006FC-00000828       .text phase_1__FP9daNpcAh_c */
 static cPhs_State phase_1(daNpcAh_c* i_this) {
     fopAcM_ct(i_this, daNpcAh_c);
@@ -569,6 +587,8 @@ void daNpcAh_c::eventGetItemInit() {
     }
 }
 
+// Same flow as fopNpc_npc_c::talk, plus chkMsg, called when a following line starts typing. A family B
+// NPC can act on a line there. It is empty in this one. [asm]
 /* 00001718-00001860       .text talk2__9daNpcAh_cFi */
 u16 daNpcAh_c::talk2(int i_param) {
     u16 msg_status = 0xff;
@@ -604,6 +624,7 @@ u16 daNpcAh_c::talk2(int i_param) {
     return msg_status;
 }
 
+// Walks the message list until its 0, then falls back to the base class. [asm]
 /* 00001860-000018B0       .text next_msgStatus__9daNpcAh_cFPUl */
 u16 daNpcAh_c::next_msgStatus(u32* pMsgNo) {
     u16 ret = fopMsgStts_MSG_CONTINUES_e;
@@ -626,6 +647,7 @@ u16 daNpcAh_c::next_msgStatus(u32* pMsgNo) {
     return ret;
 }
 
+// Returns 0, and no list, during a photo or when showing an item. [asm]
 /* 000018B0-00001958       .text getMsg__9daNpcAh_cFv */
 u32 daNpcAh_c::getMsg() {
     u32 ret = 0;
@@ -650,6 +672,8 @@ void daNpcAh_c::setMessage(u32 msgNo) {
     mCurrMsgNo = msgNo;
 }
 
+// Attribute 0 and 1 from message text select the two idle animations. It is cleared after being read,
+// so it only acts once. [asm]
 /* 00001964-000019D0       .text setAnmFromMsgTag__9daNpcAh_cFv */
 void daNpcAh_c::setAnmFromMsgTag() {
     switch(dComIfGp_getMesgAnimeAttrInfo()){
@@ -684,6 +708,10 @@ void daNpcAh_c::setMtx() {
     mpMorf->getModel()->setBaseTRMtx(mDoMtx_stack_c::get());
 }
 
+// Decides where to look. An event's attention point wins. Otherwise the player counts when within the
+// range and angle, which grow by 40 units and 0x71C angle units once already looking, so the NPC does
+// not flicker at the edge. After losing the player it keeps looking for l_npc_dat.field_0x50 frames,
+// then returns to its home angle. [asm]
 /* 00001ABC-00001DBC       .text chkAttention__9daNpcAh_cFv */
 void daNpcAh_c::chkAttention() {
     field_0x751 = 0;
@@ -816,6 +844,7 @@ BOOL daNpcAh_c::initTexPatternAnm(bool modify) {
     }
 }
 
+// Blinks at a fixed interval of 120 frames. Family A uses a random wait instead. [asm]
 /* 00002014-00002080       .text playTexPatternAnm__9daNpcAh_cFv */
 void daNpcAh_c::playTexPatternAnm() {
     if(!cLib_calcTimer(&mTimer)){
@@ -829,6 +858,7 @@ void daNpcAh_c::playTexPatternAnm() {
     }
 }
 
+// When an animation ends, a positive count replays it, and reaching 0 moves to the next list step. [asm]
 /* 00002080-00002148       .text playAnm__9daNpcAh_cFv */
 void daNpcAh_c::playAnm() {
     field_0x74A &= ~1;

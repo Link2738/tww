@@ -2,6 +2,7 @@
  * d_a_npc_roten.cpp
  * NPC - Traveling Merchants
  */
+// Uses the table-driven NPC template. See d_a_npc_ah.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_roten.h"
