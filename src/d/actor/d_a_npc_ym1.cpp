@@ -2,6 +2,9 @@
  * d_a_npc_ym1.cpp
  * NPC - Mesa & Abe
  */
+// Spawn rules: YM1_0 without bit 0x520, YM1_1 with it. YM2_0 without 0x520 or 0xE20, YM2_1 without 0x520
+// and with 0xE20, YM2_2 with 0x520 by day, YM2_3 with 0x520 at night. Variants 6 and 7 always spawn, in
+// the demo action. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

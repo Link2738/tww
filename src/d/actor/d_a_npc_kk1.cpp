@@ -2,6 +2,7 @@
  * d_a_npc_kk1.cpp
  * NPC - Mila (poor)
  */
+// Spawn rule: with bit 0x2D01, by day or without bit 0xE08. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

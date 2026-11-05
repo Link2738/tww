@@ -2,6 +2,7 @@
  * d_a_npc_zk1.cpp
  * NPC - Rito Chieftain
  */
+// Spawn rule: only once the player has Din's Pearl. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

@@ -2,6 +2,9 @@
 * d_a_npc_ba1.cpp
 * NPC - Link's Grandma
 */
+// Spawn rules: BA1_0 without bits 0x520 and 0x1. BA1_1 without 0x520 and with 0x1. BA1_2 always, the
+// demo version. BA1_3 with 0x520 until GRANDMA_HEALED, which takes a shown item through the XY
+// callbacks. BA1_4 with both. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

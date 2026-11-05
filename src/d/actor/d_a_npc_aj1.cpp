@@ -2,6 +2,8 @@
  * d_a_npc_aj1.cpp
  * NPC - Sturgeon
  */
+// Spawn rules: AJ1_0 without bits 0xE20 and 0x502. If it fails, it sets its placed switch instead.
+// AJ1_1 without 0x520, and it sets 0x502 itself. AJ1_2 with 0x520. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

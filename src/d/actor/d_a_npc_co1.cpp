@@ -2,6 +2,7 @@
  * d_a_npc_co1.cpp
  * NPC - Prince Komali (before Dragon Roost Cavern)
  */
+// Spawn rule: only until the player has Din's Pearl. d_a_npc_ac1 is Komali afterward. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

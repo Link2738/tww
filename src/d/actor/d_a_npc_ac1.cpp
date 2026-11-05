@@ -2,6 +2,8 @@
  * d_a_npc_ac1.cpp
  * NPC - Prince Komali (after Dragon Roost Cavern)
  */
+// Spawn rule: only with bit 0x2E04, which is also the flag d_a_tag_island type 5 sets on arrival at
+// Headstone. It reads bit 0x1580 and ignores the result. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

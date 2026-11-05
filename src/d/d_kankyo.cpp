@@ -3168,6 +3168,21 @@ void dKy_arrowcol_chg_move() {
 
 // TRUE from the ENDLESS_NIGHT event until the player has Nayru's Pearl, the period when it stays
 // night. This also feeds stage layer choice, and blocks time from moving. [asm]
+// The Endless Night, as the player sees it: [tested]
+//   1. Link and the King of Red Lions reach the destroyed Greatfish Isle. Quill says Jabun has fled
+//      to Outset Island.
+//   2. Link sails to Windfall and gets Bombs from Tetra's ship. Tetra catches him over the Pirate's
+//      Charm and gives him until morning to reach Jabun's cave.
+//   3. Morning never comes, so there is no real deadline. Link blows open the door to the cave.
+//   4. Link receives Nayru's Pearl, the curse breaks, and the Endless Night ends.
+// Code that fits each step: [inferred]
+//   1. d_a_tag_island type 3 sets ENDLESS_NIGHT when its arrival event starts.
+//   2. d_a_tag_island type 4 arms only during this period, and getLayerNo gives Windfall its own
+//      layer. d_a_tag_event type 9 is the scene where Link overhears the pirate ship password.
+//      See that unit.
+//   3. setDaytime stops the clock while this returns TRUE. d_a_tag_island type 7, PUROLO_RETURN, needs
+//      this period and the Bomb Bag.
+//   4. This returns FALSE once dSymbol_NAYRU_e is owned.
 /* 80196764-801967C4       .text dKy_checkEventNightStop__Fv */
 BOOL dKy_checkEventNightStop() {
     if (dComIfGs_isEventBit(dSv_event_flag_c::ENDLESS_NIGHT) && !dComIfGs_isSymbol(dSymbol_NAYRU_e)) {

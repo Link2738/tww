@@ -2,6 +2,8 @@
  * d_a_npc_zl1.cpp
  * NPC - Tetra
  */
+// Spawn rules: ZL1_0 without bit 0x1, ZL1_1 without bit 0x101. Both are demo versions, so this actor
+// exists only early on, as far as these two go. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

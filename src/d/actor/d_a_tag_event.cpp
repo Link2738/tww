@@ -17,8 +17,12 @@
 //   6    mo2 is the partner
 //   7    calls setQuakeInfo on the dragon at frame 105
 //   8    sets bit 0x2502 at the end
-//   9    needs ENDLESS_NIGHT. First run picks one of 6 passwords and keeps it in register 0xBA0F. Sets
-//        bit 0x2110 at the end
+//   9    the pirate ship password scene on Windfall: Link overhears the pirates, and the game will not
+//        accept the password until he has. [tested] Needs ENDLESS_NIGHT. Whichever comes first, this or
+//        the door in d_a_knob00, picks one of 6 and keeps it in event register 0xBA0F, so it is fixed per
+//        save file. The text comes from message 0x1B37 + the index. Sets bit 0x2110 at the end, which
+//        d_a_knob00::chkPassward checks. [asm] The six are Schooner,
+//        Barnacle, Chummily, Plankton, Swabbies and Treasure; which index is which is not read. [tested]
 //   A    needs bit 0xE20; sets 0x3202 at the end
 //   B    uses this stage event on the ship and BEAST_GATE2 on foot; sets 0x3040 at the end
 //   C    arms while its switch is clear, the reverse of the others

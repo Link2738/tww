@@ -2,6 +2,9 @@
  * d_a_npc_yw1.cpp
  * NPC - Malo
  */
+// Spawn rules: YW1_0 without bits 0x520 and 0x1, needing a path. YW1_1 without 0x520. YW1_2 with 0x520,
+// at night or without bit 0x2A20. YW1_3 with 0x520 and 0x2A20 by day, needing a path. YW1_0 and YW1_3 also
+// create a TSUBO actor and walk a path, and fail if it cannot be created. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

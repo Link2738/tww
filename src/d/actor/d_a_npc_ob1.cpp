@@ -2,6 +2,7 @@
  * d_a_npc_ob1.cpp
  * NPC - Rose
  */
+// Spawn rules: OB1_0 without bit 0x520, OB1_1 with it by day, OB1_2 with it at night. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

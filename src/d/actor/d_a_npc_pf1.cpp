@@ -2,6 +2,8 @@
  * d_a_npc_pf1.cpp
  * NPC - Maggie's Father (poor)
  */
+// Spawn rule: only without bit 0x2D01. The rich version of this NPC, d_a_npc_gp1, spawns only with it.
+// See d_a_npc_kf1. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep

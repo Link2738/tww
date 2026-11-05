@@ -2,6 +2,10 @@
  * d_a_npc_kf1.cpp
  * NPC - Mila's Father (rich)
  */
+// Spawn rule: only without bit 0x2D01. The poor version of this NPC, d_a_npc_gk1, spawns only with it.
+// The same bit swaps Maggie's father, d_a_npc_pf1 and d_a_npc_gp1, the other way, and picks Windfall's
+// stage layer. [asm] In the story, Mila's and Maggie's families trade fortunes after Forsaken Fortress
+// 2. [tested]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
