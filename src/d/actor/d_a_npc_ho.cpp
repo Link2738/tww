@@ -2,6 +2,11 @@
  * d_a_npc_ho.cpp
  * NPC - Mrs. Marie (Windfall Island teacher)
  */
+// Mrs. Marie. She starts the Killer Bees quest and runs the Joy Pendant trade, all from one action,
+// wait_action, which steps mState through the talk and give states. [asm] The quest runs end to end
+// in our all-source build. [tested] Her part of it is next_msg_sub0, and the trade is
+// next_msgStatus. She takes pendants only after bit 0x1E04 (0x1E02 in the demo), which the Killer
+// Bees' visit talk sets after her quest reward, see visitTalkInit in d_a_npc_mk.cpp. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_ho.h"
@@ -66,6 +71,9 @@ s16 daNpc_Ho_c::XyCheckCB(int) {
     return 1;
 }
 
+// Event register 0xC0FF is the lifetime count of pendants given, capped at 99. Retail returns the
+// excess to the player. Bug: the demo skips that, so the excess is lost. In-game effect not tested.
+// [asm]
 /* 00000254-000002F8       .text receivePendant__10daNpc_Ho_cFi */
 void daNpc_Ho_c::receivePendant(int numPendantsGiven) {
     int totalGiven = dComIfGs_getEventReg(dSv_event_flag_c::UNK_C0FF);
@@ -186,6 +194,12 @@ void daNpc_Ho_c::checkOrder() {
     ClrOrder();
 }
 
+// Her opening menu. Choosing to talk from 0x2712, the menu before any pendant is given, runs the
+// quest chain. From 0x2713 it goes to the topic menu instead. [asm] [data] Chain: hide and seek
+// never started (bit 0x2201) asks for help, and yes sets bit 0x1380, which Ivan's getMsg reads.
+// Started but not won (bit 0x1340) gives a reminder. Won gives the reward speech once, setting bit
+// 0x1F80, then a closing line. Temp bit 0x580, used by d_a_npc_mk, is set with the reward, in
+// retail only during the day. [asm] [data]
 /* 000007A8-00000884       .text next_msg_sub0__10daNpc_Ho_cFUl */
 u32 daNpc_Ho_c::next_msg_sub0(u32 msgNo) {
     switch(mMsgSelectNum) {
@@ -217,6 +231,17 @@ u32 daNpc_Ho_c::next_msg_sub0(u32 msgNo) {
     }
 }
 
+// The pendant trade, entered from getMsg once a pendant is shown: [asm] [data]
+//   First pendant: takes exactly one, pays a red rupee.
+//   Until the deed: takes exactly 20 once the player holds at least 20, and gives the Cabana Deed
+//   (bit 0x1C08). With fewer, she only asks for 20.
+//   Until the charm: takes every pendant held. A lifetime total of 40 or more gives the Hero's
+//     Charm
+//   (bit 0x1C04).
+//   After that: takes every pendant held and pays by the number handed over, red under 3, purple
+//     under
+//   5, otherwise orange. At a lifetime total of 99 she takes no more.
+// The rupee tier counts pendants that receivePendant then returns over the cap. [asm]
 /* 00000884-00000C0C       .text next_msgStatus__10daNpc_Ho_cFPUl */
 u16 daNpc_Ho_c::next_msgStatus(u32* pMsgNo) {
     u16 msgStatus = fopMsgStts_MSG_CONTINUES_e;
@@ -236,6 +261,8 @@ u16 daNpc_Ho_c::next_msgStatus(u32* pMsgNo) {
                     break;
             }
             break;
+// The purple rupee's closing line, 0x2748, is the same one that ends the cabana speech.
+// [asm] [data]
         case 0x271E:
             mNextMessageId = 0x2748;
             mItemNum = dItemNo_PURPLE_RUPEE_e;
@@ -267,6 +294,9 @@ u16 daNpc_Ho_c::next_msgStatus(u32* pMsgNo) {
                 *pMsgNo = 0x272D;
             }
             break;
+// Dead path: no messages 0x2723-0x272A exist in the GZLE01 data, and no code path selects
+// 0x2723 or 0x2724. So HO_FLAG_00000020 is never set here and the HO_PREACH state never
+// runs. [asm] [data]
         case 0x2725:
             setFlag(HO_FLAG_00000020);
             mNextMessageId = 0x2726;
@@ -382,6 +412,9 @@ u16 daNpc_Ho_c::next_msgStatus(u32* pMsgNo) {
     return msgStatus;
 }
 
+// HO_STATE_TALK_03 means an item was shown. Anything but a pendant, or a pendant before the gate
+// bit, gets a brush-off line. Temp bit 0x104, set with the deed and cleared by the daily reset,
+// picks the line for pendants brought again the same day. [asm] [data]
 /* 00000C0C-00000DA8       .text getMsg__10daNpc_Ho_cFv */
 u32 daNpc_Ho_c::getMsg() {
     switch(mState) {
@@ -508,6 +541,8 @@ u16 daNpc_Ho_c::talk() {
                         mTalkState = TALK_FINISHED;
                     }
 
+// Presumably ends the player's item-showing pose on the lines that follow a
+// shown pendant. [inferred]
                     if (msgStatus == fopMsgStts_MSG_CONTINUES_e && (CPad_CHECK_TRIG_A(0) || CPad_CHECK_TRIG_B(0))) {
                         switch (mCurrMsgNo) {
                         case 0x274D:
@@ -555,6 +590,8 @@ BOOL daNpc_Ho_c::init() {
     return TRUE;
 }
 
+// After the head joint callback has run twice, the positions refresh only while the state function
+// returns true, which is while the morf is blending. [asm]
 /* 000012B8-0000130C       .text setAttention__10daNpc_Ho_cFb */
 void daNpc_Ho_c::setAttention(bool param_1) {
     if (!param_1 && mAttnSetCount >= 2) {
@@ -644,6 +681,8 @@ bool daNpc_Ho_c::talk01() {
     return mpMorf->isMorf();
 }
 
+// Widens her collision to 90 while an item is shown. talk01 and talk03 restore 40. Presumably keeps
+// the player clear of her during the pose. [asm] [inferred]
 /* 00001678-000016E8       .text talk02__10daNpc_Ho_cFv */
 bool daNpc_Ho_c::talk02() {
     if (dComIfGp_evmng_ChkPresentEnd()) {
@@ -765,6 +804,7 @@ BOOL daNpc_Ho_c::_draw() {
     mpMorf->entry();
     mBtpAnm.remove(pModelData);
     mpJoyPendentModel->setBaseTRMtx(pModel->getAnmMtx(m_jnt.getBackboneJntNum()));
+// She wears the pendant model, on the backbone joint, from the first one given. [asm]
     if(dComIfGs_getEventReg(dSv_event_flag_c::UNK_C0FF) != 0) {
         mDoExt_modelUpdateDL(mpJoyPendentModel);
     }
@@ -830,6 +870,8 @@ BOOL daNpc_Ho_c::_execute() {
     mObjAcch.CrrPos(*dComIfG_Bgsp());
     mtrlSndId = 0;
 
+// Possible bug: the material sound id is read only when not on the ground. d_a_npc_hi1 tests
+// the same call without the negation. In-game effect not tested. [asm]
     if (!mObjAcch.ChkGroundHit()) {
         mtrlSndId = dComIfG_Bgsp()->GetMtrlSndId(mObjAcch.m_gnd);
     }

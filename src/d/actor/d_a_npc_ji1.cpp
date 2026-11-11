@@ -5,7 +5,7 @@
 // Orca, on Outset. Three stages by story, chosen in CreateInit and getMsg: [asm] [data]
 //   before bit 0x1    unarmed until the rolling attack: he shows it, the player crashes a roll, the shelves
 //                     fall and his brother shouts from upstairs (bit 0x501). Then lessons up to the thrust.
-//   bit 0x1           Aryll taken. All six lessons, ending with the Hero's Sword (bit 0x2F10).
+//   bit 0x1           Tetra has fallen. All six lessons, ending with the Hero's Sword (bit 0x2F10).
 //   bit 0x520         back from the sea. The hit-count duel, and the Hurricane Spin for 10 Knight's Crests.
 // field_0xD70 changes meaning with the action: lesson number in teachAction, hit count in battleAction.
 // field_0xD84 is the spear: 0 none, 1 in hand, 2 dropped and bouncing (harpoonMove).

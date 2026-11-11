@@ -2,6 +2,10 @@
  * d_a_npc_hi1.cpp
  * NPC - King of Hyrule
  */
+// He has no dialogue: getMsg returns 0, even though wait_1 keeps the talk condition open, so a talk
+// would ask for message 0. His event tables hold only placeholders, "dummy" and "DUMMY", so what he
+// does beyond idling comes from demo. decideType ignores params. l_check_inf and l_check_wrk are
+// unused here. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -461,6 +465,8 @@ bool daNpc_Hi1_c::chk_talk() {
     return true;
 }
 
+// Despite the name, returns true when the head, backbone or facing changed since lookBack took its
+// snapshot. [asm]
 /* 00000FFC-0000103C       .text chk_parts_notMov__11daNpc_Hi1_cFv */
 bool daNpc_Hi1_c::chk_parts_notMov() {
     return field_0x788.y != m_jnt.getHead_y() || 
@@ -662,6 +668,9 @@ void daNpc_Hi1_c::setStt(s8 param_1) {
     setAnm();
 }
 
+// While field_0x7B9 is set he turns back to his spawn angle. Once there, attention starts a random
+// 15 to 30 frame look at the player, kept up while dNpc_chkAttn passes. When it fails he stops
+// looking and starts turning home again. `timer` first holds the angle left to turn. [asm]
 /* 00001654-000017D4       .text wait_1__11daNpc_Hi1_cFv */
 BOOL daNpc_Hi1_c::wait_1() {
     s16 timer = 0;
@@ -752,6 +761,8 @@ int daNpc_Hi1_c::wait_action1(void*) {
     return 1;
 }
 
+// On entering a demo, zeroes the head and backbone turn. The demo can then swap in its own blink
+// and texture animations, which hold on their last frame. [asm]
 /* 00001958-00001B34       .text demo__11daNpc_Hi1_cFv */
 u8 daNpc_Hi1_c::demo() {
     if(demoActorID == 0) {
@@ -914,6 +925,8 @@ BOOL daNpc_Hi1_c::_delete() {
     return TRUE;
 }
 
+// a_siz_tbl is all zero, so fopAcM_entrySolidHeap builds in all free heap memory, then shrinks.
+// [asm]
 /* 00001F30-0000205C       .text _create__11daNpc_Hi1_cFv */
 cPhs_State daNpc_Hi1_c::_create() {
     static int a_siz_tbl[] = {

@@ -109,6 +109,9 @@ u16 daNpc_Tc_c::next_msgStatusNormal2(u32* pMsgNo) {
     return msgStatus;
 }
 
+// First talk per spawn is a greeting, which the Tingle Tuner bits change. Then with a chart to
+// decipher: the offer, the long form once per spawn. With none: USA and PAL mention a small wallet,
+// see setRupeeSizeMsg. [asm] [data]
 /* 00004E6C-00004F68       .text getMsgNormal2__10daNpc_Tc_cFv */
 u32 daNpc_Tc_c::getMsgNormal2() {
     u32 msg;
@@ -154,6 +157,8 @@ u32 daNpc_Tc_c::getMsgNormal2() {
 }
 
 #if VERSION > VERSION_JPN
+// Wallet sizes 0 and 1 get a hint toward a fairy. Bit 0x3020 picks which fairy, see case 0x38AA.
+// Only in versions after JPN. [asm] [data]
 /* 00004F68-00004FD8       .text setRupeeSizeMsg__10daNpc_Tc_cFv */
 u32 daNpc_Tc_c::setRupeeSizeMsg() {
     u32 msgNo = 0xDB5;
@@ -183,6 +188,8 @@ bool daNpc_Tc_c::existUnknownCollectMap() {
     return false;
 }
 
+// Marks the lowest chart held but not deciphered, and returns its number. Called from
+// cutPresentProc, which turns it into the deciphered chart item. [asm]
 /* 00005054-000050DC       .text analysisCollectMap__10daNpc_Tc_cFv */
 int daNpc_Tc_c::analysisCollectMap() {
     for(int i = 1; i <= 8; i++) {

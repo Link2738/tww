@@ -2,6 +2,10 @@
  * d_a_npc_so.cpp
  * NPC - Fishman (blue fish)
  */
+// The fishmen. Each hides at a d_a_tag_so tag in its sea room, swims and jumps, and only talks after being fed from the ship, see XyCheckCB. Feeding fills in the room's chart square with
+// a map-opening jump. mode_tbl in modeProc is the state machine, and the event cuts are in
+// d_a_npc_so_cut.inc. [asm] [data] The body rides on mB34, an offset from a position kept at water
+// level. mB38 holds its target, rate and step, set by the offset functions below. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_so.h"
@@ -275,6 +279,8 @@ static s16 daNpc_So_XyCheckCB(void* i_this, int arg2) {
     return a_this->XyCheckCB(arg2);
 }
 
+// Accepts bait only while he swims, with none already in the water, from a player on the ship.
+// [asm]
 /* 000005E8-00000680       .text XyCheckCB__10daNpc_So_cFi */
 s16 daNpc_So_c::XyCheckCB(int arg1) {
     fopAc_ac_c* pfVar1 = fopAcM_Search(searchEsa_CB, this);
@@ -543,6 +549,9 @@ void daNpc_So_c::offsetAppear() {
     mB38.x = DEMO_SELECT(110.0f + REG12_F(0), 110.0f);
 }
 
+// After the bow game, mB0C: by hits. 10 pays 200 rupees through SO_GET_RUPEE, fewer pay 10 each,
+// see next_msgStatus. Otherwise: the Dragon Roost speech once, ending in the map jump, or the
+// greeting. After the map jump, mBD8, the room's hint m6D0. [asm] [data]
 /* 00000D1C-00000E40       .text getMsg__10daNpc_So_cFv */
 u32 daNpc_So_c::getMsg() {
     if (mB0C) {
@@ -578,6 +587,10 @@ u32 daNpc_So_c::getMsg() {
     return 0x32d0;
 }
 
+// 0x32D0: a room already charted skips the map jump and repeats the hint. After a repeated hint,
+// 0x32D6 offers the bow game if the room has a minigame tag, the player owns the Bow, and no timer
+// is running. The Dragon Roost hint is followed by 0x32CE, which leaves through SO_1ST_MEET_END.
+// [asm] [data]
 /* 00000E40-00001214       .text next_msgStatus__10daNpc_So_cFPUl */
 u16 daNpc_So_c::next_msgStatus(u32* pMsgNo) {
     u16 ret = 0xF;
@@ -704,6 +717,7 @@ u16 daNpc_So_c::next_msgStatus(u32* pMsgNo) {
         *pMsgNo = 0x32E2;
         break;
 
+// The King of Red Lions' lines in SO_TRIFORCE_CHECK, chosen by shard count. [asm] [data]
     case 0x633:
         if (dComIfGs_getTriforceNum() == 8) {
             *pMsgNo = 0x635;
@@ -927,6 +941,8 @@ void daNpc_So_c::modeSwimInit() {
 #endif
 }
 
+// Circles his tag, and jumps when mA90 runs out. A player on the ship inside the tag's range moves
+// him to modeNearSwim. [asm]
 /* 00001A6C-00001DB8       .text modeSwim__10daNpc_So_cFv */
 void daNpc_So_c::modeSwim() {
     mBDB = 0;
@@ -976,6 +992,8 @@ void daNpc_So_c::modeNearSwimInit() {
     m_jnt.onBackBoneLock();
 }
 
+// Circles the player at radius 400 and keeps the talk and bait conditions open. Forces the
+// BoatBattle camera while the player is in range. [asm]
 /* 00001DFC-00002144       .text modeNearSwim__10daNpc_So_cFv */
 void daNpc_So_c::modeNearSwim() {
     dCam_getBody()->SetTypeForce("BoatBattle", NULL);
@@ -1028,6 +1046,8 @@ void daNpc_So_c::modeEventFirstWaitInit() {
     offsetDive();
 }
 
+// The Dragon Roost first meeting: undrawn, he follows the ship until it is 20000 from his spawn,
+// with the Sail owned and the player aboard, then runs SO_1ST_MEET. [asm]
 /* 0000217C-000022D0       .text modeEventFirstWait__10daNpc_So_cFv */
 void daNpc_So_c::modeEventFirstWait() {
     daShip_c* ship = dComIfGp_getShipActor();
@@ -1202,6 +1222,7 @@ void daNpc_So_c::modeTalk() {
     }
 }
 
+// Any departure sets bit 0x901, so the Dragon Roost first meeting cannot run again. [asm]
 /* 0000289C-0000296C       .text modeDisappearInit__10daNpc_So_cFv */
 void daNpc_So_c::modeDisappearInit() {
     if (!dComIfGs_isEventBit(dSv_event_flag_c::UNK_0901)) {
@@ -1215,6 +1236,8 @@ void daNpc_So_c::modeDisappearInit() {
     m_jnt.offBackBoneLock();
 }
 
+// Possible bug: loops until it finds a tag with a different random number, 0 to 4. A room without a
+// second usable tag would hang here. Rooms need at least two, or a mod must handle this. [asm]
 /* 0000296C-00002A90       .text modeDisappear__10daNpc_So_cFv */
 void daNpc_So_c::modeDisappear() {
     if (std::abs(mB34 - mB38.x) < 10.0f) {
@@ -1475,6 +1498,8 @@ void daNpc_So_c::checkOrder() {
     }
 }
 
+// Near the player, scale is 0.7. Past 2000 it grows with distance up to 2. Presumably so he stays
+// visible from far off. [asm] [inferred]
 /* 0000330C-000033F4       .text setScale__10daNpc_So_cFv */
 void daNpc_So_c::setScale() {
     f32 dVar2 = fopAcM_searchActorDistanceXZ(this, dComIfGp_getPlayer(0));
@@ -1510,6 +1535,7 @@ bool daNpc_So_c::_execute() {
 
     fopAcM_setCullSizeBox(this, dVar4, dVar4, dVar4, dVar5, dVar5, dVar5);
 
+// Touching ground outside an event resets him to hiding, as a safety. [asm] [inferred]
     if (!dComIfGp_event_runCheck() && mAcch.ChkGroundHit()) {
         current.pos.y = 0.0f;
         fopAcM_SetSpeedF(this, 0.0f);
@@ -1636,6 +1662,7 @@ void daNpc_So_c::debugDraw() {
     tmp4.y += 20.0f;
 }
 
+// The SO_FUDE model, on joint 11, shows between the EQUIP and UNEQUIP cuts. [asm]
 /* 000038E0-00003954       .text hudeDraw__10daNpc_So_cFv */
 void daNpc_So_c::hudeDraw() {
     g_env_light.setLightTevColorType(mpModel, &tevStr);
@@ -1700,6 +1727,8 @@ bool daNpc_So_c::_draw() {
     return true;
 }
 
+// Special starts: the first meeting at Dragon Roost, before bit 0x901, and SO_TRIFORCE_CHECK at
+// Gale Isle once its temple's boss is beaten, with collect bit 0,3, and before bit 0x3A20. [asm]
 /* 00003B00-00003DF8       .text createInit__10daNpc_So_cFv */
 void daNpc_So_c::createInit() {
     mBDA = 0;
@@ -1758,6 +1787,8 @@ void daNpc_So_c::createInit() {
     mEventCut.setActorInfo2("NpcSo", this);
 }
 
+// The room's hint message is placement data, home.angle.x, with 0 or 0xFFFF meaning message 1.
+// [asm]
 /* 00003DF8-00003E24       .text getArg__10daNpc_So_cFv */
 void daNpc_So_c::getArg() {
     m6D0 = home.angle.x;
@@ -1766,6 +1797,8 @@ void daNpc_So_c::getArg() {
     }
 }
 
+// None exist before Dragon Roost Cavern's boss is beaten. The Tower of the Gods room also needs bit
+// 0x1E40. [asm]
 /* 00003E24-00003F38       .text _create__10daNpc_So_cFv */
 cPhs_State daNpc_So_c::_create() {
     fopAcM_ct(this, daNpc_So_c);

@@ -2,6 +2,15 @@
  * d_a_npc_tc.cpp
  * NPC - Tingle, Ankle, David Jr. & Knuckle
  */
+// Tingle and his brothers, all one class. Params bits 0-3 pick mType, with 0xF meaning TYPE_NORMAL:
+// [asm] [data]
+//   TYPE_NORMAL: Tingle in the cell, help_action. Rescue sets bit 0xB80 and deletes him.
+//   TYPE_NORMAL2: Tingle at his tower, after bit 0xB80. Deciphers charts for 398 rupees.
+//   TYPE_RED, TYPE_WHITE: turn the tower's bar, see setTower. Red pays for Tingle Statues, see
+//     d_a_npc_tc_msg_red.inc.
+//   TYPE_BLUE: appears only after bit 0x1708, which d_a_agb.cpp sets from the Tingle Tuner. It
+//     comments on the statues and has no other job.
+// The msg_*.inc files hold each type's dialogue, and d_a_npc_tc_cut.inc the event cuts. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_tc.h"
@@ -61,6 +70,8 @@ static daNpc_Tc_HIO_c l_HIO;
 
 #include "d/actor/d_a_npc_tc_msg_red.inc"
 
+// The save bits read into fields 0x7C-0x93 are debug display only. Nothing in this unit reads them
+// back. This also runs at static init, before any save is loaded. [asm]
 /* 000000EC-00000394       .text __ct__14daNpc_Tc_HIO_cFv */
 daNpc_Tc_HIO_c::daNpc_Tc_HIO_c() {
     field_0x60.set(-100.0f, 1700.0f, -50.0f);
@@ -232,6 +243,8 @@ void daNpc_Tc_c::smoke_set(f32 i_rate, f32 i_spread, f32 i_initialVelOmni, f32 i
     }
 }
 
+// Morph lengths in a_anm_prm_tbl are overwritten from l_HIO on every call. Besides choosing
+// animations, this runs their effects, at fixed frames for smoke and particles. [asm]
 /* 00000948-00001168       .text setAnm__10daNpc_Tc_cFv */
 void daNpc_Tc_c::setAnm() {
     static const int a_anm_bck_tbl[] = {
@@ -598,6 +611,8 @@ void daNpc_Tc_c::setTexAnm() {
     }
 }
 
+// Red and white notice at half range. In the seated, jumping and walking cell states, Tingle uses
+// 900. [asm]
 /* 000011C0-0000136C       .text chkAttention__10daNpc_Tc_cF4cXyzs */
 bool daNpc_Tc_c::chkAttention(cXyz param_1, s16 param_2) {
     fopAc_ac_c* player = dComIfGp_getPlayer(0);
@@ -677,6 +692,8 @@ void daNpc_Tc_c::checkOrder() {
     mTalkingNearJail = true;
 }
 
+// Tests chest 0xF in each of five dungeons. Presumably each holds a Tingle Statue, going by the
+// dialogue. [asm] [inferred]
 /* 00001470-000014FC       .text existTcMonument__10daNpc_Tc_cFv */
 bool daNpc_Tc_c::existTcMonument() {
     if(dComIfGs_isStageTbox(dSv_save_c::STAGE_DRC, 0xF) || dComIfGs_isStageTbox(dSv_save_c::STAGE_FW, 0xF) 
@@ -745,6 +762,9 @@ void daNpc_Tc_c::stopTower() {
     }
 }
 
+// Possible bug: for red and white, the tower restarts only if the actor is within 0x600 of its bar
+// angle. statusTalk calls this only on the frame the box closes. If he has turned further, the
+// tower stays stopped until a later talk. In-game effect not tested. [asm]
 /* 00001618-000017A4       .text startTower__10daNpc_Tc_cFv */
 void daNpc_Tc_c::startTower() {
     JUT_ASSERT(DEMO_SELECT(0x408, 0x407), m_tower_actor != NULL);
@@ -782,6 +802,7 @@ void daNpc_Tc_c::startTower() {
     }
 }
 
+// All five next_msgStatus variants hold the message box while a dance is playing. [asm]
 /* 000017A4-00001900       .text next_msgStatusBlue__10daNpc_Tc_cFPUl */
 u16 daNpc_Tc_c::next_msgStatusBlue(u32* pMsgNo) {
     u16 msgStatus = fopMsgStts_MSG_CONTINUES_e;
@@ -1157,6 +1178,9 @@ void daNpc_Tc_c::statusWait() {
     }
 }
 
+// The cell sequence: seated, he notices the player within 900. The first time plays TC_JUMP_DEMO,
+// later ones jump straight down. He then walks to the bars facing the player, and goes back to the
+// stool once the player is beyond 400. "OpenDoor" ending runs TC_RESCUE, see help_action. [asm]
 /* 00002594-000026E4       .text statusSit__10daNpc_Tc_cFv */
 void daNpc_Tc_c::statusSit() {
     mSmokeCallBack.end();
@@ -1204,6 +1228,9 @@ void daNpc_Tc_c::statusJump() {
     }
 }
 
+// The first talk at the bars plays an event: TC_TALK_NEAR_JAIL, or TC_TALK_NEAR_JAIL_S with a
+// nonzero clear count. Possible bug: statusWaitNearJail has the same code without the clear count
+// test, so from there a second run plays the first-run event. In-game effect not tested. [asm]
 /* 00002798-000029B0       .text statusWalkToJail__10daNpc_Tc_cFv */
 void daNpc_Tc_c::statusWalkToJail() {
     fopAc_ac_c* player = dComIfGp_getPlayer(0);
@@ -1688,6 +1715,8 @@ BOOL daNpc_Tc_c::_draw() {
 }
 
 
+// Red and white are carried by the tower at fixed offsets, at opposite ends of the bar, while they
+// push. [asm]
 /* 00003A40-00003BE0       .text setTower__10daNpc_Tc_cFv */
 void daNpc_Tc_c::setTower() {
     m_tower_actor = (daObjSmplbg::Act_c*)fopAcM_Search(&searchTower_CB, this);
@@ -1825,6 +1854,7 @@ static BOOL createHeap_CB(fopAc_ac_c*i_this) {
     return static_cast<daNpc_Tc_c*>(i_this)->_createHeap();
 }
 
+// TYPE_NORMAL deletes itself after rescue in help_action, rather than being refused here. [asm]
 /* 00003F3C-00003FC0       .text isCreate__10daNpc_Tc_cFv */
 bool daNpc_Tc_c::isCreate() {
     switch(mType) {

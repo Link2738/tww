@@ -123,6 +123,9 @@ void daNpc_Tc_c::cutSitToJumpProc(int i_staffIdx) {
 void daNpc_Tc_c::cutPresentStart(int) {
 }
 
+// ItemType from the event: 0 Tingle Tuner, 1 a chart, 2 by type. Red: rupees for 1-5 new statues,
+// or item 6 once all are paid. Normal2: the deciphered chart. itemNo is left unset if the count is
+// 0, which the dialogue paths into this event rule out. [asm]
 /* 00005FA8-00006174       .text cutPresentProc__10daNpc_Tc_cFi */
 void daNpc_Tc_c::cutPresentProc(int i_staffIdx) {
     int* pItemType = dComIfGp_evmng_getMyIntegerP(i_staffIdx, "ItemType");
@@ -303,6 +306,7 @@ void daNpc_Tc_c::cutDoorClose2Proc(int i_staffIdx) {
     dComIfGp_evmng_cutEnd(i_staffIdx);
 }
 
+// The decipher fee. The check against 398 is in next_msgStatusNormal2. [asm]
 /* 000066C8-000066E0       .text cutPayStart__10daNpc_Tc_cFi */
 void daNpc_Tc_c::cutPayStart(int i_param) {
     dComIfGp_setItemRupeeCount(-398);

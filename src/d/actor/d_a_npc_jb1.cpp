@@ -2,6 +2,9 @@
  * d_a_npc_jb1.cpp
  * NPC - Jabun
  */
+// Jabun. He has no dialogue: getMsg returns 0, and nothing in this file writes the talk order
+// field_0x91D, so eventOrder and checkOrder never act. All he does outside a demo is loop his idle
+// animation and keep his light updated. charDecide ignores params. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -34,6 +37,9 @@ public:
 
 static daNpc_Jb1_HIO_c l_HIO;
 
+// Fields 0x06-0x0A are the light's color, 0x0C its power and 0x10 its fluctuation, see setMtx.
+// Power is 1200 in USA and 2050 in the other versions. Why they differ is not established. In-game
+// effect not tested. [asm]
 /* 000000EC-00000144       .text __ct__15daNpc_Jb1_HIO_cFv */
 daNpc_Jb1_HIO_c::daNpc_Jb1_HIO_c() {
     static hio_prm_c a_prm_tbl = {
@@ -85,6 +91,8 @@ bool daNpc_Jb1_c::createInit() {
     return true;
 }
 
+// Places the point light registered in createInit and the 2x light model 150 below the jb_case
+// joint. The morf and ground check run only outside a demo. [asm]
 /* 00000264-0000049C       .text setMtx__11daNpc_Jb1_cFv */
 void daNpc_Jb1_c::setMtx() {
     cXyz temp(0.0f, -150.0f, 0.0f);
@@ -139,6 +147,7 @@ void daNpc_Jb1_c::playBrkAnm(J3DAnmTevRegKey* param_1, s16* param_2) {
     *param_2 = 0;
 }
 
+// Index 1 is the appear animation, but no parameter table in this file selects it. [asm]
 /* 000004CC-000004E0       .text anmNum_toResID__11daNpc_Jb1_cFi */
 int daNpc_Jb1_c::anmNum_toResID(int param_1) {
     static const int a_bck_resID_tbl[] = {
@@ -634,6 +643,8 @@ J3DModelData* daNpc_Jb1_c::create_Anm() {
     return a_mdl_dat;
 }
 
+// These strings name an appear model with its animations and a splash joint, none of which this
+// retail code loads. Presumably cut from create_Anm. [asm] [inferred]
 // Probably unused JUT_ASSERTS
 static void dummy() {
     DEAD_STRING("m_app_mdl != 0");

@@ -2,6 +2,10 @@
  * d_a_npc_de1.cpp
  * NPC - Deku Tree
  */
+// The Deku Tree. wait_action1 runs his rescue from the ChuChus, until bit 0x1801. wait_action2 is
+// everything after, where talking to him starts from his leaf lift rather than from him. mType is 0
+// before Farore's Pearl and 1 after, see decideType. Type 1 skips the rescue, and the type picks
+// his lines. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -54,6 +58,9 @@ static daNpc_De1_HIO_c l_HIO;
 static fopAc_ac_c* l_check_inf[0x64];
 static int l_check_wrk;
 
+// m00 is the attention height, m04 the talk radius around the lift, m08 the model scale, m0C the
+// radius that starts the ChuChu event, m10-m18 that radius's center relative to him, and m1C a
+// debug display toggle. [asm]
 /* 000000EC-00000144       .text __ct__15daNpc_De1_HIO_cFv */
 daNpc_De1_HIO_c::daNpc_De1_HIO_c() {
     static hio_prm_c a_prm_tbl = {
@@ -150,6 +157,8 @@ void daNpc_De1_c::setMtx() {
     mpMorf->calc();
 
     J3DModel* model = mpMorf->getModel();
+// His collision is the animated mesh: dBgWDeform is pointed at the current vertices every
+// frame, so it follows his animation. [asm]
     dBgWSv* bgw = mpBgWSv;
     Vec* vtx = (Vec*)model->getCurrentVtxPos();
     if (bgw->GetVtxTbl() == NULL) {
@@ -334,6 +343,10 @@ void daNpc_De1_c::setStt(signed char i_stt) {
     setAnm();
 }
 
+// The topic menus. Bit 0x1D40, set in d_a_npc_bj1, swaps the second topic from the King of Red
+// Lions to Forest Water. Island Koroks: bit 0x0102 and bit 0x3940 pick the line. Forest Koroks:
+// before bit 0x1820 Makar is at home. After it, whether the boss of stage 6 is beaten picks between
+// the two lines about where he has gone. [asm] [data]
 /* 000009B4-00000C98       .text next_msgStatus__11daNpc_De1_cFPUl */
 u16 daNpc_De1_c::next_msgStatus(unsigned long* pMsgNo) {
     u16 status = fopMsgStts_MSG_CONTINUES_e;
@@ -475,6 +488,12 @@ u16 daNpc_De1_c::next_msgStatus(unsigned long* pMsgNo) {
     return status;
 }
 
+// Possible bug: item 0x20 is the Telescope, while dItemNo_DEKU_LEAF_e is 0x34, and the lines are
+// about whether the player can reach or use his leaf. [asm] [data] Aryll gives the Telescope on
+// Outset, see d_a_npc_ls1.cpp, long before Forest Haven, so the Baba Bud hint 0x139C never shows in
+// normal play. [asm]
+// After the pearl: a first speech once (bit 0x1C20), then a short line until bit 0x1C40. Once that
+// is set, 0x13A8 plays once per spawn and 0x13AC after. [asm] [data]
 /* 00000C98-00000D6C       .text getMsg__11daNpc_De1_cFv */
 u32 daNpc_De1_c::getMsg() {
     u32 msg = 0;
@@ -523,6 +542,8 @@ void daNpc_De1_c::eventOrder() {
     }
 }
 
+// Starting "contact" sets bit 0x1801 and queues the stage change to Omori, so the rescue counts as
+// done from the moment that event begins. [asm]
 /* 00000E14-00000F8C       .text checkOrder__11daNpc_De1_cFv */
 void daNpc_De1_c::checkOrder() {
     if (eventInfo.checkCommandDemoAccrpt()) {
@@ -544,6 +565,7 @@ void daNpc_De1_c::checkOrder() {
     }
 }
 
+// Measures from the player to the lift, not to him. The radius grows by 50 once near. [asm]
 /* 00000F8C-000010B8       .text chkAttention__11daNpc_De1_cFv */
 bool daNpc_De1_c::chkAttention() {
     fopAc_ac_c* partner = searchByID(mPartnerID);
@@ -634,6 +656,7 @@ void daNpc_De1_c::ccCreate() {
     }
 }
 
+// Copies joints c1 to c10 into each ChuChu's m7EC every frame until the rescue is done. [asm]
 /* 000013F0-000014A0       .text cc_set__11daNpc_De1_cFv */
 void daNpc_De1_c::cc_set() {
     cXyz offset(0.0f, 0.0f, 0.0f);
@@ -720,6 +743,9 @@ BOOL daNpc_De1_c::decideType(int) {
     return ret;
 }
 
+// ActNo from the event data: 0 raises the lift, 1 sets the item partner to a ChuChu, 2 waits Timer
+// frames and then releases ChuChu number Num, 3 plays an animation, 4 his long cry, 5 a player demo
+// pose. event_action holds the cut for 0 and 2. [asm]
 /* 0000165C-00001858       .text event_actionInit__11daNpc_De1_cFi */
 void daNpc_De1_c::event_actionInit(int i_staffIdx) {
     int* pActNo = dComIfGp_evmng_getMyIntegerP(i_staffIdx, "ActNo");
@@ -768,6 +794,7 @@ void daNpc_De1_c::event_actionInit(int i_staffIdx) {
     }
 }
 
+// m2FB = 1 is what lets a held ChuChu leave its start pose, see action_noboru in d_a_cc.cpp. [asm]
 /* 00001858-00001938       .text event_action__11daNpc_De1_cFv */
 BOOL daNpc_De1_c::event_action() {
     BOOL ret = FALSE;
@@ -881,6 +908,10 @@ BOOL daNpc_De1_c::chk_action(ActionFunc i_action) {
     return mActionFunc == i_action;
 }
 
+// The talk cycle. wait01: a talk with the lift down goes to talk01, which orders LIFT_UP instead of
+// opening a message. When that ends, event_proc forces a talk and sets wait02. wait02: normal
+// talks, until the lift sinks below home + m_height, then wait03 waits for it to finish lowering
+// and returns here. [asm]
 /* 00001C3C-00001C94       .text wait01__11daNpc_De1_cFv */
 BOOL daNpc_De1_c::wait01() {
     if (mPartnerNearPlayer) {
@@ -933,6 +964,7 @@ BOOL daNpc_De1_c::wait03() {
     return TRUE;
 }
 
+// Rescue trigger: entering m0C of mDemoCenterPos orders DE_CHUCHU. [asm]
 /* 00001D8C-00001EA0       .text wait04__11daNpc_De1_cFv */
 BOOL daNpc_De1_c::wait04() {
     mDemoMode = 0;
@@ -955,6 +987,7 @@ BOOL daNpc_De1_c::wait04() {
     return TRUE;
 }
 
+// When all ten ChuChus are gone, orders "contact". [asm]
 /* 00001EA0-00001F38       .text wait05__11daNpc_De1_cFv */
 BOOL daNpc_De1_c::wait05() {
     if (mDemoMode == 5) {

@@ -115,6 +115,9 @@ u32 daNpc_Tc_c::setFinishMsg() {
     return 0xDC7;
 }
 
+// Before the rescue he asks the player to find his brother. After it, once per spawn, any statue
+// not yet paid for gets 0xDEE and the payment. Otherwise he talks about the Tingle Tuner, which bit
+// 0x1A20 changes. The two flags at the top resume after a payment event. [asm] [data]
 /* 00005730-00005944       .text getMsgRed__10daNpc_Tc_cFv */
 u32 daNpc_Tc_c::getMsgRed() {
     stopTower();
@@ -176,6 +179,7 @@ u32 daNpc_Tc_c::getMsgRed() {
     return setFirstMsg(&field_0x811, 0xDE1U, 0xDE5);
 }
 
+// True when this dungeon's statue chest is taken and its paid bit is set. [asm]
 /* 00005944-000059A8       .text checkMonumentFee__10daNpc_Tc_cFUsUs */
 bool daNpc_Tc_c::checkMonumentFee(u16 i_stageNo, u16 i_eventId) {
     if (dComIfGs_isStageTbox(i_stageNo, 0xf)) {
@@ -216,6 +220,8 @@ bool daNpc_Tc_c::checkOneMonumentGet() {
     return false;
 }
 #endif
+// Sets the paid bit for every statue held, and returns how many were new. The count picks the rupee
+// item in cutPresentProc. [asm]
 /* 00005A50-00005B10       .text checkAllMonumentPay__10daNpc_Tc_cFv */
 int daNpc_Tc_c::checkAllMonumentPay() {
     int amountOfMonumentsPaid = 0;

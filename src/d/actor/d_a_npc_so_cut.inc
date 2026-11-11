@@ -327,6 +327,8 @@ void daNpc_So_c::cutEatesaFirstStart() {
 #endif
 }
 
+// He rushes to a point 260 beside the ship and eats until no bait remains. The bait stops when
+// field_0x298 is set. [asm]
 /* 00005C6C-000060FC       .text cutEatesaFirstProc__10daNpc_So_cFv */
 void daNpc_So_c::cutEatesaFirstProc() {
     fopAc_ac_c* link = dComIfGp_getLinkPlayer();
@@ -429,6 +431,8 @@ void daNpc_So_c::cutJumpMapopenStart() {
     mBDA = 1;
 }
 
+// Leaps over the ship, opening the map mid-flight through dComIfGp_fmapOpenFishOn, then lands on
+// the far side. m94 is a debug switch that skips the map. [asm]
 /* 00006148-000064B8       .text cutJumpMapopenProc__10daNpc_So_cFv */
 void daNpc_So_c::cutJumpMapopenProc() {
     daShip_c* ship = dComIfGp_getShipActor();
@@ -533,6 +537,10 @@ void daNpc_So_c::cutMiniGameStart() {
     mBDE = false;
 }
 
+// The bow game: he repositions 1000-1400 ahead, surfaces, and jumps. mB78 counts arrows and mB80
+// jumps. It ends on the 10th jump, or at 10 arrows, at once unless he is in the air. mB7C counts
+// hits, which only register while airborne: in retail at least 50 above the water and capped at 10.
+// The demo has neither the height test nor the cap. [asm]
 /* 00006710-00006FE4       .text cutMiniGameProc__10daNpc_So_cFv */
 void daNpc_So_c::cutMiniGameProc() {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -759,6 +767,8 @@ void daNpc_So_c::cutTurnProc() {
     }
 }
 
+// Moves ship and player to the minigame tag, keeping the old position in mBA0 and mBAC for
+// cutMiniGameReturnStart. [asm]
 /* 00007114-00007324       .text cutMiniGameWarpStart__10daNpc_So_cFv */
 void daNpc_So_c::cutMiniGameWarpStart() {
 #if VERSION > VERSION_JPN

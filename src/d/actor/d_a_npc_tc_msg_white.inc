@@ -106,6 +106,8 @@ u16 daNpc_Tc_c::next_msgStatusWhite(u32* pMsgNo) {
     return msgStatus;
 }
 
+// Every talk stops the tower, see stopTower. Lines depend on bits 0x1708 and 0xB80, and each story
+// runs once per spawn. [asm] [data]
 /* 000053D4-00005498       .text getMsgWhite__10daNpc_Tc_cFv */
 u32 daNpc_Tc_c::getMsgWhite() {
     u32 msg;

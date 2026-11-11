@@ -2,6 +2,14 @@
  * d_a_npc_p1.cpp
  * NPC - Gonzo, Senza, & Nudge
  */
+// Three of Tetra's crew in one class. Params bits 20-23 pick the type, which sets head model, blink
+// and limits. The low params value mParam picks the job. [asm] What each says, from talkAction:
+// [asm] [data]
+//   P1A: mParam 1 meets the player on deck, 2 steers the ship, 3 sends the player to Tetra up the
+//     mast.
+//   P1B: mParam 1 runs the boat game, 3 watches the Forsaken Fortress. 0 runs confuseAction.
+//   P1C: guards Tetra's cabin, see p1c_speakAction. Bit ARRIVE_MAJYU changes the line on arrival.
+// A P1B on Outset, sea room layer 0xA, also holds a stick model in its right hand. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_p1.h"
@@ -143,6 +151,8 @@ daNpc_P1_HIO_c::daNpc_P1_HIO_c() {
 daNpc_P1_childHIO_c::daNpc_P1_childHIO_c() {
 }
 
+// Maps the message's animation tag to setAnm. Animations 10 and 11 run to their end first, so a tag
+// cannot cut a wheel turn short. 12 and 8 play 4 and 6 loops, then settle. [asm]
 /* 000002BC-0000051C       .text setAnimFromMsg__10daNpc_P1_cFv */
 void daNpc_P1_c::setAnimFromMsg() {
     if ((mAnmNum == 10 || mAnmNum == 11) && !mpMorf->checkFrame(mpMorf->getEndFrame() - 1.0f)) {
@@ -360,6 +370,7 @@ BOOL daNpc_P1_c::normalAction(void*) {
     return TRUE;
 }
 
+// Swaps between two talk animations at double speed, every four loops. [asm]
 /* 00000DEC-00000F40       .text confuseAction__10daNpc_P1_cFPv */
 BOOL daNpc_P1_c::confuseAction(void*) {
     if (mActionStatus == ACTION_STARTING_e) {
@@ -387,6 +398,8 @@ BOOL daNpc_P1_c::confuseAction(void*) {
     return TRUE;
 }
 
+// Waits for a wheel turn to finish before starting. The clear count picks P1B's line about the
+// player's outfit: 0x100C on a first run, 0x1034 otherwise. [asm] [data]
 /* 00000F40-000013A4       .text talkAction__10daNpc_P1_cFPv */
 BOOL daNpc_P1_c::talkAction(void*) {
     if (mActionStatus == ACTION_STARTING_e) {
@@ -489,6 +502,9 @@ BOOL daNpc_P1_c::talkAction(void*) {
     return TRUE;
 }
 
+// P1C starts 40 to one side of home, set in _create, and stops the player within 200 with a speech.
+// Afterward it slides home and widens its collision to 100, closing off the cabin door. [asm]
+// [data]
 /* 000013A4-000017A0       .text p1c_speakAction__10daNpc_P1_cFPv */
 BOOL daNpc_P1_c::p1c_speakAction(void*) {
     if (mActionStatus == ACTION_STARTING_e) {
@@ -538,6 +554,10 @@ BOOL daNpc_P1_c::p1c_speakAction(void*) {
     return TRUE;
 }
 
+// The boat game offer, forced within 400. Start point 2 opens with the shorter timer line. Asking
+// for the rules ends in "sea_exp_cam", then comes back here at 0xFA5. Every other way out goes to
+// Ocean point 1, including saying no. That point deletes this actor, see _create. The game itself
+// is not in this file. [asm] [data]
 /* 000017A0-00001C60       .text speakAction__10daNpc_P1_cFPv */
 BOOL daNpc_P1_c::speakAction(void*) {
     if (mActionStatus == ACTION_STARTING_e) {
@@ -614,6 +634,7 @@ BOOL daNpc_P1_c::explainAction(void*) {
     return TRUE;
 }
 
+// 0xFA9 is never selected here: the rules end at 0xFA8, which returns to the offer at 0xFA2. [asm]
 /* 00001CD4-00001DE8       .text getNextMsgNo__10daNpc_P1_cFi */
 u32 daNpc_P1_c::getNextMsgNo(int i_param_1) {
     u32 o_retval;
@@ -680,6 +701,8 @@ BOOL daNpc_P1_c::playTexPatternAnm() {
     return TRUE;
 }
 
+// When a demo ends, mParam 0 goes to confuseAction and is placed on the pirate ship. This also
+// turns the ship itself by -0x4000. [asm]
 /* 00001E70-00002098       .text demo_end_init__10daNpc_P1_cFv */
 void daNpc_P1_c::demo_end_init() {
     if (mParam == 0) {
@@ -757,6 +780,8 @@ BOOL daNpc_P1_c::demo_move() {
     return TRUE;
 }
 
+// Possible bug: the flag is saved after cutProc, so restoring it writes back the same value.
+// eventMove in d_a_npc_auction.cpp saves first. In-game effect not tested. [asm]
 /* 000021E0-00002244       .text event_move__10daNpc_P1_cFv */
 BOOL daNpc_P1_c::event_move() {
     if (mEventCut6B0.cutProc()) {
@@ -818,6 +843,9 @@ BOOL daNpc_P1_c::evn_talk() {
     return FALSE;
 }
 
+// Cuts "4013_msg" and "4014_msg" play 0xFAD and 0xFAE, the decimal numbers in their names, during
+// the camera tour. Each cut ends on a button press in 4013, or on the box closing in 4014. The
+// tour's end returns to speakAction. [asm]
 /* 00002464-000027AC       .text minigameExplainCut__10daNpc_P1_cFv */
 BOOL daNpc_P1_c::minigameExplainCut() {
     static char* ActionNames[] = {"4013_msg", "4014_msg"};
@@ -1207,6 +1235,9 @@ fpc_ProcID daNpc_P1_c::getKajiID() {
     return kaji_id;
 }
 
+// The helmsman, mParam 2 of P1A: idles 300 frames, then picks one of two wheel turns at random,
+// never during a talk. The wheel actor plays the matching animation at the same frame. Also runs
+// the idle loop for P1B mParam 2. [asm]
 /* 00003E70-000043CC       .text kaji_anm__10daNpc_P1_cFv */
 BOOL daNpc_P1_c::kaji_anm() {
     if (m671 != 0) {
@@ -1299,6 +1330,7 @@ BOOL daNpc_P1_c::_execute() {
 BOOL daNpc_P1_c::_draw() {
 
     static u8 l_snap_idx_tbl[] = {DSNAP_TYPE_NPC_P1A, DSNAP_TYPE_NPC_P1B, DSNAP_TYPE_NPC_P1C};
+// P1A is invisible until bit 0x310. Execute and collision still run. [asm]
     if (mType == TYPE_P1A_e && !dComIfGs_isEventBit(dSv_event_flag_c::UNK_0310)) {
         return TRUE;
     }
