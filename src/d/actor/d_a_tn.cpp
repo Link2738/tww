@@ -2,6 +2,23 @@
  * d_a_tn.cpp
  * Enemy - Darknut / Mini-Boss - Darknut (Tower of the Gods) / タートナック (Taatonakku)
  */
+// Built from the same file as Bokoblin (d_a_bk): patrol, weapon search, bomb flight, stun, statue
+// and death work as described there. What is Darknut's own is noted here. [asm]
+// Params (daTn_Create): [asm]
+//   bits 0-3   behavior: 4 guards its home (stand), 0xC stands then raises its sword, 0xD the
+//              mini-boss (waits for the byte 3 switch, then its intro), 0xE drops from the ceiling
+//              in an event, 0xF a statue (d_dozou); anything else roams
+//   bits 4-7   armor color, 0-5 (the brk frame and the break particle colors)
+//   byte 1     sight range / 10 (0xFF for 500), or the statue pose
+//   byte 2     path, 0xFF for none
+//   byte 3     switch it waits for; 0xFF for none
+//   angle.x    bits 5-7 equipment: 0 none, 1 helmet, 2 shield, 3 helmet and shield, 4 shield and
+//              cape, 5 all three. Body armor is always on
+//   angle.z    death switch; 1-0x7F also makes it a mini-boss
+// Placed on disc: 0xD once in SirenMB, 0xE four times in kenroom (the Master Sword chamber), 0xF as
+// the 21 statues in Hyroom, 4 and 0 elsewhere (much of it in the Savage Labyrinth, Cave09-11).
+// 0xC is never placed. [data]
+// Health is 30 with a helmet, 15 without; helmeted ones also hit harder (wepon_hit_check).
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_tn.h"
@@ -1323,6 +1340,7 @@ static void fight_run(tn_class* i_this) {
     }
 }
 
+// Leftover JUTReport "TN AT HITOBJ NON" if a hit reports no object. [asm]
 /* 00004CFC-00005098       .text wepon_hit_check__FP8tn_class */
 static fopAc_ac_c* wepon_hit_check(tn_class* i_this) {
     static int atp_0[] = {2, 2, 1, 2, 8, 8};
@@ -1427,6 +1445,9 @@ static fopAc_ac_c* wepon_hit_check(tn_class* i_this) {
     return NULL;
 }
 
+// Sword attacks: vertical (roll parry hint) or horizontal (jump parry hint). Unarmed: palm strike
+// or kick. While Link charges a spin attack it circles him, and answers a spin or roll with its
+// own spinning slash (modes 10-22, spin_blur_set). [asm]
 /* 00005098-00005EB0       .text fight__FP8tn_class */
 static void fight(tn_class* i_this) {
     fopEn_enemy_c* actor = &i_this->actor;
@@ -1908,6 +1929,8 @@ static void b_nige(tn_class* i_this) {
     }
 }
 
+// With a shield it blocks (80%) when Link swings while locked on; without its body armor it hops
+// back instead (fight_run). [asm]
 /* 00006950-00006AC0       .text defence__FP8tn_class */
 static void defence(tn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2335,6 +2358,9 @@ static void d_dozou(tn_class* i_this) {
     }
 }
 
+// Mode 0: the mini-boss intro once its switch is set, then the mini-boss music. Mode 10: the
+// Master Sword chamber drop, timed by the btl_of_swroom or btl_of_swroom2 event's "Appear" cut;
+// home x below 0 picks the higher drop. s_check pairs the two. Mode 0x14: behavior 0xC. [asm]
 /* 00007B7C-00008490       .text s_demo__FP8tn_class */
 static void s_demo(tn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2806,6 +2832,11 @@ static void yoroi_break(tn_class* i_this, cXyz* particlePos, u8 param_3) {
     }
 }
 
+// Armor rules: body hits on the armor are blocked. A hit from more than 90 degrees behind cuts the
+// straps and drops the armor, unless the cape is still catching hits; front hits wear the armor
+// down and break it at 0, after which health is reset to 20 (helmet) or 10. The helmet only comes
+// off to the parry jump cut on the head. A Light Arrow vaporizes the armor and cape; an Ice Arrow
+// only freezes it when it hits an unarmored part, and gives back 4 health. [asm]
 /* 00008F9C-00009E2C       .text damage_check__FP8tn_class */
 static u8 damage_check(tn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -3138,6 +3169,8 @@ static u8 damage_check(tn_class* i_this) {
 
 static s32 j_dt[] = {TN_MAIN_JNT_J_TN_MUNE1_e, TN_MAIN_JNT_J_TN_ATAMA1_e, TN_MAIN_JNT_J_TN_ITEM_L1_e};
 
+// Armor, helmet and shield: worn, loosening, then falling with bounces and breaking up
+// (yoroi_break). The body armor also carries the cape (d_a_mant) at its shoulders. [asm]
 /* 00009E68-0000AC54       .text part_move__FP8tn_classi */
 static void part_move(tn_class* i_this, int partIndex) {
     fopAc_ac_c* actor = &i_this->actor;

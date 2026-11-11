@@ -566,6 +566,12 @@ u16 daNpc_Ob1_c::next_msgStatus(u32* p_msgNo) {
     return status;
 }
 
+// OB1_0 (before 0x520). With new pigs in the pen she thanks Link once per pig over several talks
+// (0xA90-0xA9B, or 0xA9C-0xAA2 once 0x302 is set); talk_1 orders Get_Rupee between them while more
+// are owed. With no new pig: 0xAA3 ("I'll take the pigs out for a walk") if fewer are in the pen
+// than she has counted, else 0xAA4-0xAA6 by how many are there. Otherwise the birthday greeting
+// once (0xAAD or 0xAAE, by 0x2A80) and then 0xA8D/0xA8F ("bring it here and put it inside the
+// fence"). [asm] [data]
 /* 000014C0-000017E8       .text getMsg_OB1_0__11daNpc_Ob1_cFv */
 u32 daNpc_Ob1_c::getMsg_OB1_0() {
     u32 msg = 0;
@@ -678,6 +684,8 @@ u32 daNpc_Ob1_c::getMsg_OB1_0() {
     return dComIfGs_isEventBit(0x304) ? 0xA8F : 0xA8D;
 }
 
+// After 0x520: 0xAA8 ("I'm so glad you're safe") once, then 0xAAB if any pig was ever delivered
+// ("how large the pig you gave us has grown") or 0xAAC. [asm] [data]
 /* 000017E8-00001854       .text getMsg_OB1_1__11daNpc_Ob1_cFv */
 u32 daNpc_Ob1_c::getMsg_OB1_1() {
     if (!dComIfGs_isEventBit(0x2C20)) {
@@ -757,6 +765,11 @@ s8 daNpc_Ob1_c::bitCount(u8 i_bits) {
     return count;
 }
 
+// Pig bookkeeping for the pen. Each pig (d_a_kb) standing in the pen carries its bit in m405, the
+// same bit d_a_kb sets in event register 0xBFFF. Event register 0xB6FF holds the pigs Rose has
+// already thanked Link for. field_0x7E7 counts those, field_0x7E8 the pigs in the pen now, and
+// field_0x7E9 the new ones. When a talk closes, the pigs present are added to 0xB6FF (talk_1).
+// [asm]
 /* 00001A2C-00001B0C       .text set_pigCnt__11daNpc_Ob1_cFv */
 void daNpc_Ob1_c::set_pigCnt() {
     field_0x7E7 = bitCount(dComIfGs_getEventReg(0xB6FF));

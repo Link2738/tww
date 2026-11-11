@@ -939,6 +939,10 @@ static u32 l_msg_xy_koukan_item2_CB[] = {
     0x0000,
 };
 
+// Trade scripts, one row per merchant (A, B, C) and one column per shown item (item - 0x8C, Town
+// Flower to Shop Guru Statue). Code 1 reads the Yes/No of the offer, 2 the Yes/No of the fee:
+// paying adds a trade to the merchant's register and books the new item (next_msgStatus). [asm]
+// [data]
 static u32* l_msg_xy_koukan_item2[][12] = {
     {
         l_msg_xy_koukan_item2_A0,
@@ -1361,6 +1365,8 @@ static u32 l_msg_collect_map[] = {
     0x0000
 };
 
+// Merchant B's dream item: the Shop Guru Statue, given once (0x3E04), earns his "heart-filled
+// reward" (ROTEN_GET_MAP, item from l_get_item_no). [asm] [data]
 static u32 l_msg_try_force[] = {
     0x29A7,
     0x29A8,
@@ -1494,6 +1500,8 @@ struct SaveDatStruct {
     /* 0x06 */ u16 field_0x06;
 }; // Size: 0x08
 
+// Per merchant: first talk flag, trade count register (three trades each), an entry this unit does
+// not use, and a flag for having shown him an item. [asm]
 static const SaveDatStruct l_save_dat[] = {
     {
         dSv_event_flag_c::UNK_1320,
@@ -1515,6 +1523,8 @@ static const SaveDatStruct l_save_dat[] = {
     },
 };
 
+// What each merchant gives for each shown item, as item - 0x8C. Giving one also sets its get-item
+// reserve bit, which daObj_Roten_c::getCreateCount counts to grow Zunari's stall. [asm] [data]
 static const u8 l_item_dat[][12] = {
     {
         0x01,
@@ -1614,6 +1624,8 @@ static BOOL CheckCreateHeap(fopAc_ac_c* i_this) {
     return static_cast<daNpcRoten_c*>(i_this)->createHeap();
 }
 
+// Params pick the merchant (A, B, C); none appear before 0x1108, set by Zunari (d_a_npc_rsh1).
+// [asm]
 /* 000008EC-00000974       .text phase_1__FP12daNpcRoten_c */
 static cPhs_State phase_1(daNpcRoten_c* i_this) {
     fopAcM_ct(i_this, daNpcRoten_c);
@@ -2398,6 +2410,10 @@ void daNpcRoten_c::eventOffPlrInit() {
     daPy_getPlayerLinkActorClass()->onPlayerNoDraw();
 }
 
+// Paying the fee: the item shown is swapped for the new one in the same button slot
+// (setReserveItemChange), with 0x293E the first time that item is booked and 0x293D after. No to
+// the offer or the fee, or too few Rupees, ends with the matching line on the next talk. [asm]
+// [data]
 /* 00002B0C-00002D5C       .text next_msgStatus__12daNpcRoten_cFPUl */
 u16 daNpcRoten_c::next_msgStatus(u32* pMsgNo) {
     u16 status = fopMsgStts_MSG_CONTINUES_e;
@@ -2479,6 +2495,9 @@ u16 daNpcRoten_c::next_msgStatus(u32* pMsgNo) {
     return status;
 }
 
+// Talk: the first-meeting line once, "through working" after three trades, B's reward line after
+// 0x3E04, the hint about the next merchant once an item was shown, otherwise his intro. Shown items
+// below 0x8C or past 0xA2 get 0x2914, and 0x98-0xA2 (letters and the like) get 0x2915. [asm] [data]
 /* 00002D5C-000030C0       .text getMsg__12daNpcRoten_cFv */
 u32 daNpcRoten_c::getMsg() {
     u32 msgNo = 0;
@@ -2888,6 +2907,8 @@ void daNpcRoten_c::setCollisionB() {
     dComIfG_Ccsp()->Set(&mCyl2);
 }
 
+// A sphere at his head that only wind hits: the first gust plays the hat-blown animation (mode 4)
+// and stops him noticing Link (field_0x9CA) until it ends. [asm]
 /* 00003DD4-00003F08       .text setCollisionH__12daNpcRoten_cFv */
 void daNpcRoten_c::setCollisionH() {
     MtxP mtx = mpMorf->getModel()->getAnmMtx(m_jnt.getHeadJntNum());

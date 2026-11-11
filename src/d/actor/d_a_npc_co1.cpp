@@ -110,6 +110,11 @@ bool daNpc_Co1_c::createInit() {
     return true;
 }
 
+// Din's Pearl is a separate model (copeal) carried on his backbone joint, with its own animation set
+// kept in step with his. An orange point light (255, 150, 0) sits on the pearl and pulses: its power
+// swings between 20 and 40 with |sin| of a phase advancing 512 a frame, and _draw raises the red of
+// his own lighting from 64 toward 255 by the same amount. The letter model (co_letter) is shown in
+// his right hand during the receive and read animations. [asm]
 /* 00000588-000008E4       .text setMtx__11daNpc_Co1_cFb */
 void daNpc_Co1_c::setMtx(bool i_attn_flag) {
     if (field_0x81F == 0) {
@@ -485,6 +490,7 @@ void daNpc_Co1_c::checkOrder() {
     }
 }
 
+// Lying down (animation 1) his cylinder shifts 20 back and widens to 70 by 60 tall. [asm]
 /* 00001288-000013AC       .text setCollision_SP___11daNpc_Co1_cFv */
 void daNpc_Co1_c::setCollision_SP_() {
     if (field_0x81D == 0) {
@@ -640,6 +646,10 @@ u16 daNpc_Co1_c::next_msgStatus(u32* p_msgNo) {
     return status;
 }
 
+// Before his father's letter is delivered: 0x1839 ("Who are you supposed to be?"), which sets 0x0F08,
+// then 0x183A. Showing the Father's Letter gives 0x183C, consumes it and plays Red_Ltr, after which
+// he talks at once (0x183E-0x1840). After delivery: 0x1841-0x1848 ("This is MY treasure"), which
+// sets 0x0F04, then 0x1849-0x184B. Any other item gets 0x183B. [asm] [data]
 /* 000017EC-00001894       .text getMsg_CO1_0__11daNpc_Co1_cFv */
 u32 daNpc_Co1_c::getMsg_CO1_0() {
     if (field_0x80B == 0x98) {
@@ -931,6 +941,8 @@ BOOL daNpc_Co1_c::wakeup() {
     return 1;
 }
 
+// On a later load after the letter, talking to him first plays Prl_Flw (the pearl), whose end sets
+// 0x0F04. [asm]
 /* 00002150-0000234C       .text talk_1__11daNpc_Co1_cFv */
 BOOL daNpc_Co1_c::talk_1() {
     u8 parts_not_moving = chk_partsNotMove();
@@ -1025,6 +1037,8 @@ BOOL daNpc_Co1_c::modoru() {
     return 1;
 }
 
+// Before the letter he lies in bed (state 1); the first visit plays Contact, which sets 0x1810.
+// After it he waits standing (state 4). The pearl light is registered here. [asm]
 /* 00002458-000025DC       .text wait_action1__11daNpc_Co1_cFPv */
 int daNpc_Co1_c::wait_action1(void*) {
     switch (field_0x862) {

@@ -87,6 +87,8 @@ daNpc_Ym1_HIO_c::daNpc_Ym1_HIO_c() {
 static daNpc_Ym1_HIO_c l_HIO;
 static fopAc_ac_c* l_check_inf[20];
 static int l_check_wrk;
+// Mesa (Ym1, YM1_0) checks for grass with a mass area cylinder 80 in front of him (radius 50,
+// height 30, set in createInit). Anything inside sets mKariFlag, copied to m89C each frame. [asm]
 /* 00000268-00000290       .text area_check__FP10fopAc_ac_cP4cXyzUl */
 static void area_check(fopAc_ac_c* i_param_1, cXyz*, unsigned long i_param_3) {
     
@@ -645,6 +647,9 @@ unsigned long daNpc_Ym1_c::getMsg_YM2_1() {
     return (dComIfGs_isEventBit(0xB01) ? 1 : 0) + 0xA2D;
 }
 
+// Abe after 0x520: 0xA2F once ("You made it back!"), continuing by night (0xA30) or by whether a
+// pig is in the pen (0xBFFF) and 0x3402 (0xA31-0xA38). getMsg_YM2_3 has no return statement in
+// this source; it relies on the value getMsg_YM2_2 leaves in r3. [asm] [data]
 /* 0000166C-00001718       .text getMsg_YM2_2__11daNpc_Ym1_cFv */
 unsigned long daNpc_Ym1_c::getMsg_YM2_2() {
 
@@ -770,6 +775,9 @@ void daNpc_Ym1_c::set_collision_sp() {
 
 }
 
+// His cutting swing only plays a grass particle (0x3DA) at his left hand and a sound on frame 34;
+// he does not cut any grass actor. kari_1 stops cutting when Link is within 400 or nothing is left
+// in front of him, and turn_1 starts again only if something is. [asm]
 /* 00001A08-00001B24       .text set_cutGrass__11daNpc_Ym1_cFv */
 void daNpc_Ym1_c::set_cutGrass() {
     
@@ -787,6 +795,9 @@ void daNpc_Ym1_c::set_cutGrass() {
     return;
 }
 
+// Bit 2 of event register 0xBFFF: the black pig is in the pen (d_a_kb sets 1 << (type & 3)). Abe
+// (Ym2) points out the wild black pig (0xA29) until it is there, then gives pig-catching advice
+// (0xA2B). [asm] [data]
 /* 00001B24-00001B5C       .text chk_BlackPig__11daNpc_Ym1_cFv */
 bool daNpc_Ym1_c::chk_BlackPig() {
     

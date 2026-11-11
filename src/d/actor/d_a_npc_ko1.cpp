@@ -1053,8 +1053,8 @@ void daNpc_Ko1_c::lookBack() {
 
 // 0xAFB branches on event register 0xBFFF: any bit set gives 0xAFC ("we named the pig you caught for
 // us after you"), none gives 0xAFD; getMsg_BOU_2 picks 0xB07 ("those other pigs you caught for us")
-// at two or more bits. [asm] [data] Presumably the register records the pigs Link brought them.
-// [inferred]
+// at two or more bits. The register has a bit per pig standing in the pen on Outset: d_a_kb sets
+// 1 << (type & 3) on ground special code 4. [asm] [data]
 /* 00001FFC-00002204       .text next_msgStatus__11daNpc_Ko1_cFPUl */
 u16 daNpc_Ko1_c::next_msgStatus(unsigned long* i_param_1) {
 

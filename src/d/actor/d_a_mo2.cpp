@@ -2,6 +2,22 @@
  * d_a_mo2.cpp
  * Enemy - Moblin / モ２(Mo 2)
  */
+// Built from the same file as Bokoblin (d_a_bk): patrol, fight, weapon search, bomb flight, stun,
+// statue and death work as described there. What is Moblin's own is noted here. [asm]
+// Params (daMo2_Create): [asm]
+//   byte 0     mode: 1 carries a lantern (d_a_kantera, made at create), 5 is carried by a
+//              Kargaroc (BB_FLY), 0xF a statue (d_dozou); anything else fights normally
+//   byte 1     statue pose: 0 mid-tackle, else mid-walk
+//   byte 2     path, 0xFF for none
+//   byte 3     switch it waits for before acting; 0xFF for none
+//   angle.z    death switch. 1-0x7F also makes it a mini-boss: always sees Link and gets the
+//              death camera (mo2_demo_camera). After event bit 0x1101, a set death switch means it
+//              is not created
+// Placed on disc: mode 1 in majroom and ma2room (the Forsaken Fortress interiors), Abship, M_Dai,
+// GanonL, A_mori, Cave11 (Savage Labyrinth) and MajyuE; 0xF as the 30 statues in Hyroom; 0 in most other places;
+// 0xFF (handled as 0) in GanonJ. Mode 5 is never placed. [data]
+// It always starts with a spear and has 10 health; its orange mane is 16 strands drawn as 3D
+// lines (ke_disp).
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_mo2.h"
@@ -152,6 +168,8 @@ static void anm_init(mo2_class* i_this, int bckFileIdx, f32 morf, u8 loopMode, f
     }
 }
 
+// Dropping the spear makes a d_a_boko Moblin spear at its hands and throws it; only a Moblin can
+// pick that type back up (s_w_sub). Without one it punches (attacks 4 and 5). [asm]
 /* 0000031C-000004B0       .text yari_off_check__FP9mo2_class */
 static void yari_off_check(mo2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1180,6 +1198,8 @@ static void path_check2(mo2_class* i_this) {
     }
 }
 
+// Spear attacks: 0 thrust, 1 overhead, 2 spin, 3 a shove when Link guards (then the overhead).
+// 1, 2 and the big punch (5) set the parry hint shown to Link (roll or jump). [asm]
 /* 00004898-00004DEC       .text attack_set__FP9mo2_classUc */
 static void attack_set(mo2_class* i_this, u8 param_2) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1798,6 +1818,9 @@ static fopAc_ac_c* yari_hit_check(mo2_class* i_this) {
     return NULL;
 }
 
+// Jail mode (rouya_mode) is on while Link owns no sword (collect byte 0 bits 0-3 clear). Then a
+// spear hit on Link hiding in a barrel catches him: e3_demo plays and he is sent to majroom.
+// [asm]
 /* 0000645C-000064B0       .text AtHitCallback__FP10fopAc_ac_cP12dCcD_GObjInfP10fopAc_ac_cP12dCcD_GObjInf */
 static void AtHitCallback(fopAc_ac_c* a_this, dCcD_GObjInf*, fopAc_ac_c* actor, dCcD_GObjInf*) {
     mo2_class* i_this = (mo2_class*)a_this;
@@ -1998,6 +2021,9 @@ static void fight(mo2_class* i_this) {
     }
 }
 
+// Lantern Moblin on spotting Link: in jail mode it stops, looks (KKEIKAI) and, if it sees him,
+// starts the capture (e3_demo). Otherwise it walks up, throws the lantern at him (KNAGE) and
+// fights on without it; a hit also knocks the lantern away. [asm]
 /* 00006DD0-000071DC       .text nage__FP9mo2_class */
 static void nage(mo2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2594,6 +2620,7 @@ static void wepon_search(mo2_class* i_this) {
     }
 }
 
+// Hit from behind: it runs off holding its rear, then turns back to fight. [asm]
 /* 000088F8-00008AF8       .text hip_damage__FP9mo2_class */
 static void hip_damage(mo2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2771,6 +2798,8 @@ static void carry_drop(mo2_class* i_this) {
     }
 }
 
+// The capture: hides the HUD, sounds the alarm, walks Link down and holds him up (DEMO_HOLDUP);
+// daMo2_Execute then loads majroom, the jail cell. [asm]
 /* 0000910C-000094DC       .text e3_demo__FP9mo2_class */
 static void e3_demo(mo2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -3017,6 +3046,8 @@ static void mo2_eye_tex_anm(mo2_class* i_this) {
     }
 }
 
+// A steal (attack type 0xE) makes it react once (p_lost) and hides material 0. Being hit in jail
+// mode while carrying a lantern starts the capture instead of a knockback. [asm]
 /* 00009AC0-0000A3C0       .text damage_check__FP9mo2_class */
 static u8 damage_check(mo2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -3336,6 +3367,8 @@ static void mo2_demo_camera(mo2_class* i_this) {
     }
 }
 
+// Lantern: creates d_a_kantera with params byte 3 copied over and waits for it; if it is not up
+// within 20 frames the Moblin deletes itself. [asm]
 /* 0000A788-0000A8C0       .text kantera_get_init__FP9mo2_class */
 static s32 kantera_get_init(mo2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

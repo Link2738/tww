@@ -108,11 +108,16 @@ static NpcDatStruct l_npc_dat[] = {
     },
 };
 
+// The Bird-Man Contest. Flight distance is measured from entry 0, in a frame turned by -0x6000
+// (calcFlyDist): x is distance down the course, z the sideways drift. [asm]
 static cXyz l_bmcon_pos_tbl[] = {
     cXyz(297080.0f, 1100.0f, -202920.0f),
     cXyz(278900.0f, 1100.0f, -221100.0f),
 };
 
+// Script codes: 0 ends, 1 and 2 read the Yes/No of a 10-Rupee fee (1 for the first time, 2 after;
+// No or too few Rupees branch off), 3 fills magic and sends Link up after the talk, 4 and 5 queue
+// the prize (Piece of Heart, Purple Rupee). [asm] [data]
 static u32 l_msg_bmcon1_1st_appear[] = {
     0x2A96,
     0x2A97,
@@ -424,6 +429,9 @@ static s16 daNpcBmcon_XyCheckCB(void* i_this, int i_itemBtn) {
     return ((daNpcBmcon_c*)i_this)->XyCheckCB(i_itemBtn);
 }
 
+// Params byte 0 picks the brother: 0 (Bmcon1) takes the fee below, 1 (Bmcon2) runs the flight up
+// top. With a rail he spawns on it with collision weight 0xFE. Bmcon1 starts BMCON_RESULT at once,
+// Link dripping, when tmp bit 0x210 says Link was brought back from a flight. [asm]
 /* 0000107C-00001468       .text createInit__12daNpcBmcon_cFv */
 cPhs_State daNpcBmcon_c::createInit() {
     int weight = 0xFF;
@@ -614,6 +622,12 @@ bool daNpcBmcon_c::_execute() {
     return false;
 }
 
+// Bmcon2 on start layer 2 or 3, during a flight: past 10 he starts the contest music. Past 25710
+// within 1131 sideways is the goal (result 0); behind -1948, past 25710 or over 3534 sideways is
+// out of bounds (2); either empties magic. When Link lands in water the distance / 100 is taken;
+// negative makes it the wrong way (3), and a result still at 1 is a plain landing. It goes to tmp
+// register 0xF903 and orders BMCON_END (0, 1) or BMCON_END2; the distance is kept in tmp registers
+// 0xFBFF/0xFAFF and, unless out of bounds, as the record in registers 0xA7FF/0xA8FF. [asm]
 /* 00001878-00001BC8       .text executeCommon__12daNpcBmcon_cFv */
 u8 daNpcBmcon_c::executeCommon() {
     if (mbPlayerAttention && field_0x7C3 == 0) {
@@ -717,6 +731,8 @@ int daNpcBmcon_c::executeTalkInit() {
     return MOVE_PROC_TALK;
 }
 
+// After a paid talk (field_0x7C2) Link goes to sea point 1, room 14, layer 2: up the platform.
+// [asm]
 /* 00001D48-00001E40       .text executeTalk__12daNpcBmcon_cFv */
 void daNpcBmcon_c::executeTalk() {
     executeCommon();
@@ -894,6 +910,10 @@ void daNpcBmcon_c::privateCut() {
     }
 }
 
+// MsgNo 1 (Bmcon2, landing): 0x2AB2 goal or 0x2AB3 splash with the distance, 0x2AB0 out of bounds,
+// 0x2AB5 wrong way; then 0x2901 (has flown) and tmp bit 0x210. MsgNo 10 (Bmcon1, BMCON_RESULT): a
+// goal gives the first-win script once (sets 0x2B40, champion), then the repeat one; a landing
+// gives 0x2AAF to the champion, otherwise advice 0x2AA1-0x2AA5 by distance * 6 / 256. [asm] [data]
 /* 000025F8-00002A48       .text eventMesSetInit__12daNpcBmcon_cFi */
 void daNpcBmcon_c::eventMesSetInit(int i_staffIdx) {
     int* msgNo = dComIfGp_evmng_getMyIntegerP(i_staffIdx, "MsgNo");
@@ -1117,6 +1137,10 @@ u16 daNpcBmcon_c::next_msgStatus(u32* i_msgNo) {
     return ret;
 }
 
+// Bmcon1: 0x2A95 right after paying, the first offer before 0x2901, the champion's offer after
+// 0x2B40, otherwise the record and offer. Bmcon2: 0x2AF9 once (sets 0x2A40; he calls Link over
+// for it in executeWait), the champion line, the record after a flight, otherwise 0x2AFA. [asm]
+// [data]
 /* 00002E58-0000301C       .text getMsg__12daNpcBmcon_cFv */
 u32 daNpcBmcon_c::getMsg() {
     u32 msgNo = 0;
@@ -1396,6 +1420,7 @@ bool daNpcBmcon_c::setAnmTbl(sBmconAnmDat* i_anmDat) {
     return FALSE;
 }
 
+// No item shows. [asm]
 /* 00003960-00003968       .text XyCheckCB__12daNpcBmcon_cFi */
 s16 daNpcBmcon_c::XyCheckCB(int) {
     return false;

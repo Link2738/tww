@@ -68,6 +68,9 @@ public:
 };
 STATIC_ASSERT(sizeof(enemyfire) == 0x228);
 
+// State for damage_reaction, embedded in Moblin, Bokoblin and Darknut as `dr`. mAction and mMode
+// are the owner's own action and mode, which the knockdown changes. mSpawnY is the ground height
+// under the body, not the spawn height. See c_damagereaction.cpp. [asm]
 struct damagereaction {
 public:
     enum EnemyType {
@@ -95,8 +98,8 @@ public:
     /* 0x418 */ int m418;
     /* 0x41C */ u8 m41C[0x420 - 0x41C];
     /* 0x420 */ int m420;
-    /* 0x424 */ int m424;
-    /* 0x428 */ f32 m428;
+    /* 0x424 */ int m424;  // hit flags from the owner: 0x10 hit, 0x40 knocked over backwards
+    /* 0x428 */ f32 m428;  // knock speed; over 25 launches
     /* 0x42C */ cXyz m42C;
     /* 0x438 */ int m438;
     /* 0x43C */ u8 m43C[0x440 - 0x43C];
@@ -119,7 +122,7 @@ public:
     /* 0x482 */ s16 m482;
     /* 0x484 */ s16 m484;
     /* 0x486 */ s16 m486;
-    /* 0x488 */ s16 m488;
+    /* 0x488 */ s16 m488;  // 0 standing, 1 knocked down, 2 getting up
     /* 0x48A */ s16 m48A;
     /* 0x48C */ csXyz m48C;
     /* 0x492 */ s16 m492;
@@ -147,7 +150,7 @@ public:
     /* 0x4BE */ s16 m4BE;
     /* 0x4C0 */ s16 m4C0;
     /* 0x4C2 */ u8 m4C2[0x4C8 - 0x4C2];
-    /* 0x4C8 */ s16 m4C8[3];
+    /* 0x4C8 */ s16 m4C8[3];  // countdowns: [0] stuck on a wall, [2] stay down
     /* 0x4CE */ s16 mInvincibleTimer;
     /* 0x4D0 */ s16 m4D0;
     /* 0x4D2 */ u8 m4D2[0x4D4 - 0x4D2];
@@ -159,15 +162,15 @@ public:
     /* 0x6E4 */ f32 mSpawnY;
     /* 0x6E8 */ cXyz m6E8;
     /* 0x6F4 */ cXyz m6F4[2];
-    /* 0x70C */ u8 m70C;
-    /* 0x70D */ u8 m70D;
+    /* 0x70C */ u8 m70C;  // bounce count
+    /* 0x70D */ u8 m70D;  // lying face down
     /* 0x70E */ u8 m70E;
     /* 0x70F */ u8 m70F[0x710 - 0x70F];
-    /* 0x710 */ u8 m710;
+    /* 0x710 */ u8 m710;  // head look mode
     /* 0x711 */ u8 m711;
     /* 0x712 */ u8 m712;
     /* 0x713 */ u8 m713;
-    /* 0x714 */ fopAc_ac_c* m714;
+    /* 0x714 */ fopAc_ac_c* m714;  // look target
     /* 0x718 */ s16 m718;
     /* 0x71A */ s16 m71A;
     /* 0x71C */ u8 m71C[0x71E - 0x71C];

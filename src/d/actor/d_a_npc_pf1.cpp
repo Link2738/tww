@@ -391,6 +391,10 @@ void daNpc_Pf1_c::anmAtr(unsigned short param_1) {
     ctrlAnmTag();
 }
 
+// 0x1B59 asks for help. "Uh, OK" runs 0x1B5A, 0x1B61, 0x1B5B, 0x1B62 and sets 0xB04; "Eww, no!"
+// gives 0x1B5D. Either way field_0x7A5 is set, so the next talk in this load is 0x1B5E then 0x1B60
+// ("Go away! Ptheh! Ptheh!"), which closes itself after the spitting animation. After the promise:
+// 0x1B5C, 0x1B5F. [asm] [data]
 /* 00000D94-00000EAC       .text next_msgStatus__11daNpc_Pf1_cFPUl */
 u16 daNpc_Pf1_c::next_msgStatus(unsigned long* param_1) {
     u16 status = 0xf;
@@ -690,6 +694,8 @@ bool daNpc_Pf1_c::set_action(ActionFunc param_1, void* param_2) {
     return 1;
 }
 
+// States: 2 talk, 3 walk his path, 4 pause on it (regret), 5 chase, 6 wait after a chase. Nothing
+// sets 1 or 7, so wait_1 and wait_3 are unreachable. [asm]
 /* 00001748-000017C8       .text setStt__11daNpc_Pf1_cFSc */
 void daNpc_Pf1_c::setStt(signed char param_1) {
     s8 uVar1 = mStt;
@@ -726,6 +732,9 @@ void daNpc_Pf1_c::setStt(signed char param_1) {
     return;
 }
 
+// Sight probe. Every third frame Link is inside the area, an invisible d_a_tama flies from his eyes
+// toward Link at speed 50; if it touches the player before any wall or floor it sets field_0x6ba,
+// meaning he saw Link. [asm]
 /* 0000179C-00001958       .text createTama__11daNpc_Pf1_cFf */
 void daNpc_Pf1_c::createTama(float param_1) {
     csXyz sp14(0, 0, 0);
@@ -769,6 +778,9 @@ bool daNpc_Pf1_c::endEvent_check() {
     return 0;
 }
 
+// He starts after Link when Link is within mAreaInRadius (900) of his spawn point and either within
+// 210 of him or seen by a probe. endEvent_check stops this once Link has refused him (field_0x7A5)
+// and not yet promised (0xB04), until the next load. [asm]
 /* 00001ACC-00001BEC       .text startEvent_check__11daNpc_Pf1_cFv */
 bool daNpc_Pf1_c::startEvent_check() {
     cXyz sp18(field_0x70C.x, field_0x70C.y + 100.0f, field_0x70C.z);
@@ -860,6 +872,9 @@ BOOL daNpc_Pf1_c::regret() {
     return 1;
 }
 
+// The chase. He turns to Link, shows the "!" particle with the notice sound, then runs at him and
+// orders a talk once within 210. If Link gets mAreaOutRadius (1050) from his spawn point he gives
+// up (wait_2) and goes back to his path. [asm]
 /* 00002030-00002350       .text attk_1__11daNpc_Pf1_cFv */
 BOOL daNpc_Pf1_c::attk_1() {
     f32 dist = (current.pos - dComIfGp_getLinkPlayer()->current.pos).absXZ();

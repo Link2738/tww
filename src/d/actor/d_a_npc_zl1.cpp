@@ -2,8 +2,14 @@
  * d_a_npc_zl1.cpp
  * NPC - Tetra
  */
-// Spawn rules: ZL1_0 without bit 0x1, ZL1_1 without bit 0x101. Both are demo versions, so this actor
-// exists only early on, as far as these two go. [asm]
+// Params byte 0 picks the type; 0, 6 and 7 load the Zl2 archive, the rest Zl. [asm]
+//   ZL1_0  demo-driven, until 0x0001
+//   ZL1_1  demo-driven, hanging from a d_a_branch tree, until 0x101
+//   ZL1_2  Outset after the kidnapping: from 0xE20 (d_a_tag_event) until 0x2401 (on the ship)
+//   ZL1_3  Forsaken Fortress (MajyuE), until 0x801
+//   ZL1_4  always; the "stay out of the way" talk on deck
+//   ZL1_5  Hyrule and Hyroom, until ZELDA_AWAKENED; follows Link
+//   ZL1_6, ZL1_7  demo-driven
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -127,6 +133,8 @@ daNpc_Zl1_HIO_c::daNpc_Zl1_HIO_c() {
     field_0x8 = -1;
 }
 
+// Her events, by index (mEventIdx, field_0x7A8 = field_0x84A - 3): yuukaigo on Outset (sea),
+// ooi and majyuu_shinnyuu in MajyuE, nakaniwa in Hyrule. [data]
 static const char* l_evn_tbl[4] = {
     "yuukaigo",
     "ooi",
@@ -231,6 +239,8 @@ static void* searchActor_Bm1(void* i_param1, void*) {
     return NULL;
 }
 
+// ZL1_5 on a later visit: three spots for Hyroom (0) and three for Hyrule (1). The one whose
+// check point is nearest Link (XZ) wins, and she stands at its paired position and angle. [asm]
 /* 00000638-00000824       .text set_startPos__11daNpc_Zl1_cFi */
 BOOL daNpc_Zl1_c::set_startPos(int param_1) {
     static const Vec a_chk_playerPos[][3] = {
@@ -342,6 +352,8 @@ bool daNpc_Zl1_c::init_ZL1_4() {
     return true;
 }
 
+// Before HYRULE_COURTYARD_CUTSCENE the retail versions order nakaniwa at once and cancel the stage
+// start demo; in every version optn_action1 then puts her in state 5, which orders it too. [asm]
 /* 00000B48-00000CC0       .text init_ZL1_5__11daNpc_Zl1_cFv */
 bool daNpc_Zl1_c::init_ZL1_5() {
     if(!dComIfGs_isEventBit(dSv_event_flag_c::ZELDA_AWAKENED)) {
@@ -502,6 +514,8 @@ void daNpc_Zl1_c::play_animation() {
     }
 }
 
+// While field_0x7CA is set (state 5) she lies on the King of Red Lions: her position is a fixed
+// offset in the boat's body matrix, facing backward. [asm]
 /* 000010F4-000011EC       .text swoon_OnShip__11daNpc_Zl1_cFv */
 bool daNpc_Zl1_c::swoon_OnShip() {
     daShip_c* pShip = dComIfGp_getShipActor();
@@ -863,6 +877,10 @@ void daNpc_Zl1_c::chngAnmTag() {
 void daNpc_Zl1_c::ctrlAnmTag() {
 }
 
+// Look targets for the nakaniwa talk, by message: 0x15E1 "Ohhh... Owwww..." locks her back,
+// 0x15E2/0x15ED look at Link, 0x15E3 "What is this place...?" looks around, 0x15E7 "Who is using
+// that stone...?" looks at the light by Link's right hand, 0x15EC looks at a point just ahead of
+// her. [asm] [data]
 /* 00001BC4-00001DA8       .text chngAnmAtr__11daNpc_Zl1_cFUc */
 void daNpc_Zl1_c::chngAnmAtr(u8 param_1) {
     switch(mCurrMsgNo) {
@@ -964,6 +982,8 @@ void daNpc_Zl1_c::anmAtr(u16 mesgNo) {
     ctrlAnmTag();
 }
 
+// 0xC90 "Are you ready?": Yes ends the talk, and talk_1 sends Link to sea point 0xCD at Outset,
+// layer 10. No gives 0xC91 and sets 0x2908, so the next talk opens with 0xCA3. [asm] [data]
 /* 00001ED4-00001FA0       .text next_msgStatus__11daNpc_Zl1_cFPUl */
 u16 daNpc_Zl1_c::next_msgStatus(u32* pMsgNo) {
     u16 msg_status = fopMsgStts_MSG_CONTINUES_e;
@@ -1009,6 +1029,8 @@ u16 daNpc_Zl1_c::next_msgStatus(u32* pMsgNo) {
     return msg_status;
 }
 
+// No shield yet (collect byte 1): 0xCA1, "find one before I change my mind". With one: 0xCA2, or
+// 0xCA3 after a No; both lead to 0xC90. [asm] [data]
 /* 00001FA0-00001FF0       .text getMsg_ZL1_2__11daNpc_Zl1_cFv */
 u32 daNpc_Zl1_c::getMsg_ZL1_2() {
     u32 temp;
@@ -1020,6 +1042,7 @@ u32 daNpc_Zl1_c::getMsg_ZL1_2() {
     return temp;
 }
 
+// 0x1005 ("report below decks" to Niko) the first time, setting 0x810, then 0x1006. [asm] [data]
 /* 00001FF0-0000202C       .text getMsg_ZL1_4__11daNpc_Zl1_cFv */
 u32 daNpc_Zl1_c::getMsg_ZL1_4() {
     return 0x1005 + (dComIfGs_isEventBit(dSv_event_flag_c::UNK_0810) != 0 ? 1 : 0);
@@ -1065,6 +1088,8 @@ void daNpc_Zl1_c::eventOrder() {
     }
 }
 
+// When an event starts: majyuu_shinnyuu sets the restart point (-229.77, 37.46, 305.21), angle
+// 0x4000, and runs event_proc even without a staff entry; nakaniwa hides Link. [asm]
 /* 0000213C-00002280       .text checkOrder__11daNpc_Zl1_cFv */
 void daNpc_Zl1_c::checkOrder() {
     static const Vec a_start_pos[] = {-229.76634f, 37.46317f, 305.2134f};
@@ -1393,6 +1418,10 @@ void daNpc_Zl1_c::decEnvironment() {
     mRatio = cLib_minLimit(mRatio -0.05f, 0.15f);
 }
 
+// The charm glow. OMAMORI_ONOFF 0 turns on two light influences (blue 0x5C/0xAE/0xFF power 139.7,
+// pale 0xBA/0xFF/0xFF power 270.7) next to Link's right hand and lowers mRatio by 0.05 a frame to
+// 0.15, darkening sky, fog and background. Any other value cuts the lights and raises the ratio
+// back to 1. [asm]
 /* 00002BCC-00002CD0       .text darkProc__11daNpc_Zl1_cFv */
 void daNpc_Zl1_c::darkProc() {
     switch(field_0x7C2) {
@@ -1524,6 +1553,7 @@ BOOL daNpc_Zl1_c::cut_move_PLYER_TRN_TETRA() {
     return TRUE;
 }
 
+// Places her at (-37927, 2200, 7852), facing (-37978, 400, 7766). [asm]
 /* 00002F7C-00002FFC       .text cut_init_MAJYU_START__11daNpc_Zl1_cFi */
 void daNpc_Zl1_c::cut_init_MAJYU_START(int) {
     current.pos.set(-37927.0f, 2200.0f, 7852.0f);
@@ -1600,6 +1630,8 @@ BOOL daNpc_Zl1_c::cut_move_PLYER_DRW_ONOFF() {
     return TRUE;
 }
 
+// nakaniwa: she hops off the boat sideways (+0x4000) with the event's Speed, Spd_y and Grvty,
+// and Link is hidden. [asm] [data]
 /* 000031B0-0000333C       .text cut_init_JMP_OFF__11daNpc_Zl1_cFi */
 void daNpc_Zl1_c::cut_init_JMP_OFF(int i_staffIdx) {
     f32* pSpeed = dComIfGp_evmng_getMyFloatP(i_staffIdx, "Speed");
@@ -1838,6 +1870,9 @@ int daNpc_Zl1_c::isEventEntry() {
     return dComIfGp_evmng_getMyStaffId(mEventCut.getActorName());
 }
 
+// Event ends: yuukaigo sets 0x802 and she waits; ooi sets 0x804 and moves her to (-37692, 2200,
+// 8016) for state 8; majyuu_shinnyuu sets 0x801; nakaniwa sets HYRULE_COURTYARD_CUTSCENE and she
+// starts following (state 3). [asm]
 /* 0000383C-00003A1C       .text event_proc__11daNpc_Zl1_cFi */
 void daNpc_Zl1_c::event_proc(int i_staffIdx) {
     if(dComIfGp_evmng_endCheck(mEventIdx[field_0x7A8])) {
@@ -1892,6 +1927,8 @@ bool daNpc_Zl1_c::set_action(ActionFunc i_action, void* param_2) {
     return true;
 }
 
+// States: 1 wait, 2 talk, 3 follow idle, 4 follow move, 5 on the boat, 6 demo, 7 and 8 the two
+// MajyuE triggers, 9 orders yuukaigo. [asm]
 /* 00003AC8-00003B8C       .text setStt__11daNpc_Zl1_cFSc */
 void daNpc_Zl1_c::setStt(s8 param_1) {
     s8 temp = field_0x84B;
@@ -2047,6 +2084,8 @@ void daNpc_Zl1_c::setEff() {
     }
 }
 
+// TRUE when a near-vertical wall is 25 past her wall circle at wall height but nothing blocks at
+// 70 up and the roof is over 80 above her: a ledge she can hop. [asm]
 /* 00004118-0000498C       .text setFrontWallType__11daNpc_Zl1_cFv */
 BOOL daNpc_Zl1_c::setFrontWallType() {
     f32 sin = cM_ssin(shape_angle.y);
@@ -2243,6 +2282,9 @@ BOOL daNpc_Zl1_c::demo_2() {
     return TRUE;
 }
 
+// demo_2 orders ooi once Link is within field_24 (200) XZ and 100 Y of field_0x764, set at create
+// (-123, 0, -100) from her, at height 400. demo_3 orders majyuu_shinnyuu within field_28 (200),
+// and deletes her once 0x801 is set. [asm]
 /* 000055C8-000056E8       .text demo_3__11daNpc_Zl1_cFv */
 BOOL daNpc_Zl1_c::demo_3() {
     if(field_0x84A == 1 || field_0x84A >= 3) {
@@ -2268,6 +2310,8 @@ BOOL daNpc_Zl1_c::demo_4() {
     return TRUE;
 }
 
+// Following, idle: within 230 she stands and now and then plays the look-around animation. Further
+// out she turns to Link and starts moving (state 4) once she faces within 0x1800. [asm]
 /* 00005718-00005954       .text optn_1__11daNpc_Zl1_cFv */
 BOOL daNpc_Zl1_c::optn_1() {
     f32 temp = l_HIO.mPrmTbl.field_34 + 100.0f;
@@ -2326,6 +2370,8 @@ BOOL daNpc_Zl1_c::optn_1() {
     return TRUE;
 }
 
+// Following, moving: speed 0.04 per unit past 130, up to 10. She walks close and runs far, hops a
+// ledge in front (setFrontWallType) and, outside the demo version, jumps off drops over 30. [asm]
 /* 00005954-00005C68       .text optn_2__11daNpc_Zl1_cFv */
 BOOL daNpc_Zl1_c::optn_2() {
     if(field_0x7CC) {
@@ -2398,6 +2444,7 @@ BOOL daNpc_Zl1_c::optn_3() {
     return TRUE;
 }
 
+// ZL1_2 starts in state 9 (yuukaigo) until 0x802, otherwise state 1. [asm]
 /* 00005C98-00005DB0       .text wait_action1__11daNpc_Zl1_cFPv */
 int daNpc_Zl1_c::wait_action1(void*) {
     switch(field_0x850) {
@@ -2460,6 +2507,7 @@ int daNpc_Zl1_c::demo_action1(void*) {
     return 1;
 }
 
+// ZL1_3 starts in state 7, or in state 8 at the ooi end position once 0x804 is set. [asm]
 /* 00005E68-00005F80       .text demo_action2__11daNpc_Zl1_cFPv */
 int daNpc_Zl1_c::demo_action2(void*) {
     switch(field_0x850) {
@@ -2976,6 +3024,7 @@ BOOL daNpc_Zl1_c::bodyCreateHeap() {
     return TRUE;
 }
 
+// Only ZL1_1 has the extra cloth model, fixed to her chest joint in setMtx. [asm]
 /* 000077C8-000078AC       .text itemCreateHeap__11daNpc_Zl1_cFv */
 BOOL daNpc_Zl1_c::itemCreateHeap() {
     if(field_0x84F != 1) {

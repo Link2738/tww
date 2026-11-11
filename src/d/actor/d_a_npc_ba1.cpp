@@ -651,6 +651,9 @@ void daNpc_Ba1_c::lookBack() {
     m_jnt.lookAtTarget(&current.angle.y,dstPos_p,src_pos,desiredYrot,mLookAtMaxVel,headOnlyFollow);
 }
 
+// Soup. Once Link has had soup: no empty bottle gives 0x803, a soup bottle already carried gives
+// 0x7FE, otherwise she offers to fill one (0x7FF). "Yes, please" (0x800) orders Ba1_Get_Itm, whose
+// end tops up a half-soup bottle or fills an empty one (event_proc). [asm] [data]
 /* 0000155C-000016C8       .text next_msgStatus__11daNpc_Ba1_cFPUl */
 u16 daNpc_Ba1_c::next_msgStatus(u32* i_msg_no) {
     u16 ret = 0xF;
@@ -738,6 +741,10 @@ u32 daNpc_Ba1_c::getMsg_BA1_1() {
 
 }
 
+// After she is healed, her greeting depends on event register 0xA60F, which the new-day code in
+// d_kankyo_dayproc.inc raises by one a day up to 3 (outside JPN only once GRANDMA_HEALED is set).
+// Three or more days away gives 0x7FC, fewer gives 0x7FB ("My dear, sweet..."); the talk resets the
+// register. The JPN versions reset it on every talk (setStt state 2) instead. [asm] [data]
 /* 00001818-00001908       .text getMsg_BA1_3__11daNpc_Ba1_cFv */
 u32 daNpc_Ba1_c::getMsg_BA1_3() {
     if (m7F0) {
@@ -1217,6 +1224,7 @@ void daNpc_Ba1_c::cut_init_START_TALE1(int i_staff_idx) {
     }
 }
 
+// tale_1 moves to LinkRM point 200, or 202 on a file with a clear count, room 0, layer 8. [asm]
 /* 00002764-00002820       .text cut_move_START_TALE1__11daNpc_Ba1_cFv */
 bool daNpc_Ba1_c::cut_move_START_TALE1() {
     if(cLib_calcTimer(&mEvTimer) == 0) {
@@ -1307,6 +1315,9 @@ BOOL daNpc_Ba1_c::isEventEntry() {
     
 }
 
+// Event ends. Use_Fairy (from showing a Fairy Bottle while she is sick, BA1_3) waits in CHK_FAIRY
+// until the fairy, d_a_npc_fa1, switches to its Grandma mode. Ganbaru's end sends letter 0x9D03,
+// sets GRANDMA_HEALED and switches her to wait_action4. [asm]
 /* 000029A0-00002B50       .text event_proc__11daNpc_Ba1_cFi */
 void daNpc_Ba1_c::event_proc(int i_staff_idx) {
     if (dComIfGp_evmng_endCheck(mEventIdTable[mEventIdx])) {
@@ -1536,6 +1547,9 @@ BOOL daNpc_Ba1_c::talk_2() {
     return talk_1();
 }
 
+// BA1_1 (after Tetra's fall, before 0x520). With 0x3202 but no shield yet (collect byte 1; see
+// d_menu_collect) she moves to (-290, 0, 110); once Link is level with her, talking sends him to
+// LinkRM point 201, layer 9. [asm]
 /* 00003130-00003348       .text wait_2__11daNpc_Ba1_cFv */
 BOOL daNpc_Ba1_c::wait_2() {
     cLib_addCalcAngleS(

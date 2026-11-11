@@ -477,6 +477,9 @@ void daNpc_Aj1_c::anmAtr(u16 i_param_1) {
     ctrlAnmTag();
 }
 
+// After Tetra's fall (0x0001) and before 0x3704, his normal talk ends with "what was that racket
+// outside?" (0x9DA or 0x9DD), which sets 0x3704. 0x9DB, once after 0xE20 (0x3702), asks if Link is
+// all right. On his return (AJ1_2) 0x9D0 continues by 0x2A20 and day or night. [asm] [data]
 /* 000010E0-000012B4       .text next_msgStatus__11daNpc_Aj1_cFPUl */
 u16 daNpc_Aj1_c::next_msgStatus(u32* pMsgNo) {
     u16 msgStatus = fopMsgStts_MSG_CONTINUES_e;
@@ -556,6 +559,8 @@ u32 daNpc_Aj1_c::getMsg_AJ1_1() {
     return dComIfGs_isEventBit(0x2A80) ? 0x9DC : 0x9CB;
 }
 
+// AJ1_2 accepts the Knight's Crest on X/Y (_XyCheckCB): 0x9D7 the first time (sets 0x3701), then
+// 0x9D8 after 0xB20 or 0x9D9 ("ask my brother downstairs"). [asm] [data]
 /* 00001398-00001460       .text getMsg_AJ1_2__11daNpc_Aj1_cFv */
 u32 daNpc_Aj1_c::getMsg_AJ1_2() {
     if (m75A == dItemNo_KNIGHTS_CREST_e) {
@@ -1107,6 +1112,10 @@ bool daNpc_Aj1_c::chk_areaIN(f32 i_radius, s16 i_angle, cXyz i_center) {
     return false;
 }
 
+// AJ1_0, outside. Link within 1500 and 115 degrees either side of his spawn facing puts him in
+// call_1: he waves (CALL) and, within 550 and 137 degrees, offers a talk. Leaving that area sends
+// him back to stretching (NOBI) every 90-120 frames. This is the Z-targeting lesson:
+// 0x9C6-0x9C8 ("climb up that ladder"), which sets 0x510, then 0x9C9. [asm] [data]
 /* 00002988-00002A84       .text FARwai__11daNpc_Aj1_cFv */
 BOOL daNpc_Aj1_c::FARwai() {
     if (chk_areaIN(l_HIO.hio_prm.mFarRadius, l_HIO.hio_prm.mFarAngle, current.pos)) {
@@ -1264,6 +1273,9 @@ BOOL daNpc_Aj1_c::wait_action1(void*) {
     return TRUE;
 }
 
+// AJ1_1 in Ojhous2 orders his "angry" event on the first visit (until 0x508): stomping with steam
+// (PUNPUN), red-face (AKAAKA) and stamp (DONDON) particles, a body-slam quake and a jump. Its end
+// sets 0x508 and 0x504. [asm] [data]
 /* 00002F3C-0000304C       .text wait_action2__11daNpc_Aj1_cFPv */
 BOOL daNpc_Aj1_c::wait_action2(void*) {
     switch (m7C0) {

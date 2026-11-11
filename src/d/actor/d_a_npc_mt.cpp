@@ -178,6 +178,8 @@ static u32 l_msg_mt_making[] = {
     0x0000,
 };
 
+// Script codes: 0 ends, 1 inserts the room line for the new figurine (l_msg_mt_room by the
+// figurine's dSnap room, 1-7 = figureA-G), 2 ends and erases the pictograph. [asm] [data]
 static u32 l_msg_mt_1st_kansei[] = {
     0x364D,
     0x364E,
@@ -302,6 +304,8 @@ static u32* l_msg_mt_make_mn[] = {
     l_msg_mt_make_2nd_mn,
 };
 
+// The figurines owned, one bit per figurine, eight to a register: figurine n is bit n % 8 of
+// l_figure_comp[n / 8]. [asm]
 static u16 l_figure_comp[] = {
     dSv_event_flag_c::UNK_95FF,
     dSv_event_flag_c::UNK_94FF,
@@ -379,6 +383,9 @@ static BOOL CheckCreateHeap(fopAc_ac_c* i_this) {
     return static_cast<daNpcMt_c*>(i_this)->createHeap();
 }
 
+// With the collection complete (isComp, latched in 0x3D08) Carlov is gone: he gives figurine 0x40
+// and the create stops. Otherwise, entering by start point 0 clears the per-visit bit 0x202 and,
+// once a finished figurine was announced (0x4080), the whole figurine cycle. [asm]
 /* 00000714-00000858       .text phase_1__FP9daNpcMt_c */
 static cPhs_State phase_1(daNpcMt_c* i_this) {
     BOOL bVar1 = FALSE;
@@ -532,6 +539,8 @@ cPhs_State daNpcMt_c::createInit() {
     return cPhs_COMPLEATE_e;
 }
 
+// Leaving for a figure room after the announcement: the right room (the figurine's dSnap room)
+// sets 0x3F01. Leaving anywhere else clears 0x202 and the announced cycle, as in phase_1. [asm]
 /* 00000DEC-00000F6C       .text _delete__9daNpcMt_cFv */
 bool daNpcMt_c::_delete() {
 #if VERSION == VERSION_DEMO
@@ -912,6 +921,17 @@ u16 daNpcMt_c::next_msgStatus(u32* pMsgNo) {
     return status;    
 }
 
+// Showing a pictograph: monochrome (I4/I8, the plain Picto Box) gets 0x3655, no figurine subject
+// 0x3656, one already made 0x3658, face not toward the camera 0x3659, body not whole 0x365A.
+// Otherwise he accepts it: 0x2F01 (in progress), 0x3401 (opens the d_a_knob00 type 6 door) and
+// the subject in register 0xA9FF; table index 0x5E opens with 0x3672 and 0x5F with 0x3673. The
+// new day turns 0x2F01 into 0x3080 (d_kankyo_dayproc).
+// With 0x3080: the first talk announces it (0x364D-0x3650), gives the figurine plus its group
+// (0x4A with 0x49, 0x72 with 0x73-0x78, and outside the demo 0x8C with 0x8D, 0x88 with 0x87),
+// and sets 0x4080. Then 0x3651 until Link has been in the right room (0x3F01), 0x3652 once, and
+// 0x3653, which ends the cycle. Without a figurine: 0x3654 while one is in progress, the first
+// talk 0x365E (sets 0x2F02), 0x3665 until the first figurine (0x3A01), then 0x3668 once a
+// visit and 0x3669. [asm] [data]
 /* 00001A8C-00001FC8       .text getMsg__9daNpcMt_cFv */
 u32 daNpcMt_c::getMsg() {
     u32 msgNo = 0;
@@ -1317,6 +1337,8 @@ bool daNpcMt_c::setAnmTbl(sMtAnmDat* anmDat) {
     return false;
 }
 
+// Picto Box on X/Y/Z: only after the first talk, with no figurine in progress and a picture
+// taken. [asm]
 /* 00002984-00002A28       .text XyCheckCB__9daNpcMt_cFi */
 s16 daNpcMt_c::XyCheckCB(int i_itemBtn) { 
     if (dComIfGs_isEventBit(dSv_event_flag_c::UNK_2F02) && !dComIfGs_isEventBit(dSv_event_flag_c::UNK_2F01)) {
@@ -1338,6 +1360,8 @@ void daNpcMt_c::setCollision(dCcD_Cyl* cyl, cXyz center, f32 radius, f32 height)
     dComIfG_Ccsp()->Set(cyl);
 }
 
+// MT_GET_ITEM: eventMesSet orders it from bits of m749, which nothing in this unit sets, so the
+// item hand-over (items 7 and 5) never runs. [asm]
 /* 00002AA0-00002AFC       .text chkEndEvent__9daNpcMt_cFv */
 BOOL daNpcMt_c::chkEndEvent() {
     if (dComIfGp_evmng_endCheck(mMtGetItemEventIdx)) {
@@ -1386,6 +1410,7 @@ int daNpcMt_c::getFigureMakeNum() {
     return num;
 }
 
+// Complete at 0x84 figurines, or 0x85 once figurine 0x32 is owned. [asm]
 /* 00002CA0-00002D08       .text isComp__9daNpcMt_cFv */
 BOOL daNpcMt_c::isComp() {
     int ownedNum = getFigureMakeNum();

@@ -26,6 +26,10 @@
 #include "res/Object/Sa.h"
 #include "res/Object/Ug.h"
 
+// The Windfall townsfolk; params byte 0 picks one. Uo1 Sam (Joy Pedestals), Uo3 posts love
+// letters, Ub1/Ub2 Pompie and Vera, Ub4 Minenco, Uw2 and Um2 Linda and Anton, Um1 Kreeb, Um3 Kamo,
+// Sa3 Kane (the gate pedestals), Sa5 the pig owner, Ug1/Ug2 the rumor kids. Most tables have a day
+// and a night column (mbIsNight). [asm] [data]
 enum NpcNo_e {
     /* 0x00 */ NPC_UO1,
     /* 0x01 */ NPC_UO2,
@@ -3453,6 +3457,8 @@ static u32* l_msg_sa3_fdai[] = {
     l_msg_sa3_fdai_7,
 };
 
+// Kane's four rewards, one flag each: Shop Guru Statue, Postman Statue, six flags, six idols
+// (chkDaiza 1, 2, 4, 5). [asm] [data]
 static u16 l_item_chk_sa3[] = {
     dSv_event_flag_c::UNK_2410,
     dSv_event_flag_c::UNK_2408,
@@ -3853,6 +3859,9 @@ static u32 l_msg_ug2_out_area[] = {
     0x0000,
 };
 
+// Event ItemNo: Sam's Piece of Heart (an Orange Rupee in JPN), Pompie and Vera's chart (0xEB),
+// Minenco's chart (0xEF), Linda and Anton's Piece of Heart, Kreeb's Piece of Heart, Kamo's chart
+// (0xF0). [data]
 static int l_get_item_no[] = {
 #if VERSION <= VERSION_JPN
     dItemNo_ORANGE_RUPEE_e,
@@ -3954,6 +3963,8 @@ static PsoData l_pso_um2 = {
     DSNAP_TYPE_COUPLE_LOOK,
 };
 
+// Photo subjects registered while posed (m7A6): Uo2 startled, Uo3 posting a letter, Minenco, and
+// Linda and Anton looking at each other (_draw). [asm]
 static PsoData* l_pso_tbl[] = {
     &l_pso_uo2,
     &l_pso_uo3,
@@ -4258,6 +4269,9 @@ static BOOL CheckCreateHeap(fopAc_ac_c* i_this) {
     return static_cast<daNpcPeople_c*>(i_this)->createHeap();
 }
 
+// Minenco in Lenzo's house (Ocmera) only by her start point and before chart 0xEB. Linda and Anton
+// placements (arg0) must match register 0xB907 bits 1-2. Ug arg0 0 skips days 5 and 6, arg0 1
+// appears only then. [asm]
 /* 0000075C-000008E0       .text phase_1__FP13daNpcPeople_c */
 static cPhs_State phase_1(daNpcPeople_c* i_this) {
     fopAcM_ct(i_this, daNpcPeople_c);
@@ -4996,6 +5010,9 @@ s32 daNpcPeople_c::executeWaitInit() {
     return 0;
 }
 
+// Kamo at night (not in an Endless Night without Nayru's Pearl): after his first night talk
+// (0x2320), Link looking at him through the Telescope gets UM3_TELESCOPE_TALK when the moon (sets
+// 0x2308), Orion or the Big Dipper is in view, each once per visit. [asm]
 /* 00002240-00002500       .text executeWait__13daNpcPeople_cFv */
 void daNpcPeople_c::executeWait() {
     if(!executeCommon()) {
@@ -5314,6 +5331,9 @@ void daNpcPeople_c::executeFurue() {
     }
 }
 
+// Uo3's route: at the end of his path he looks around toward the postbox (d_a_obj_toripost),
+// turns, posts a letter (letter model and photo subject between frames 0x23 and 0x45), and walks
+// back. [asm]
 /* 00002EC4-00002F80       .text executeKyoroInit__13daNpcPeople_cFv */
 s32 daNpcPeople_c::executeKyoroInit() {
     fopAc_ac_c* mailbox;
@@ -5389,6 +5409,8 @@ void daNpcPeople_c::executeLetter() {
     }
 }
 
+// Anton, on a path point with argument 0, stops and looks at Linda; she looks back (Look2). Both
+// register the couple photo while it lasts. [asm]
 /* 00003154-000031D0       .text executeLookInit__13daNpcPeople_cFv */
 s32 daNpcPeople_c::executeLookInit() {
     m76E = 0x3C;
@@ -5483,6 +5505,8 @@ s32 daNpcPeople_c::executeUgWalkInit() {
     return 0xA;
 }
 
+// The rumor kids wander within 180 of home. Bumping into each other turns them apart, Link in the
+// way steers them around him, and at each stop Ug1 may look at Ug2 or either may sit. [asm]
 /* 00003438-00003A70       .text executeUgWalk__13daNpcPeople_cFv */
 void daNpcPeople_c::executeUgWalk() {
     if(!executeCommon()) {
@@ -5961,6 +5985,8 @@ void daNpcPeople_c::eventMesSetTpInit(int param_1) {
     eventMesSetInit(param_1);
 }
 
+// The rumor kids' 0x3594: the first missing of Sail, 0x0B80, Magic Armor, Deluxe Picto Box and
+// 0x1C08 picks the hint; with all of them 0x3599 and 0x2B04 end it. [asm] [data]
 /* 00004784-0000498C       .text eventMesSetInit__13daNpcPeople_cFi */
 void daNpcPeople_c::eventMesSetInit(int staffIdx) {
     int* pMsgNo = dComIfGp_evmng_getMyIntegerP(staffIdx, "MsgNo");
@@ -6076,6 +6102,9 @@ bool daNpcPeople_c::eventTurnToPlayer() {
     return current.angle.y == m77A ? TRUE : FALSE;
 }
 
+// Pompie and Vera talk in turns: each sUbMsgDat entry gives the message, both animations and
+// whether to face Link, and the speaker alternates. 0x2102 (asked for the photo) is set once Link
+// has a Picto Box. [asm]
 /* 00004BC4-00004CEC       .text eventUb1TalkInit__13daNpcPeople_cFi */
 void daNpcPeople_c::eventUb1TalkInit(int) {
     BOOL r29 = FALSE;
@@ -6133,6 +6162,8 @@ bool daNpcPeople_c::eventUb1Talk() {
     return false;
 }
 
+// Showing them a pictograph: picture result 5 (Lenzo and Minenco) earns chart 0xEB once and sets
+// register 0xC103 to 1. [asm] [data]
 /* 00004DC0-00004F24       .text eventUb1TalkXyInit__13daNpcPeople_cFi */
 void daNpcPeople_c::eventUb1TalkXyInit(int staffIdx) {
     int* pMsgNo = dComIfGp_evmng_getMyIntegerP(staffIdx, "MsgNo");
@@ -6475,6 +6506,10 @@ u16 daNpcPeople_c::talk3(int param_1) {
     return status;
 }
 
+// Script codes: 1-5 and 7 queue an event after the talk (talk bits m77E), 6 gives Kane's reward
+// once per flag, 8 branches on owning the Iron Boots or Power Bracelets, 9 and 10 queue the pig
+// game Rupee (red, purple), 0xB-0x15 handle each NPC's Yes/No, 0xD picks Kreeb's wind line, 0x17
+// ends the pig game. 0x358B is the kids' 2-Rupee price. [asm] [data]
 /* 000057FC-00005FB8       .text next_msgStatus__13daNpcPeople_cFPUl */
 u16 daNpcPeople_c::next_msgStatus(u32* pMsgNo) {
     u16 status = fopMsgStts_MSG_CONTINUES_e;
@@ -6756,6 +6791,12 @@ u16 daNpcPeople_c::next_msgStatus(u32* pMsgNo) {
     return status;
 }
 
+// Pictographs: Uo3 wants result 1 (his letter), Minenco 5, 6 or 0x6D in color (chart 0xEF), Anton
+// 4 in color, Kamo 7 in color (the full moon; 8 not full, 9 the sun). Talk: Sam counts the Joy
+// Pedestals (daDai_c), Kane the gate pedestals (chkDaiza), Linda and Anton step register 0xB907
+// (Lenzo's register 0xC407 must reach 7 first), Kreeb waits for the ferris wheel (0x2104) and the
+// lighthouse (0x1C02). Several say one line during an Endless Night without Nayru's Pearl. [asm]
+// [data]
 /* 00005FB8-000073B8       .text getMsg__13daNpcPeople_cFv */
 u32 daNpcPeople_c::getMsg() {
     u32 msgNo = 0;
@@ -7388,6 +7429,7 @@ u32 daNpcPeople_c::getMsg3() {
     return msgNo;
 }
 
+// 0x3278 blows the whistle that starts the pig game and puts the pigs back home. [asm] [data]
 /* 00007478-00007604       .text chkMsg__13daNpcPeople_cFv */
 void daNpcPeople_c::chkMsg() {
     switch(mCurrMsgNo) {
@@ -8122,6 +8164,8 @@ void daNpcPeople_c::setCollision(dCcD_Cyl* cyl, cXyz center, f32 radius, f32 hei
     dComIfG_Ccsp()->Set(cyl);
 }
 
+// Uo2 is startled by Link roll-crashing within 2000 or by a loud noise in that range, then
+// shivers. [asm]
 /* 00008C7C-00008DB0       .text chkSurprise__13daNpcPeople_cFv */
 BOOL daNpcPeople_c::chkSurprise() {
     if(mNpcNo == NPC_UO2 && m78F != 1) {
@@ -8290,6 +8334,7 @@ static u16 l_daiza_no_tbl[] = {
     dSv_event_flag_c::UNK_F3FF,
 };
 
+// Registers 0xF8FF-0xF3FF hold the item on each of the six gate pedestals. [asm]
 /* 000091E0-00009420       .text chkDaiza__13daNpcPeople_cFv */
 s32 daNpcPeople_c::chkDaiza() {
     int i;
@@ -8356,6 +8401,9 @@ s32 daNpcPeople_c::chkDaiza() {
     return 0;
 }
 
+// Pig game: a pig of the three (d_a_kb, l_pig_para) brought within 400 is held at him and starts
+// the judging talk; tmp register 0xFC03 is the pig brought, 0xFF03 the one asked for, 0xFE03 the
+// pigs still owed in the Skull Necklace round, all against the item timer. [asm]
 /* 00009420-000095D8       .text checkPig__13daNpcPeople_cFv */
 BOOL daNpcPeople_c::checkPig() {
     if(dComIfGs_isTmpBit(dSv_event_tmp_flag_c::UNK_0280) && (m789 != 0 || m78A != 0)) {
@@ -8450,6 +8498,7 @@ cXyz daNpcPeople_c::getDirDistToPos(s16 angle, f32 mag) {
     return temp;
 }
 
+// Params bit 31, set from outside, puts him back at the start of his path. [asm]
 /* 0000982C-000098DC       .text warp__13daNpcPeople_cFv */
 void daNpcPeople_c::warp() {
     if(fopAcM_GetParam(this) & 0x80000000) {

@@ -195,6 +195,8 @@ static int CheckCreateHeap(fopAc_ac_c* i_npc) {
 
 
 
+// Her partner is the d_a_swc00 of type 0 whose switch is hers (params byte 1). A type 0 swc00 holds
+// the switch on only while Link stands inside its area. [asm]
 /* 0000044C-000004EC       .text searchActor_SWC00__FPvPv */
 void* searchActor_SWC00(void* i_swc, void* i_kk1) {
     swc00_class* swc_act = (swc00_class*)(i_swc);
@@ -231,6 +233,8 @@ bool daNpc_Kk1_c::init_KK1_0() {
 
 extern dCcD_SrcCyl dNpc_cyl_src;
 
+// Params byte 2 is her path, required. By day she starts in state 1 at the shop, by night in state
+// 4 (wait_action1). [asm]
 /* 00000598-000007B0       .text createInit__11daNpc_Kk1_cFv */
 bool daNpc_Kk1_c::createInit() {
     for (int i = 0; i < EVENTLENGTH; ++i) {
@@ -661,6 +665,10 @@ void daNpc_Kk1_c::anmAtr(unsigned short param_1) {
 
 }
 
+// The catch talk. Each rude answer adds to mMuuruBadResponse. With at most one, "Not at all" at
+// 0x1C97, or "Unfortunately, no" then "Because I'm honest", leads to her apology and the reward
+// (0x1C9F); with two or more those lead to 0x1C9A or 0x1C9C and she leaves. "Because I like you"
+// gives 0x1C9A, "I'll let you go" ends at 0x1C98. event_proc acts on the last message. [asm] [data]
 /* 000011A0-0000149C       .text next_msgStatus__11daNpc_Kk1_cFPUl */
 u16 daNpc_Kk1_c::next_msgStatus(unsigned long* param_1) {
 
@@ -812,6 +820,9 @@ u16 daNpc_Kk1_c::next_msgStatus(unsigned long* param_1) {
     return message_outcome;
 }
 
+// By night 0x1C8B ("Shh!"), or 0x1CA1 once right after the reward. By day before 0xE08: 0x1C88
+// until the shop intro 0x1CA9 has set 0xE10, then 0x1C87. After 0xE08: 0x1C85, "I won't be seeing
+// you at night anymore". [asm] [data]
 /* 0000149C-00001534       .text getMsg_KK1_0__11daNpc_Kk1_cFv */
 u32 daNpc_Kk1_c::getMsg_KK1_0() {
 
@@ -1084,6 +1095,7 @@ bool daNpc_Kk1_c::decideType(int) {
     return o_retval;
 }
 
+// run_start / run_start_2: the swc00 area is the item partner for the camera. [asm] [data]
 /* 00001C70-00001D10       .text cut_init_RUN_START__11daNpc_Kk1_cFi */
 void daNpc_Kk1_c::cut_init_RUN_START(int) {
     fopAc_ac_c* a_actor;
@@ -1183,6 +1195,9 @@ bool daNpc_Kk1_c::cut_move_CATCH_END() {
 }
 
 
+// Turns her along the path away from Link: if Link is ahead of her (by nearest path point, or by
+// distance to her point when equal) she steps back two points and reverses. On points 0x19-0x28
+// a fixed table gives the point instead. [asm]
 /* 00001FB4-000022BC       .text cut_init_TRN__11daNpc_Kk1_cFi */
 void daNpc_Kk1_c::cut_init_TRN(int) {
     if(field_0x816 != 5){
@@ -1414,6 +1429,9 @@ bool daNpc_Kk1_c::cut_move_PLYER_MOV() {
 
 }
 
+// runaway ("Who's there?!", then BYE with a wipe): Link is stopped facing her. If he is more
+// than 0x3800 off her facing she turns about with animation 8, otherwise she turns to him. [asm]
+// [data]
 /* 000028AC-00002A40       .text cut_init_RUNAWAY_START__11daNpc_Kk1_cFi */
 void daNpc_Kk1_c::cut_init_RUNAWAY_START(int param_1) {
 
@@ -1636,6 +1654,10 @@ int daNpc_Kk1_c::isEventEntry() {
 
 }
 
+// Event ends. run_start(_2) starts the night walk (state 5). catch, by the last message: 0x1C9A
+// orders bye_2, 0x1C98 and 0x1C9C order bye, 0x1C9F orders get_empty_btl (the Empty Bottle, item
+// 0x50 in the event data). Its end sets 0xE08 and starts a talk at once (0x1CA1 and on), which
+// ends with 0x1CAB ordering bye. bye, bye_2 and runaway delete her. [asm] [data]
 /* 00002DF4-00002F80       .text event_proc__11daNpc_Kk1_cFi */
 void daNpc_Kk1_c::event_proc(int param_1) {
 
@@ -1783,6 +1805,8 @@ void daNpc_Kk1_c::setStt(signed char param_1) {
  return;
 }
 
+// Her sight: a d_a_tama probe (0x1D6) fired at Link's eyes, flying up to the given distance. See
+// d_a_tama. [asm]
 /* 0000311C-000032D8       .text createTama__11daNpc_Kk1_cFf */
 void daNpc_Kk1_c::createTama(float param_1) {
 
@@ -1815,6 +1839,8 @@ void daNpc_Kk1_c::createTama(float param_1) {
     return;
 }
 
+// TRUE while Link is within the distance (XZ) of the point; then every third frame she fires a
+// probe, with half the range if Link is more than about 110 degrees off her facing. [asm]
 /* 000032D8-0000345C       .text chk_areaIN__11daNpc_Kk1_cFf4cXyz */
 bool daNpc_Kk1_c::chk_areaIN(float i_distanceThreshold, cXyz i_position) {
 
@@ -1833,6 +1859,8 @@ bool daNpc_Kk1_c::chk_areaIN(float i_distanceThreshold, cXyz i_position) {
     return o_result;
 }
 
+// Spotted: Link in range (field_0x5C, 1000) and either within 210 or hit by a probe (field_0x6ba,
+// cleared each frame in _execute). Anywhere on the night walk this orders runaway. [asm]
 /* 0000345C-00003578       .text startEvent_check__11daNpc_Kk1_cFv */
 bool daNpc_Kk1_c::startEvent_check() {
 
@@ -1897,6 +1925,8 @@ void daNpc_Kk1_c::set_pthPoint(unsigned char i_pointIndex) {
 }
 
 
+// Night path. With TRUE, passing a point reads its argument + 1: 2 or 3 sets the walk mode and
+// keeps going, anything else stops her there, and the value picks the stop in cmmt_1. [asm]
 /* 000036A8-00003940       .text event_move__11daNpc_Kk1_cFb */
 bool daNpc_Kk1_c::event_move(bool i_param_1) {
 
@@ -2165,6 +2195,10 @@ BOOL daNpc_Kk1_c::wait_1() {
     return TRUE;
 }
 
+// By day she walks her path along the shop. Outbound she turns back at the point index equal to
+// the shop's size (daObj_Roten_c::getCreateCount, 1-4 from the Zunari trades done). She stops for
+// a talk or when chk_attn sees Link, then waits in state 7 until he is 300 away. wait_1 starts a
+// walk only once the shop has grown past size 1. [asm]
 /* 0000415C-0000449C       .text walk_1__11daNpc_Kk1_cFv */
 BOOL daNpc_Kk1_c::walk_1() {
 
@@ -2240,6 +2274,10 @@ BOOL daNpc_Kk1_c::walk_1() {
 }
 
 
+// Night, before the walk. 0x1C8B leads to 0x1CAC ("Take off! Go away!"), which sets field_0x7B8;
+// after that, Link inside the swc00 area orders run_start, or in retail run_start_2 when he stands
+// in front of the swc00 (within 90 degrees of its facing). Her collision weight goes to 0xD9.
+// [asm] [data]
 /* 0000449C-00004614       .text wait_2__11daNpc_Kk1_cFv */
 BOOL daNpc_Kk1_c::wait_2() {
 
@@ -2294,6 +2332,9 @@ BOOL daNpc_Kk1_c::wait_2() {
 
 }
 
+// Path stops (point argument + 1): 1 WAI looks around, 4 TRN looks back, 5 PCK picks. At the end
+// of a WAI or TRN look, Link in range orders otoboke ("...Who's that?"), and she walks on. [asm]
+// [data]
 /* 00004614-0000466C       .text init_CMT_WAI__11daNpc_Kk1_cFv */
 void daNpc_Kk1_c::init_CMT_WAI() {
 
@@ -2410,6 +2451,9 @@ void daNpc_Kk1_c::move_CMT_TRN() {
     }
 }
 
+// While she picks (animation 1, the effect model, particle 0x819E at her head, a sound every
+// frame) the catch event is armed: touching her (chkHitPlayer) starts it. When the timer
+// (field_0x26, 90) runs out she walks on. [asm]
 /* 00004A14-00004A84       .text init_CMT_PCK__11daNpc_Kk1_cFv */
 void daNpc_Kk1_c::init_CMT_PCK() {
 
@@ -2518,6 +2562,7 @@ BOOL daNpc_Kk1_c::cmmt_1() {
     }
 }
 
+// After the reward (state 6): turns home while Link is over 300 away. [asm]
 /* 00004DD0-00004F74       .text wait_3__11daNpc_Kk1_cFv */
 BOOL daNpc_Kk1_c::wait_3() {
 
@@ -2899,6 +2944,7 @@ BOOL daNpc_Kk1_c::_delete() {
     }
     return 1;
 }
+// Links the d_a_tama REL (0x1D6) before the heap; _delete unlinks it. [asm]
 /* 00005A58-00005B98       .text _create__11daNpc_Kk1_cFv */
 cPhs_State daNpc_Kk1_c::_create() {
     static u32 a_siz_tbl[2] = {0x0,0x0};
@@ -2990,6 +3036,8 @@ BOOL daNpc_Kk1_c::bodyCreateHeap() {
     return 1;
 }
 
+// The effect model with its bpk, btk and bck, placed 120 up and 30 in front of her (setMtx)
+// and drawn only during animation 1. [asm]
 /* 0000638C-000065E0       .text effcCreateHeap__11daNpc_Kk1_cFv */
 BOOL daNpc_Kk1_c::effcCreateHeap() {
 

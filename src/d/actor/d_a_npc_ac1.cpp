@@ -503,6 +503,12 @@ u16 daNpc_Ac1_c::next_msgStatus(u32* p_msgNo) {
     return status;
 }
 
+// Komali's flower. Every load of Dragon Roost Island's room clears event register 0xB8FF, and once
+// Link has talked to him (0x3F02, set in talk_1) also sets 0x1580 (dScnRoom phase_4). Until then he
+// holds the fresh flower (Ac res 4) and says 0x184C-0x184E ("I went to all the trouble of picking
+// this flower"); from the next load on he holds the wilted one (res 0xF) and says 0x1850-0x1852
+// ("My flower... It wilted..."). Bit 0x10 of the register shortens repeat talks within one load
+// to 0x184F or 0x1853. [asm] [data]
 /* 0000128C-000012AC       .text getBitMask__11daNpc_Ac1_cFv */
 u32 daNpc_Ac1_c::getBitMask() {
     u32 mask = 0;

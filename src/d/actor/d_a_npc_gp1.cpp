@@ -464,6 +464,8 @@ bool daNpc_Gp1_c::chk_partsNotMove() {
     return ret;
 }
 
+// Within 300 of him and up to 100 above his feet. Until 0x1501 he stops Link here with a forced talk
+// ("You there! Halt!", 0x1E15), see wait_action1. [asm] [data]
 /* 00001048-00001168       .text chk_forceTlkArea__11daNpc_Gp1_cFv */
 bool daNpc_Gp1_c::chk_forceTlkArea() {
     f32 dist = (dComIfGp_getPlayer(0)->current.pos - current.pos).absXZ();
@@ -515,6 +517,12 @@ void daNpc_Gp1_c::lookBack() {
     m_jnt.lookAtTarget(&current.angle.y, target, look_from, angle, field_0x7EE, flag);
 }
 
+// Skull Necklace trade. The first necklace shown runs 0x1E20, 0x1E21; with fewer than 20 he asks
+// for twenty (0x1E30, 0x1E23, which sets 0x1804). With 20 or more (0x1E22, or 0x1E28 later) he takes
+// exactly 20 and 0x1E25 orders Gp1_Get_Itm, whose end sets 0x1420. After that each hand-in (0x1E29)
+// takes every necklace Link has and tips 20, 40 or 60 Rupees for 1-5, 6-15 or 16+ (0x1E2B-0x1E2D),
+// as one to three red rupees (create_rupee), then orders Giv_Rupee. Necklaces taken are added to
+// event register 0xC5FF, capped at 127 (talk_1). [asm] [data]
 /* 00001308-00001504       .text next_msgStatus__11daNpc_Gp1_cFPUl */
 u16 daNpc_Gp1_c::next_msgStatus(u32* p_msgNo) {
     u16 status = 0xF;
@@ -593,6 +601,10 @@ u16 daNpc_Gp1_c::next_msgStatus(u32* p_msgNo) {
     return status;
 }
 
+// Without an item: 0x1E15 until 0x1501; before 0x1808 the rescued-daughter talk (0x1E19, or 0x1E1B
+// after 0x1920); after it, 0x1E1D ("we don't allow postmen here!") while Link holds the Moblin's
+// Letter, else 0x1E1E once 0xC5FF reaches 10 necklaces, else 0x1E1F. Any other item gets 0x1E2F.
+// [asm] [data]
 /* 00001504-0000166C       .text getMsg_GP1_0__11daNpc_Gp1_cFv */
 u32 daNpc_Gp1_c::getMsg_GP1_0() {
     if (field_0x7FB == dItemNo_SKULL_NECKLACE_e) {
@@ -786,6 +798,8 @@ void daNpc_Gp1_c::gp_nMove() {
     }
 }
 
+// Spawns field_0x7F4 red rupees from his left hand, fanned -30/0/+30 degrees with 15 degrees of
+// jitter. Called on frame 80 of the give animation (control_anmAtr). [asm]
 /* 00001C40-00001ED8       .text create_rupee__11daNpc_Gp1_cFv */
 BOOL daNpc_Gp1_c::create_rupee() {
     cXyz scale(0.2f, 0.2f, 0.2f);
@@ -1115,6 +1129,9 @@ BOOL daNpc_Gp1_c::hair_1() {
     return 1;
 }
 
+// State 3, used while dNpc_chkArasoi (0x1220, set when the Rito postbox delivers, without 0x1808):
+// he faces d_a_npc_bm4 and orders Kaere_Kaere once Link is level with him or above. Its end sets
+// 0x1808. [asm]
 /* 00002930-00002988       .text wait_2__11daNpc_Gp1_cFv */
 BOOL daNpc_Gp1_c::wait_2() {
     if (field_0x813 != 1 && field_0x813 < 3) {

@@ -179,6 +179,10 @@ static u32 l_msg_2nd_photo[] = {
     0x0000
 };
 
+// Lenzo's three orders. Script codes: 0 ends; 1, 3 and 5 end and raise the progress register
+// (l_save_dat, 0xC407); 2 and 4 also erase the shown pictograph; 6 does both and queues the Joy
+// Pendant (item 0x1F, PHOTO_GET_ITEM); 9 reads a Yes/No fee; 7, 8, 10 and 11 just end. The _c
+// tables pick a fixed camera (l_msg_camera) per message, -1 for the normal one. [asm] [data]
 static u32 l_msg_1st_order[] = {
     0x2A39,
     0x2A3A,
@@ -524,6 +528,10 @@ struct SaveDatStruct {
     /* 0x06 */ u16 field_0x06;
 }; // Size: 0x08
 
+// 0x1208 first talk, 0x1701 has seen Link's Picto Box, 0x1601 the gallery talk, register 0xC407
+// the order progress (0-6). 0x1701 also unlocks his upper door: the Windfall door with lock
+// message 0x6A9 (d_a_knob00 chkException) stands on Windfall point 11, whose exit leads to
+// Ocmera point 1 at that door. [asm] [data]
 static const SaveDatStruct l_save_dat = {
     dSv_event_flag_c::UNK_1208,
     dSv_event_flag_c::UNK_1701,
@@ -612,6 +620,9 @@ static BOOL CheckCreateHeap(fopAc_ac_c* i_this) {
     return static_cast<daNpcPhoto_c*>(i_this)->createHeap();
 }
 
+// Params arg0: 0 is the shop Lenzo, made unless Link lacks item 0xEB and entered by a point other
+// than 0. Any other value is the spying Lenzo (state 4), made only when entering by that point and
+// before item 0xEB. [asm]
 /* 00000878-0000095C       .text phase_1__FP12daNpcPhoto_c */
 static cPhs_State phase_1(daNpcPhoto_c* i_this) {
     fopAcM_ct(i_this, daNpcPhoto_c);
@@ -951,6 +962,11 @@ void daNpcPhoto_c::executeSetMode(u8 param_1) {
     field_0x9C0 = param_1;
 }
 
+// Before 0x1701 a wide cylinder (150, pushed forward) blocks the stairs, and touching it starts
+// his talk, which ends in PHOTO_LINK_BACK. State 4: Link coming down near him (y < 10) orders
+// PHOTO_DATE_UB4 once. Otherwise, entering by point 0 and climbing upstairs before 0x1601 orders
+// PHOTO_GALLERY; upstairs (state 1) he walks down when Link drops 50 below him (state 3), and at
+// the counter (state 2) touching either counter cylinder draws his look. [asm]
 /* 000017D0-00001A80       .text executeWait__12daNpcPhoto_cFv */
 void daNpcPhoto_c::executeWait() {
     if(!executeCommon()) {
@@ -1016,6 +1032,9 @@ void daNpcPhoto_c::executeWait() {
     } 
 }
 
+// After a talk: bit 1 orders PHOTO_GET_ITEM (Joy Pendant), bit 4 spits and orders
+// PHOTO_LINK_BACK. Bit 2 (item 0x26, PHOTO_GET_ITEM2) is never set; the Deluxe Picto Box goes
+// through XyEventCB instead. [asm]
 /* 00001A80-00001BB4       .text executeTalk__12daNpcPhoto_cFv */
 void daNpcPhoto_c::executeTalk() {
     executeCommon();
@@ -1382,6 +1401,9 @@ void daNpcPhoto_c::eventSeSetInit(int i_staffId) {
 }
 
 
+// PHOTO_TALK from a d_a_tag_photo upstairs: he appears at the path point with the tag's number,
+// on the floor, facing the tag (state 1), with one of three random follow-up lines. Without a tag
+// he stands at l_gallery_pos facing Link. [asm] [data]
 /* 0000289C-00002C60       .text eventPosSetInit__12daNpcPhoto_cFv */
 void daNpcPhoto_c::eventPosSetInit() {
     s16 angle;
@@ -1493,6 +1515,7 @@ void daNpcPhoto_c::eventClrHanmeInit() {
     field_0x9C9 &= 0x7F;
 }
 
+// Puts today's Legendary Pictograph (by day of the week) into the Deluxe Picto Box. [asm]
 /* 000032B8-00003300       .text eventGetPhotoInit__12daNpcPhoto_cFv */
 void daNpcPhoto_c::eventGetPhotoInit() {
     dComIfGp_setPictureStatusGetOn(dKy_get_dayofweek());
@@ -1695,6 +1718,13 @@ u16 daNpcPhoto_c::next_msgStatus(u32* pMsgNo) {
     return status;
 }
 
+// Showing a pictograph: before the first order 0x2A5C; with an order open the right subject
+// (picture result 1, 2, 3 for orders 1-3) passes, anything else gets 0x2A5D; after all three
+// 0x2A63. Showing items: the Deluxe Picto Box when a Legendary Pictograph is offered (box under 3
+// pictures, else 0x3787); a Firefly after the orders and before the Deluxe Picto Box gets the
+// color script, empties the bottle and gives it. Talking: before the Picto Box 0x2A31 once then
+// 0x2A34; with it 0x2A35 once (sets 0x1701) then 0x2A37; after 0x1601 the orders by the
+// register, and with the Deluxe Picto Box the day's offer. [asm] [data]
 /* 000038E8-00003E68       .text getMsg__12daNpcPhoto_cFv */
 u32 daNpcPhoto_c::getMsg() {
     u32 msgNo = 0;
@@ -2134,6 +2164,8 @@ s16 daNpcPhoto_c::XyCheckCB(int i_itemBtn) {
     return 1;
 }
 
+// Deluxe Picto Box while today's pictograph is offered (tmp 0x302): PHOTO_GET_PHOTO, which charges
+// the fee (tmp 0x301 when paid). Firefly Bottle after order 3: PHOTO_GET_ITEM2. [asm] [data]
 /* 00004950-00004A5C       .text XyEventCB__12daNpcPhoto_cFi */
 s16 daNpcPhoto_c::XyEventCB(int i_itemBtn) {
     s16 eventIdx;
@@ -2175,6 +2207,8 @@ BOOL daNpcPhoto_c::isPhotoOk() {
     return FALSE;
 }
 
+// A Legendary Pictograph is offered only once its subject is met: one flag per day of the week,
+// ZELDA_AWAKENED on day 0. The first offer plays 0x3781 and sets 0x3808. [asm] [data]
 /* 00004B08-00004CCC       .text isPhotoDxOk__12daNpcPhoto_cFv */
 BOOL daNpcPhoto_c::isPhotoDxOk() {
     switch(dKy_get_dayofweek()){

@@ -164,6 +164,8 @@ static u32 l_msg_mn_comp_2nd[] = {
     0x0000
 };
 
+// His lines by a figurine. executeWalk picks with getRand(5), so only the first five are used.
+// [asm] [data]
 static u32 l_msg_mn_figure[] = {
     0x35F7,
     0x35F8,
@@ -207,6 +209,8 @@ static dCcD_SrcCyl l_cyl_src = {
     }},
 };
 
+// His place (mPosFlag) is the index of the stage being entered: 0 outside on the sea, 1 the
+// gallery lobby (Pfigure), 2-8 the figure rooms A-G (dSnap room 1-7), 9 a test stage. [asm]
 static char* l_room_name[] = {
     "sea",
     "Pfigure",
@@ -287,6 +291,10 @@ static BOOL CheckCreateHeap(fopAc_ac_c* i_this) {
     return ((daNpcMn_c*)i_this)->createHeap();
 }
 
+// Outside: register 0x870F is reset, and he is gone once his switch (params) is on. Inside, one
+// room holds him: entering with 0x870F at 0 picks it (getPosNo, only the lobby before the first
+// figurine), and every other placement stops creating. Leaving for the sea resets 0x870F
+// (_delete). [asm]
 /* 00000718-0000085C       .text phase_1__FP9daNpcMn_c */
 static cPhs_State phase_1(daNpcMn_c* i_this) {
     fopAcM_ct(i_this, daNpcMn_c);
@@ -509,6 +517,7 @@ bool daNpcMn_c::_delete() {
     return TRUE;
 }
 
+// Hidden while tmp bit 0x408 is set (d_a_obj_figure, during a figurine close-up). [asm]
 /* 00000FE4-00001154       .text _draw__9daNpcMn_cFv */
 bool daNpcMn_c::_draw() {
     if (dComIfGs_isTmpBit(dSv_event_tmp_flag_c::UNK_0408)) {
@@ -639,6 +648,10 @@ int daNpcMn_c::executeWaitInit() {
     return MOVE_PROC_WAIT;
 }
 
+// Outside: through the Telescope his attention range doubles, and after the first talk (0x2F08) a
+// look at him gives the scope message 0x35EF, where the switch is (talk3). Once the switch is hit
+// he orders FIGURE_HATCH_OPEN. Inside: he looks at the figurine he stopped by for 150-180 frames.
+// [asm] [data]
 /* 00001518-000017CC       .text executeWait__9daNpcMn_cFv */
 void daNpcMn_c::executeWait() {
     if (!executeCommon()) {
@@ -742,6 +755,8 @@ int daNpcMn_c::executeWalkInit() {
     return MOVE_PROC_WALK;
 }
 
+// Inside, on his rail: a point whose argument names a d_a_obj_figure on display stops him to look
+// at it. [asm]
 /* 00001948-00001BD4       .text executeWalk__9daNpcMn_cFv */
 void daNpcMn_c::executeWalk() {
     if (!executeCommon()) {
@@ -1150,6 +1165,8 @@ bool daNpcMn_c::eventLook() {
     return mpMorf->getFrame() >= 72.0f;
 }
 
+// Reads SpeedX, SpeedY and Gravity from the event, then overwrites them with 40, 25 and -1, so the
+// event's values (5, 25, -1) have no effect. [asm] [data]
 /* 00002988-00002A90       .text eventJumpInit__9daNpcMn_cFi */
 void daNpcMn_c::eventJumpInit(int i_staffIdx) {
     f32* speedX = dComIfGp_evmng_getMyFloatP(i_staffIdx, "SpeedX");
@@ -1281,6 +1298,10 @@ u16 daNpcMn_c::next_msgStatus(u32* i_msgNo) {
     return ret;
 }
 
+// Outside: 0x35E9 once (sets 0x2F08), then 0x35EC. In the lobby after the collection is complete
+// (0x3D08): 0x35F3 once (sets 0x3120), then 0x35F6. Otherwise inside: 0x35F1 once (sets 0x2F04),
+// the figurine line while looking at one, 0x35F2 before Link's first figurine (0x3A01), then
+// 0x35F0. [asm] [data]
 /* 00002DB8-00002F7C       .text getMsg__9daNpcMn_cFv */
 u32 daNpcMn_c::getMsg() {
     u32 msg = 0;
@@ -1606,6 +1627,8 @@ void daNpcMn_c::setCollision(dCcD_Cyl* i_cyl, cXyz i_center, float i_radius, flo
     dComIfG_Ccsp()->Set(i_cyl);
 }
 
+// FIGURE_HATCH_OPEN: he turns to the hatch and jumps, and SWON sets the second switch; its end
+// deletes him. [asm] [data]
 /* 00003A58-00003AC4       .text chkEndEvent__9daNpcMn_cFv */
 BOOL daNpcMn_c::chkEndEvent() {
     if (dComIfGp_evmng_endCheck(mHatchEventIdx)) {
@@ -1629,6 +1652,8 @@ u8 daNpcMn_c::chkPosNo() {
     return posNo;
 }
 
+// Picks at random among the lobby and the rooms holding at least one owned figurine. Between
+// completion and 0x3120 it is always the lobby. [asm]
 /* 00003B38-00003CD8       .text getPosNo__9daNpcMn_cFv */
 u8 daNpcMn_c::getPosNo() {
     int roomCnt[8];

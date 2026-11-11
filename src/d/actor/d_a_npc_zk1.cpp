@@ -422,6 +422,13 @@ u16 daNpc_Zk1_c::next_msgStatus(u32* pMsgNo) {
 
 }
 
+// His topics, in order. Before 0x1A80 he thanks Link and explains the postboxes (0x17A2-0x17A6).
+// 0x1A80 is set by dScnRoom_Delete when a room unloads without a stage change while Link holds
+// Din's Pearl [asm], so in practice once he sails away. [inferred] After it: the same thanks with
+// the postbox question (0x17A8-0x17AB), then the monsters that come after sunset (0x17AD, then
+// 0x17AE by day or 0x17AF at night), then a greeting (0x17B1). 0x17A7, 0x17AC, 0x17B0 and 0x17B2
+// are the repeats. m797 and m798 copy the postbox and monster bits at spawn, so each new topic
+// waits for the next load of the aerie. [asm] [data]
 /* 00000D30-00000E10       .text getMsg_ZK1_0__11daNpc_Zk1_cFv */
 u32 daNpc_Zk1_c::getMsg_ZK1_0() {
     

@@ -318,6 +318,8 @@ void daNpc_Yw1_c::play_animation() {
 
 static cXyz l_hed_front(0.0f, 1.0f, 0.0f);
 
+// The TSUBO he creates rides on his head: each frame it is marked as carried and placed 34 along the
+// head joint, facing the way his head points. If the pot actor is gone (broken), m775 is set. [asm]
 /* 00000D44-00000E4C       .text upLift__11daNpc_Yw1_cFv */
 bool daNpc_Yw1_c::upLift() {
     int searchFailed;
@@ -925,6 +927,10 @@ void daNpc_Yw1_c::set_pthPoint(u8 i_idx) {
     }
 }
 
+// Three-joint hair chain. The first joint swings opposite the head's movement since last frame plus
+// the square of the wind power, each lower joint takes the rotation the joint above it gave up, and
+// all three get a sine sway whose strength grows with head speed and wind, phase-shifted down the
+// chain. [asm]
 /* 00002360-00002D94       .text setHairAngle__11daNpc_Yw1_cFv */
 void daNpc_Yw1_c::setHairAngle() {
     cXyz neckFront;
@@ -1045,6 +1051,8 @@ void daNpc_Yw1_c::setHairAngle() {
     m794 = headPos;
 }
 
+// Once the pot breaks he stops (state 4) and his next talk is 0x89F ("My precious jars... How could
+// you?"), which takes 10 Rupees from Link when it closes (talk_1); after that, 0x8A0. [asm] [data]
 /* 00002D94-00002DEC       .text chk_brkTsubo__11daNpc_Yw1_cFv */
 u8 daNpc_Yw1_c::chk_brkTsubo() {
     if (m775) {
@@ -1157,6 +1165,9 @@ BOOL daNpc_Yw1_c::wait_3() {
     return TRUE;
 }
 
+// He walks his path while Link stays out of 300 in front of him, stops and turns back at either end
+// (turn_1, 0x8A1/0x8A2 by direction), and pauses whenever Link comes near or Quill (d_a_npc_bm1)
+// is surprised. [asm] [data]
 /* 00003174-0000347C       .text walk_1__11daNpc_Yw1_cFv */
 BOOL daNpc_Yw1_c::walk_1() {
     f32 targetSpeed;
@@ -1272,6 +1283,7 @@ BOOL daNpc_Yw1_c::talk_1() {
     return ret;
 }
 
+// YW1_0 deletes himself and his pot as soon as 0x0001 (Tetra's fall) is set. [asm]
 /* 000036F0-00003848       .text wait_action1__11daNpc_Yw1_cFPv */
 BOOL daNpc_Yw1_c::wait_action1(void*) {
     switch (m7C7) {

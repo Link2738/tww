@@ -2,6 +2,27 @@
  * d_a_bk.cpp
  * Enemy - Bokoblin
  */
+// Moblin (d_a_mo2) and Darknut (d_a_tn) were built from this file and keep most of its functions
+// under the same names, so their comments point back here. [asm]
+// Params (daBk_Create): [asm]
+//   bits 0-3   type: 0 patrols (jyunkai), 2 and 3 wait in a pot (tubo_wait; 3 leaps out
+//              attacking), 4 guards its home spot (stand), 5 is carried (carry), 6 works a
+//              searchlight (stand2), 7 idles poking at something (z_demo_1), 8 is an invisible
+//              spawner (waki_set), 9 runs a path (path_run), 0xA the sword-room guard (below),
+//              0xB a type 4 lookout with a telescope (bouen) and no weapon, 0xF a statue (d_dozou)
+//   bit 4      gone once the byte 3 switch is set
+//   bit 5      shield: 7 health instead of 5
+//   bits 6-7   weapon it starts with: 0x40 machete, 0x80 d_a_boko Type_UNK_7, else a stick
+//   byte 1     sight range / 10, 0xFF for the default (500)
+//   byte 2     path, 0xFF for none
+//   byte 3     switch: type 6 hides while it is set, others wait until it is set
+//   angle.z    death switch, set when it dies; already set means it is not created
+// Placed on disc: types 0, 2, 3 and 4 in most places, 0xB as the 78 sea lookouts, 6 in MajyuE
+// and on the sea, 0xA once in MajyuE, 7 in A_mori, 1 in Cave11 (Savage Labyrinth, handled as 0).
+// No stage places type 8, and 9 is only made by waki_set, so the searchlight alarm spawn never
+// runs. [data]
+// It learns: every cut that hits it is kept in m1208, and it guards or jumps back from those cuts
+// while locked on (fight_run). On ITest63 and GanonJ it always sees Link (search_sp).
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bk.h"
@@ -666,6 +687,8 @@ static BOOL daBk_other_bg_check(bk_class* i_this, fopAc_ac_c* r23) {
 static fopAc_ac_c* target_info[10];
 static s32 target_info_count;
 
+// Weapons it will pick up: any loose d_a_boko except a Moblin spear, within 1500 and in view.
+// [asm]
 /* 00002C4C-00002CD4       .text s_w_sub__FPvPv */
 static void* s_w_sub(void* param_1, void*) {
     if (fopAcM_IsActor(param_1) && fopAcM_GetName(param_1) == fpcNm_BOKO_e) {
@@ -752,6 +775,8 @@ static void* s_b_sub(void* param_1, void*) {
     return NULL;
 }
 
+// Bomb fear needs learned cut bit 0x200 (cc_pl_cut_bit), gained by being hit by that cut first;
+// it then runs from bombs it sees (b_nige). [asm]
 /* 0000302C-000033BC       .text search_bomb__FP8bk_classi */
 static fopAc_ac_c* search_bomb(bk_class* i_this, BOOL r26) {
     if (!(i_this->m1208 & 0x0200)) {
@@ -1201,6 +1226,11 @@ static void* ken_s_sub(void* param_1, void*) {
     return NULL;
 }
 
+// Type 0xA starts in mode -20: it waits until the dropped sword (item DROPPED_SWORD) is within 800
+// of Link, then demo_camera plays its intro. Guards stretch, and sleep every third time; lookouts
+// peer through the telescope or tap it instead. A noise within 1000 startles them; seeing Link in
+// range makes them charge.
+// [asm]
 /* 000048E4-000053E0       .text stand__FP8bk_class */
 static void stand(bk_class* i_this) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -1438,6 +1468,8 @@ static void* s_s_sub(void* r29, void* r30) {
     return NULL;
 }
 
+// Searchlight operator: attaches to the d_a_obj_search within 600 of its home, takes control of
+// it, and turns it back and forth. [asm]
 /* 000054E0-00005D40       .text stand2__FP8bk_class */
 static void stand2(bk_class* i_this) {
     i_this->dr.m710 = 0;
@@ -2608,6 +2640,9 @@ static void aite_miru(bk_class* i_this) {
     }
 }
 
+// Death: the disappear effect with a drop (none after falling in lava), the death switch, and event
+// bit 0x301 on the first Bokoblin killed, 0x480 on the next (not for type 4). Type 0xA stays for
+// its outro camera and stops the mini-boss music. [asm]
 /* 00008D1C-00008ECC       .text fail__FP8bk_class */
 static void fail(bk_class* i_this) {
     i_this->m030E = 5;
@@ -2882,6 +2917,9 @@ static void wepon_search(bk_class* i_this) {
     }
 }
 
+// Statue type: frozen in a pose until its byte 3 switch is set, or COLORS_IN_HYRULE without one.
+// Only test maps place it (ITest62, KATA_RM, K_Test8, K_Testd); the Hyrule statues that wake are
+// Moblins and Darknuts. [asm] [data]
 /* 00009944-00009AFC       .text d_dozou__FP8bk_class */
 static void d_dozou(bk_class* i_this) {
     i_this->m030E = 5;
@@ -2925,6 +2963,7 @@ static void carry(bk_class* i_this) {
     i_this->speed.y = 0.0f;
 }
 
+// Dropped by whatever carried it (type 5): sets event bit 0x0004, lands and poses. [asm]
 /* 00009B0C-00009DF0       .text carry_drop__FP8bk_class */
 static void carry_drop(bk_class* i_this) {
     fopAc_ac_c* actor = i_this;
@@ -3166,6 +3205,8 @@ static void z_demo_1(bk_class* i_this) {
     }
 }
 
+// Knocked off a rope bridge (d_a_bridge): hangs from it until the bridge breaks or it climbs
+// back. [asm]
 /* 0000A630-0000A9BC       .text b_hang__FP8bk_class */
 static void b_hang(bk_class* i_this) {
     fopAc_ac_c* actor = i_this;
@@ -3784,6 +3825,9 @@ static void* s_s2_sub(void* param_1, void*) {
     return NULL;
 }
 
+// Spawner type: while a searchlight has found Link (getFindFlag), every 8 frames it creates up to
+// five path-running Bokoblins (type 9, half with shields) at a path point behind the camera, away
+// from Link. The alarm ends after 1000 frames. [asm]
 /* 0000BD30-0000C2D0       .text waki_set__FP8bk_class */
 static void waki_set(bk_class* i_this) {
     fopAc_ac_c* actor = i_this;
@@ -3903,6 +3947,9 @@ static void waki_set(bk_class* i_this) {
     }
 }
 
+// Type 0xA events: the intro moves Link to (1884, y, -4100), shows the sword, sets switch 0xE0
+// and starts the mini-boss music; the outro after death sets switch 0xE1. JUTReport prints a
+// leftover "K SUB COUNT" counter while either runs. [asm]
 /* 0000C2D0-0000CC68       .text demo_camera__FP8bk_class */
 static void demo_camera(bk_class* i_this) {
     fopAc_ac_c* actor = i_this;
@@ -4131,6 +4178,8 @@ static void bou_mtx_set(bk_class* i_this) {
     }
 }
 
+// Deleted after falling 4000 below home. Pot types wait (m02BA 0xFF) until Link comes within
+// range or the pot is broken; switch-waiting types until their switch is set. [asm]
 /* 0000CE18-0000DD1C       .text daBk_Execute__FP8bk_class */
 static BOOL daBk_Execute(bk_class* i_this) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);

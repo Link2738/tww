@@ -543,6 +543,10 @@ u16 daNpc_Kf1_c::next_msgStatus(unsigned long* i_param1) {
     return uVar2;
 }
 
+// During Endless Night without Din's Pearl: 0x1C3B (no auction tonight). Before 0x0B02: the request
+// to rescue his daughter, 0x1C21-0x1C23, where agreeing sets 0x0B02. After it, the money offer
+// (0x1C27) only by day, after 0x2780 and before the vase test; otherwise the auction-house talk
+// (0x1C26). [asm] [data]
 /* 000010F4-000011DC       .text getMsg_KF1_0__11daNpc_Kf1_cFv */
 s32 daNpc_Kf1_c::getMsg_KF1_0() {
 
@@ -991,6 +995,10 @@ bool daNpc_Kf1_c::cut_move_PLYER_MOV() {
     return true;
 }
 
+// rupee_age, his test of Link's resolve: three different vases, picked at random, get a red rupee
+// as their item, and he throws three rupees as a show. TSUBO_ATN then points the camera at each
+// chosen vase. The event's end sets bit 0 of event register 0xBCFF, so it runs once, and he asks
+// "Which vases are they in?" (0x1C38). [asm] [data]
 /* 0000228C-000023E8       .text cut_init_RUPEE_SET__11daNpc_Kf1_cFi */
 void daNpc_Kf1_c::cut_init_RUPEE_SET(int) {
 
@@ -1403,6 +1411,11 @@ s16 daNpc_Kf1_c::chk_tsubo() {
     return o_retval;
 }
 
+// His eight kutani vases (srch_Tsubo needs all eight). Before 0x2780 a missing vase orders "angry",
+// whose end sets 0x2780. After it, with the room switch (param bits 8-15) on, a missing vase orders
+// "bensyou": TSUBO_CNT counts the broken ones and BENSYOU takes 10 Rupees each. GET_OUT walks
+// Link out if he could pay (0x1C2F) or throws him out if not (0x1C30, "You don't have enough
+// money!"); either way he lands outside on Windfall (sea point 3, room 0xB). [asm] [data]
 /* 000030A8-0000317C       .text orderTsuboEvent__11daNpc_Kf1_cFv */
 BOOL daNpc_Kf1_c::orderTsuboEvent() {
 
