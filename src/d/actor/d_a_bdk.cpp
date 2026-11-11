@@ -2,6 +2,18 @@
  * d_a_bdk.cpp
  * Boss - Helmaroc King / 戦闘用大怪鳥 (Giant monstrous bird for battle)
  */
+// Helmaroc King, the Forsaken Fortress boss. Placed once, in M2tower (the second visit). [data]
+// Two parts, by m2B4: [asm]
+//   1 the tower climb (the T_ actions, at 0.85 scale): it circles the tower, smashing the bridges
+//     Link stands on (d_a_bdkobj) and kicking at him; once he reaches the top it perches on the
+//     edge and pecks. A Skull Hammer hit on its head there knocks it into the water
+//   0 the fight on top, after the intro shuts the tower top (shutters and spikes in this file)
+// daBdk_Create reads the param into m2B4 and then sets it to 1, so the fight always starts with
+// the climb; the branch that would start on top is dead. [asm]
+// On top: 20 health. Skull Hammer hits on the mask crack it (m8F8, the HIBIWARE pattern) and set
+// event bit UNK_3C01 each time; the fourth breaks it (kamen_demo), and then sword hits on the crest
+// (mTosakaTgSph) do the damage. Its beak sticking in the floor (kuti_attack) is the opening. Once
+// beaten it is parked far away (ACTION_AFTER_FIGHT) whenever the stage loads. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "res/Object/Bdk.h"
@@ -640,6 +652,8 @@ static void up_fly(bdk_class* i_this) {
     }
 }
 
+// Circles between three high points, landing near Link (in the arena, land_area_check) or
+// swooping (fly_attack). [asm]
 /* 00001EB4-00002368       .text fly__FP9bdk_class */
 static void fly(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -877,6 +891,10 @@ static void landing(bdk_class* i_this) {
     }
 }
 
+// On the ground, facing Link: within 450 the stomp (jida), within 550 the beak (kuti; a quarter
+// of the time the wind once the mask is cracked twice), within 1300 it walks closer, else a
+// jump or the wind. Takes off again after two attacks (while the mask holds), five hits, losing
+// sight of Link, or 600 to 1200 frames. [asm]
 /* 000029F4-00002F64       .text wait__FP9bdk_class */
 static void wait(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1142,6 +1160,8 @@ static void jida_attack(bdk_class* i_this) {
     }
 }
 
+// The beak: it drives its beak into the floor and is stuck for 90 to 150 frames. Six hits while
+// it is stuck pull it free early. [asm]
 /* 0000345C-00003BC4       .text kuti_attack__FP9bdk_class */
 static void kuti_attack(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1296,6 +1316,7 @@ static void wind_set(bdk_class* i_this, cXyz* param2) {
     mDoAud_seStart(JA_SE_CM_DK_WIND, &wind_se_pos, 0, dComIfGp_getReverb(fopAcM_GetRoomNo(actor)));
 }
 
+// Swoops at Link with its claws; hitting a wall stuns it in the air for a while. [asm]
 /* 00003D9C-000045C8       .text fly_attack__FP9bdk_class */
 static void fly_attack(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1457,6 +1478,7 @@ static void fly_attack(bdk_class* i_this) {
     }
 }
 
+// Hovers and beats its wings for 200 frames: wind (mWindAtSph) and a spray of feathers. [asm]
 /* 000045C8-0000491C       .text wind_attack__FP9bdk_class */
 static void wind_attack(bdk_class* i_this) {
     fopAc_ac_c* player = dComIfGp_getPlayer(0);
@@ -1534,6 +1556,8 @@ static void end_set(bdk_class* i_this) {
     mDoAud_bgmStop(30);
 }
 
+// Mask hits only count from the Skull Hammer (and below 10000 height); in the tower part one
+// knocks it down instead. Crest hits do normal damage; at 0 health the death starts. [asm]
 /* 000049C0-00005018       .text damage_check__FP9bdk_class */
 static void damage_check(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1697,6 +1721,8 @@ static u8 kamen_break_time[] = {
     0x23,
 };
 
+// The mask falls off in four pieces, which can be hammered around the floor (kamen_break_move).
+// [asm]
 /* 00005054-000053C4       .text kamen_demo__FP9bdk_class */
 static void kamen_demo(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1766,6 +1792,8 @@ static void kamen_demo(bdk_class* i_this) {
     }
 }
 
+// Once Link is on top and not flying, it clears the tower's other actors (seagulls, Kargarocs,
+// Bokoblins, grapple posts, the sea) and rises for the intro. [asm]
 /* 000053C4-000057E8       .text start__FP9bdk_class */
 static void start(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2040,6 +2068,8 @@ static void* obj_s_sub(void* param_1, void*) {
     }
     return NULL;
 }
+// Tower part: circles the tower and smashes the bridge Link last stood on (a d_a_bdkobj with
+// health left), else lunges at Link with its feet. Switch 0x80 goes on 100 frames in. [asm]
 /* 00005F08-000065FC       .text t_fly__FP9bdk_class */
 static void t_fly(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2175,6 +2205,7 @@ static void t_landing(bdk_class* i_this) {
     pos_move(i_this);
 }
 
+// Tower part, with Link on top: perched on the edge, pecking. [asm]
 /* 00006680-00006C10       .text t_lastattack__FP9bdk_class */
 static void t_lastattack(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2283,6 +2314,8 @@ static void t_lastattack(bdk_class* i_this) {
     }
 }
 
+// Knocked off the top: falls into the water, then comes back for the fight (ACTION_START) with 20
+// health. Switch 0x80 goes off. [asm]
 /* 00006C10-00007008       .text t_down__FP9bdk_class */
 static void t_down(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2757,6 +2790,9 @@ static void obj_move(bdk_class* i_this) {
     }
 }
 
+// Cutscene cameras by m25A0: 1-2 the mask breaking, 10-16 the intro (shutters close, stage boss
+// demo flag), 50-52 knocked off the tower, 100-114 the death (stage boss flag, spikes retract).
+// Leftover JUTReport "K MAIN COUNT" and "K SUB  COUNT" every frame. [asm]
 /* 00008CB8-0000A7C8       .text demo_camera__FP9bdk_class */
 static void demo_camera(bdk_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

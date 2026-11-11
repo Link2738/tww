@@ -2,6 +2,11 @@
  * d_a_bdkobj.cpp
  * Object - Helmaroc King fight objects (wooden bridges, wooden planks floating in water, etc.).
  */
+// Helmaroc King fight objects in the Forsaken Fortress tower. Param 0 a block, 1 a pole, 2 a
+// wooden bridge. Placed in Mjtower and M2tower. [asm] [data]
+// Blocks and poles break when hit with attack type 0xB (at_power_check). A bridge Link stands on
+// gets health 10 (ride_call_back), counting down; d_a_bdk smashes bridges with health left by
+// setting their param to 0xF. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bdkobj.h"

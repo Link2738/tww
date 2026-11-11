@@ -2,6 +2,17 @@
  * d_a_rd.cpp
  * Enemy - ReDead
  */
+// ReDead. Ten health; freezes Link with a scream and latches on. [asm]
+// Params (getArg): [asm]
+//   bit 0      0 stands, 1 sits (and uses the Rdead2 item table)
+//   bits 1-7   added to the 650 notice radius as raw units (0x7F for 0), so placed values of 15 to
+//              31 barely change it
+//   byte 1     0: in a coffin, hidden until the byte 3 switch, then steps out (SW_WAIT, KANOKE)
+//   byte 3     coffin switch
+// Placed on disc: Cave10, Cave11 (Savage Labyrinth), GanonE, M_Dai, PShip, SubD45, SubD71 and
+// TF_04; coffin ReDeads in GanonE, M_Dai, SubD45 and SubD71. [data]
+// A ReDead that is not busy walks to any ReDead dying within 650 and stands over it
+// (SILENT_PRAY). Burning doubles its speed and kills it after 900 frames. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_rd.h"
@@ -526,6 +537,10 @@ void daRd_c::lookBack() {
     mJntCtrl.lookAtTarget(&shape_angle.y, &mTargetPos, mRdEyePos, shape_angle.y, mMaxHeadTurnVel, r29);
 }
 
+// Light (the Mirror Shield beam, or a light zone in d_detect) stuns it for 60 frames. Spin, jump,
+// roll and finishing cuts and the Skull Hammer are critical. Plain arrows hurt only from within
+// 500. An Ice Arrow freezes it for 60 frames and gives back 4 health. The Hookshot, boomerang and
+// wind do no damage; the Grappling Hook steals (5 items). [asm]
 /* 00000D78-00001650       .text checkTgHit__6daRd_cFv */
 bool daRd_c::checkTgHit() {
     if (mMode == MODE_DEATH || mMode == MODE_KANOKE || mMode == MODE_SW_WAIT) {
@@ -780,6 +795,8 @@ void daRd_c::modeWaitInit() {
     speedF = 0.0f;
 }
 
+// Wakes when Link is inside its circle and runs (speed over 10), makes a noise, or walks into the
+// front fan. Goes home when either of them leaves the circle. [asm]
 /* 00001A3C-00001DDC       .text modeWait__6daRd_cFv */
 void daRd_c::modeWait() {
     if (checkTgHit()) {
@@ -912,6 +929,7 @@ void daRd_c::modeMoveInit() {
     }
 }
 
+// Walks only while its head faces Link. [asm]
 /* 0000223C-000024B0       .text modeMove__6daRd_cFv */
 void daRd_c::modeMove() {
     if (!checkTgHit() && !isAnm(AnmPrm_TATSU)) {
@@ -971,6 +989,8 @@ void daRd_c::modeCryInit() {
     mBreakFreeCounter = l_HIO.m78;
 }
 
+// The scream (event DEFAULT_RD_CRY) holds Link for 135 frames; 45 stick flicks or button presses
+// break it early. [asm]
 /* 000025A8-000028B8       .text modeCry__6daRd_cFv */
 void daRd_c::modeCry() {
     setAnm(AnmPrm_WALK, false);
@@ -1073,6 +1093,8 @@ void daRd_c::modeAttackInit() {
     speedF = 0.0f;
 }
 
+// Latched on (event DEFAULT_RD_ATTACK): 1 life point every 30 frames for 150 frames, or until
+// 40 inputs break free or Link's life runs out. [asm]
 /* 00002A58-00002F30       .text modeAttack__6daRd_cFv */
 void daRd_c::modeAttack() {
     if (dComIfGp_evmng_startCheck("DEFAULT_RD_CRY")) {

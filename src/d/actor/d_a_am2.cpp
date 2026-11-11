@@ -2,6 +2,14 @@
  * d_a_am2.cpp
  * Enemy - Armos
  */
+// Armos: the small hopping statue with a weak crystal on its back. Two health. [asm]
+// Params (daAM2_Create): [asm]
+//   byte 0     read but not used
+//   byte 1     notice radius / 100 (0 or 0xFF for 600)
+//   byte 2     1: starts stunned and can be carried until the byte 3 switch is set; then it wakes
+//   byte 3     switch. With byte 2 at 0, a set switch means it is not created
+// Placed on disc (amos2): mostly Siren (Tower of the Gods, nearly all starting stunned on a
+// switch, 15 on switch 0x80), then kaze, Cave08, Cave09, Cave11, SubD44, TF_01 and Amos_T. [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_am2.h"
@@ -131,6 +139,8 @@ static void anm_init(am2_class* i_this, int bckFileIdx, f32 morf, u8 loopMode, f
     }
 }
 
+// The eye: an arrow wakes it, or stuns it while awake (action_mahi). A Light Arrow kills it. The
+// Grappling Hook steals without hurting it. [asm]
 /* 000004A0-00000818       .text medama_atari_check__FP9am2_class */
 static BOOL medama_atari_check(am2_class* i_this) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -201,6 +211,10 @@ static BOOL medama_atari_check(am2_class* i_this) {
     return FALSE;
 }
 
+// The back crystal, only from more than 90 degrees behind. Spin, jump, roll and finishing sword
+// cuts, bombs and arrows count as critical; other sword hits still do damage. The Skull Hammer
+// kills it outright. The boomerang does nothing; wind only sets m2CE. A Light Arrow kills it.
+// [asm]
 /* 00000818-00000D30       .text week_atari_check__FP9am2_class */
 static BOOL week_atari_check(am2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -400,6 +414,9 @@ static BOOL Line_check(am2_class* i_this, cXyz destPos) {
     return FALSE;
 }
 
+// TRUE after 50 frames on abyss ground (code 4), below y -500, or 80 under water. The caller then
+// shrinks it away and back in at its spawn point (action_modoru_move), or deletes it if it was
+// carried out of its home room. [asm]
 /* 0000177C-00001A24       .text naraku_check__FP9am2_class */
 static BOOL naraku_check(am2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -458,6 +475,9 @@ static BOOL naraku_check(am2_class* i_this) {
     return FALSE;
 }
 
+// Wakes when Link is inside the radius and in sight, then hops after him up to nine times per
+// aim, bouncing off his shield. Goes back to sleep where it stands once he is 200 past the radius.
+// [asm]
 /* 00001A24-00002240       .text action_dousa__FP9am2_class */
 static void action_dousa(am2_class* i_this) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -627,6 +647,8 @@ static void action_dousa(am2_class* i_this) {
     }
 }
 
+// Stunned: slides back, then can be picked up and thrown for 20 seconds; then it shakes for 20
+// more and jumps free. The puzzle Armos (byte 2 = 1) stays in this state until its switch. [asm]
 /* 00002240-00002B08       .text action_mahi__FP9am2_class */
 static void action_mahi(am2_class* i_this) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -848,6 +870,8 @@ static void action_mahi(am2_class* i_this) {
     }
 }
 
+// Hit on the crystal: knocked away, still stunned if it was. With no health left it hops and
+// spins for 100 frames, explodes and drops from its item table. [asm]
 /* 00002B08-000032AC       .text action_itai__FP9am2_class */
 static void action_itai(am2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

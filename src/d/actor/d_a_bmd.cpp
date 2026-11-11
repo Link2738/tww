@@ -2,6 +2,20 @@
  * d_a_bmd.cpp
  * Boss - Kalle Demos (Core) / 森ボス (Forest Boss)
  */
+// Kalle Demos, the Forbidden Woods boss (stage name Bkm): the flower body, its core (head), and
+// Makar trapped inside. Placed once each in kinBOSS and Xboss1 (the rematch). At create it makes
+// 20 vines that hold it to the ceiling (d_a_bmdhand) and 8 tentacles that hang from it
+// (d_a_bmdfoot); they talk to it through its fields (m331 vines attached, m332 one-frame signals).
+// [asm] [data]
+// The fight: cut the ceiling vines; with none left it drops and opens its petals, and the core
+// can be hit (15 health). After 100 frames it closes, swallowing Link if he stands on the petals,
+// and the vines grow back. Using Forest Water within 300 while it is open kills it outright
+// (core_damage_check). Its hover height grows with the vines still attached; the USA build
+// uses 2.5 per vine over 250, the others 5 over 200. [asm]
+// m332 signals: 1 tentacle strike, 2 underground tentacles, 3 dropped, 4 vines regrow, 5 and 6
+// the intro, 7 fight start, 8 and 9 the death. [asm]
+// Once beaten it is not created again; if Link does not yet have Farore's Pearl, Makar
+// (d_a_npc_cb1) is placed in its room instead. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bmd.h"
@@ -136,6 +150,8 @@ void anm_init(bmd_class* i_this, int bckFileIdx, f32 morf, u8 loopMode, f32 spee
     }
 }
 
+// Dropped: falls, opens (the core is exposed for l_HIO.m14 = 100 frames), then closes and
+// re-hangs. If Link rides the petals as it closes (ride_call_back sets m942), it eats him. [asm]
 /* 00000734-000010A4       .text damage__FP9bmd_class */
 void damage(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -311,6 +327,7 @@ void damage(bmd_class* i_this) {
 #endif
 }
 
+// Swallows Link, chews for 50 frames and spits him out with throw damage. [asm]
 /* 000010A4-00001530       .text eat__FP9bmd_class */
 void eat(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -416,6 +433,9 @@ void move1(bmd_class* i_this) {
     cLib_addCalcAngleS2(&actor->shape_angle.z, cM_scos(i_this->m2FE * 300) * 700.0f, 0x10, 0x80);
 }
 
+// Intro, from when Link comes within 500 of the bud: Makar calls for help, the core shows
+// itself, the bud closes and the vines and tentacles come out. Sets the stage boss demo flag;
+// skipped once seen and on X stages. [asm]
 /* 00001684-00001B48       .text start__FP9bmd_class */
 void start(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -507,6 +527,8 @@ void start(bmd_class* i_this) {
     }
 }
 
+// Death: on X stages it warps Link out and sets KALLE_DEMOS_TRIALS_CLEAR. Otherwise the flower
+// wilts, the stage boss flag is set and the warp appears. [asm]
 /* 00001B48-00001EFC       .text end__FP9bmd_class */
 void end(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -569,6 +591,9 @@ void end(bmd_class* i_this) {
     }
 }
 
+// Core hits cost health; at 0, or on Forest Water nearby while open, the death starts: a hit-stop,
+// the music stops, and the core falls out. Hits are not limited to the open flower, so a bomb can
+// reach the core while it hangs (see damage_check). [asm]
 /* 00001EFC-00002190       .text core_damage_check__FP9bmd_class */
 void core_damage_check(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -620,6 +645,8 @@ void core_damage_check(bmd_class* i_this) {
 #endif
 }
 
+// The core: shakes when hit; once dead (m306 100 and up) it falls out, flops about, sighs and
+// leaves the Heart Container. [asm]
 /* 000021CC-00002EDC       .text core_move__FP9bmd_class */
 void core_move(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -834,6 +861,8 @@ void mk_voice_set(bmd_class* i_this, u32 param_2) {
     mDoAud_monsSeStart(param_2, &i_this->m2E0, 0, dComIfGp_getReverb(fopAcM_GetRoomNo(actor)));
 }
 
+// Makar inside the bud: calls for help (CALL anims, voice CV_CB_HELP), then drops out when
+// freed and is replaced by d_a_npc_cb1 in the end scene. [asm]
 /* 00002F40-0000330C       .text mk_move__FP9bmd_class */
 void mk_move(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -910,6 +939,10 @@ void mk_move(bmd_class* i_this) {
     }
 }
 
+// Drops the flower once the last vine is cut (m331 0 just after a cut). [asm]
+// It runs in every mode but 3, the death included: bombing the core while the bud still hangs
+// starts the death, but the vines are still holding, and cutting the last one puts it back in
+// the fight. It is already dead and the warp is open, so this is a zombie fight. [tested] [asm]
 /* 0000330C-0000339C       .text damage_check__FP9bmd_class */
 void damage_check(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -920,6 +953,9 @@ void damage_check(bmd_class* i_this) {
     }
 }
 
+// Drifts to random spots within 500 of home, pulled to 1300 from Link when one is farther than
+// 1000 from him. Every 30 to 80 frames, 80% of the time: the tentacle strike when Link is within
+// 1300, else the underground tentacles. [asm]
 /* 0000339C-00003910       .text wait__FP9bmd_class */
 void wait(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1144,6 +1180,8 @@ static void ride_call_back(dBgW* bgw, fopAc_ac_c* i_ac, fopAc_ac_c* i_pt) {
     }
 }
 
+// Cutscene cameras by mB74: 1-2 eating Link, 5-15 the intro, 100-103 the death. Leftover JUTReport
+// "K MAIN COUNT" and "K SUB  COUNT" every frame. [asm]
 /* 00003E38-000054D4       .text demo_camera__FP9bmd_class */
 void demo_camera(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1561,6 +1599,8 @@ void bmd_kankyo(bmd_class* i_this) {
     }
 }
 
+// Also moves the petal collision (pm_bgw, collapsed while closed), the petal wind, and forces
+// the camera type (Boss02 while it hangs high, else Field or Dungeon). [asm]
 /* 000055EC-00005BF4       .text daBmd_Execute__FP9bmd_class */
 static BOOL daBmd_Execute(bmd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

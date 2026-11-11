@@ -2,6 +2,16 @@
  * d_a_btd.cpp
  * Boss - Gohma / ボスゴーマ (Boss Goma)
  */
+// Gohma, the Dragon Roost Cavern boss. Placed once each in M_DragB and Xboss0 (the rematch).
+// [data]
+// The fight: her shell first. Grappling Valoo's tail (d_a_kui param 0x511) makes Valoo
+// (d_a_dr2) shake the ceiling rock loose; d_a_dr2 drops it on her and sets m02F6. Three rock
+// hits crack the shell (hibi 1-3) and break it (m02E0 1: the second model, SOTAI). Only then do
+// eye hits count: 10 health, each hit stuns her for l_HIO.m0C = 150 frames, and every 5 damage
+// (l_HIO.m0E) makes her reel. In phase 1 she shuts her eye when Link swings within 400 or a
+// boomerang or rope flies close. [asm]
+// The arena floor is lava (dComIfGp_createMagma) with a heat haze actor (d_a_ykgr). On X stages
+// her death warps Link out and sets GOHMA_TRIALS_CLEAR. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/d_lib.h"
@@ -356,6 +366,8 @@ static void hahen_set(btd_class* i_this, s8 param_2) {
     smoke_set_s(i_this, &i_this->m603C, &i_this->m6048);
 }
 
+// The intro, once Link walks 200 in from the entrance spot: she rises from the lava and roars. Sets
+// the stage boss demo flag; skipped once seen and on X stages. [asm]
 /* 00000F14-00001398       .text startdemo__FP9btd_class */
 static void startdemo(btd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -434,6 +446,8 @@ static void startdemo(btd_class* i_this) {
     }
 }
 
+// m02F6 1 (the rock, from d_a_dr2) starts the shell damage. Eye hits before the shell is gone
+// only clank. [asm]
 /* 00001398-00001898       .text damage_check__FP9btd_class */
 static void damage_check(btd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -562,6 +576,9 @@ static void kubi_calc(btd_class* i_this) {
     i_this->mpDeadHeadBrkAnm->play();
 }
 
+// 0-3 stunned from an eye hit; 10-11 reeling; 20-33 struck by the rock: she sinks, a crack
+// spreads, then she climbs back out (lava spatters on landing); 40-42 the shell breaks off in
+// pieces (hahen) and the second music starts. [asm]
 /* 00001A84-000028C4       .text damage__FP9btd_class */
 #if VERSION == VERSION_DEMO
 static void damage(btd_class* i_this)
@@ -849,6 +866,8 @@ static s32 damage(btd_class* i_this)
 #endif
 }
 
+// Death: she blackens, cools and explodes, her head flies off and bounces, and leaves the Heart
+// Container. [asm]
 /* 000028C4-000036A0       .text end__FP9btd_class */
 static void end(btd_class* i_this) {
     static u16 last_eff_name[] = {
@@ -1103,6 +1122,10 @@ static void end(btd_class* i_this) {
     }
 }
 
+// Picks an attack once Link is in front: jab, slam or fire (phase 1: 50, 25, 25%; phase 2: 20,
+// 16, 64%), or the sweep when he is off-center (always past 0x800, half the time past 0x400).
+// With Link up on the ledges (above 400) she breathes fire up at him or across, depending on the
+// grapple post's state (kui health 3). l_HIO.m10 forces one attack (debug). [asm]
 /* 000036A0-00003BCC       .text wait__FP9btd_class */
 static void wait(btd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1282,6 +1305,8 @@ static s32 punch_bck[] = {
     dRes_INDEX_BTD_BCK_LATTACK5_e
 };
 
+// The slam: the claw sticks in the floor for 150 to 250 frames (its hand cylinders become solid)
+// before she pulls it out. [asm]
 /* 00003E64-00004418       .text punch_attack__FP9btd_class */
 static void punch_attack(btd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1365,6 +1390,7 @@ static void punch_attack(btd_class* i_this) {
     }
 }
 
+// The sweep: a slam that swings round toward Link. [asm]
 /* 00004418-00004948       .text punch2_attack__FP9btd_class */
 static void punch2_attack(btd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1445,6 +1471,7 @@ static void punch2_attack(btd_class* i_this) {
     }
 }
 
+// Fire breath after a 90-frame charge; in phase 2 a pincer strike comes first. [asm]
 /* 00004948-00004FE4       .text fire_attack__FP9btd_class */
 static void fire_attack(btd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1919,6 +1946,9 @@ static void sibuki_move(btd_class* i_this) {
     }
 }
 
+// Cutscene cameras by m6E16: 1-5 the intro, 100-104 the death (the lava cools, the stage boss
+// flag is set and the warp appears). Leftover JUTReport "K MAIN COUNT" and "K SUB  COUNT"
+// every frame. [asm]
 /* 000060E0-000072BC       .text demo_camera__FP9btd_class */
 static void demo_camera(btd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2434,6 +2464,7 @@ static void btd_kankyo(btd_class* i_this) {
     cLib_addCalc0(&i_this->m60D4, 1.0f, 0.025f);
 }
 
+// Also forces the camera type "Boss01" and handles the eyelid (m02FA). [asm]
 /* 00007950-000081B8       .text daBtd_Execute__FP9btd_class */
 static BOOL daBtd_Execute(btd_class* i_this) {
     static f32 hand_co_pos_X[] = {630.0f, 750.0f, 700.0f, -630.0f, -750.0f, -700.0f};

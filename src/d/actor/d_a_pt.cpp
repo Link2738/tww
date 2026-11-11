@@ -2,6 +2,18 @@
  * d_a_pt.cpp
  * Enemy - Miniblin / プチブリン (Petit Blin)
  */
+// Miniblin. Two health; climbs walls and ceilings and keeps coming back. [asm]
+// Params (daPt_Create): [asm]
+//   bits 0-3   0: respawns at its home when killed (daPt_Delete makes a new one); anything else
+//              stays dead and sets the byte 2 switch
+//   bit 4      waits until its spot is off camera before appearing (respawns always do)
+//   bits 5-7   respawn delay, (n + 1) * 20 frames; 7 keeps angle.x
+//   byte 1     notice range / 100
+//   byte 2     switch that stops it appearing; 0xFF for none
+//   byte 3     switch it waits for before appearing; 0xFF for none
+//   angle.x    first appearance delay in frames
+// Placed on disc (Puti): sea, Abship, ma2room, GanonJ and most of SubD71 respawn; Cave09,
+// Cave10, GanonN and majroom do not. [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_pt.h"
@@ -138,6 +150,9 @@ static void smoke_set(pt_class* i_this, s8 param_2) {
     }
 }
 
+// Its poke bounces off Link's shield; landing it makes it dance. The hammer quake within 350
+// throws it up, the Skull Hammer flattens it (pt_ples) or bats it away (pt_bat), and wind tumbles
+// it without damage. [asm]
 /* 00000484-0000093C       .text damage_check__FP8pt_class */
 static void damage_check(pt_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -281,6 +296,8 @@ static s16 get_z_ang(pt_class* i_this) {
     return 0xDCF;
 }
 
+// Picks the next hop along whatever surface it is on: ahead, then down, then back under. Heads
+// away from the target while mTimers[1] runs or once a switch says it should be gone. [asm]
 /* 000011AC-000018EC       .text next_pos_set__FP8pt_class */
 static BOOL next_pos_set(pt_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -448,6 +465,9 @@ static BOOL view_check(pt_class* i_this) {
     return FALSE;
 }
 
+// Within 500 (and not 50 below the target) it drops down, runs at the target and pokes from 300
+// in sight; the pause before the poke grows with its color (m2CC). Goes back to climbing past
+// 700. [asm]
 /* 000020D4-00002528       .text pt_attack__FP8pt_class */
 static void pt_attack(pt_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -797,6 +817,9 @@ static void* esa_s_sub(void* param_1, void*) {
 }
 #endif
 
+// The target is All-Purpose Bait (d_a_esa) when any is out, else Link; the demo build always
+// uses Link. Water, lava or the sea kills it. Death uses d_a_disappear type 4, the Miniblin puff,
+// then its item table. [asm]
 /* 00003B4C-00003F5C       .text action__FP8pt_class */
 static void action(pt_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

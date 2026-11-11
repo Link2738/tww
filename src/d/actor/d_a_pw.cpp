@@ -2,6 +2,21 @@
  * d_a_pw.cpp
  * Enemy - Poe
  */
+// Poe. A ghost that only light can touch, carrying a lantern (d_a_kantera) that has its own
+// health. Also the pieces Jalhalla (d_a_bpw) splits into. [asm]
+// Params (daPW_Create): [asm]
+//   byte 0     0 visible; 1 hidden until Link is within 500, then rises out; 2 only the lantern
+//              shows until Link is in range; 3 a Jalhalla split piece; 4 a Jalhalla intro piece
+//              (3 and 4 are made by d_a_bpw only)
+//   bit 8      hover at the placed height instead of over the ground
+//   bits 9-15  color, 0-5 (the IROGAE pattern frame)
+//   byte 2     notice range / 10, 0xFF for 1000
+//   byte 3     room path, 0xFF for none
+// Placed on disc (pow): Cave11, GanonE, M_Dai, PShip, SubD45 and SubD71; lantern-only (2) in PShip,
+// SubD45 and SubD71. [data]
+// Light (a light zone or the Mirror Shield beam) or a Light Arrow makes it solid for 360 frames;
+// only then do other weapons work. 4 health. Without its lantern it curses Link instead of
+// attacking; only one Poe can curse at a time (TORITUKI_ON). [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_pw.h"
@@ -124,6 +139,7 @@ static void anm_init(pw_class* i_this, int bckFileIdx, f32 morf, u8 loopMode, f3
     }
 }
 
+// Knocks the lantern loose (kantera state 5). [asm]
 /* 00000600-000006F4       .text kantera_break__FP8pw_class */
 static void kantera_break(pw_class* i_this) {
     fopAc_ac_c* player = dComIfGp_getPlayer(0);
@@ -146,6 +162,7 @@ static void kantera_break(pw_class* i_this) {
     }
 }
 
+// Jalhalla piece: when he calls them back (m3E9) it flies into him. [asm]
 /* 000006F4-000007CC       .text Big_pow_gattai_check__FP8pw_class */
 static BOOL Big_pow_gattai_check(pw_class* i_this) {
     fopAc_ac_c* jalhalla;
@@ -166,6 +183,8 @@ static BOOL Big_pow_gattai_check(pw_class* i_this) {
     return FALSE;
 }
 
+// Jalhalla piece: killed inside his split window (bpw mode 111) it takes 1 of his health;
+// otherwise it is revived at 4 health. [asm]
 /* 000007CC-000008B0       .text Big_pow_down_check__FP8pw_class */
 static BOOL Big_pow_down_check(pw_class* i_this) {
     fopAc_ac_c* jalhalla;
@@ -193,6 +212,9 @@ static BOOL Big_pow_down_check(pw_class* i_this) {
     return FALSE;
 }
 
+// Ghostly: light or a Light Arrow only (the arrow kills). Solid: special sword cuts and the Skull
+// Hammer are critical (the hammer flattens it); an Ice Arrow freezes and kills; the boomerang
+// and Grappling Hook stun (the hook steals one item); wind blows it back. [asm]
 /* 000008B0-0000121C       .text body_atari_check__FP8pw_class */
 static BOOL body_atari_check(pw_class* i_this) {
     CcAtInfo atInfo;
@@ -389,6 +411,9 @@ static BOOL body_atari_check(pw_class* i_this) {
     return FALSE;
 }
 
+// The lantern has 4 points of its own (m398): a sword takes 1 (2 for special cuts), bombs 2,
+// elemental arrows 3, the Skull Hammer all. Each hit knocks the Poe back; at 0 the lantern
+// breaks off. [asm]
 /* 00001258-000016FC       .text kantera_atari_check__FP8pw_class */
 static BOOL kantera_atari_check(pw_class* i_this) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -598,6 +623,7 @@ static void fuwafuwa_calc(pw_class* i_this) {
     }
 }
 
+// Light zone ahead or between it and Link; the Poe keeps out of light. [asm]
 /* 00002400-00002560       .text kougen_hani_check__FP8pw_classUc */
 static BOOL kougen_hani_check(pw_class* i_this, u8 i_mode) {
     fopAc_ac_c* player = dComIfGp_getPlayer(0);
@@ -728,6 +754,8 @@ static void first_mode_change(pw_class* i_this) {
     i_this->current.angle.y = i_this->m38C;
 }
 
+// Appear by type, wander (home within 1000, or 500 along a path), and flee for 360 frames once
+// made solid, then fade back. 110-112: a Jalhalla piece flung out of him. [asm]
 /* 00002A90-00003B08       .text action_dousa__FP8pw_class */
 static void action_dousa(pw_class* i_this) {
     /* Nonmatching */
@@ -1076,6 +1104,8 @@ static void action_dousa(pw_class* i_this) {
     }
 }
 
+// With a lantern: a lunge with it (blocked by the shield). Without: charges to curse Link. Both
+// give up at light. [asm]
 /* 00003B08-000042B8       .text action_kougeki__FP8pw_class */
 static void action_kougeki(pw_class* i_this) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -1518,6 +1548,8 @@ static void action_demo(pw_class* i_this) {
     }
 }
 
+// Riding Link's head: he is confused (reversed controls) for 300 frames, ended early by light,
+// damage, a fairy, or switching away from Link. The Poe dies when it ends. [asm]
 /* 00004FFC-000052B8       .text action_torituku__FP8pw_class */
 static void action_torituku(pw_class* i_this) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -1572,6 +1604,7 @@ static void action_torituku(pw_class* i_this) {
     cLib_addCalcAngleS2(&i_this->m39A, 255, 1, 10);
 }
 
+// Jalhalla's intro and regather: runs around, then flies into him, cued by his m3EA. [asm]
 /* 000052B8-00005CA4       .text action_big_demo__FP8pw_class */
 static void action_big_demo(pw_class* i_this) {
     daPy_py_c* player = daPy_getPlayerActorClass();

@@ -2,6 +2,22 @@
  * d_a_bst.cpp
  * Boss - Gohdan
  */
+// Gohdan, the Tower of the Gods boss: a head and two hands, each its own actor, placed once each in
+// SirenB. Param byte 0 picks the part: 0 head, 1 left hand, 2 right hand. The parts find each
+// other through the file-scope boss and hand[] pointers set at create. [asm] [data]
+// The fight is the Armos Knight's (d_a_am) at boss scale: arrows in the eyes drop the head with its
+// mouth open, and a bomb fed into the mouth is the only real damage. The HIO name at create is
+// "Degu Amos" (an Armos name), so it was built as one. [asm]
+// Flow (main_cont): the hands attack while the head hangs back with its eyes shut. Each hand has 4
+// health, taken by hits to the eye in its palm from the front; at 0 it sleeps for 300 frames and
+// wakes at full health. With both asleep the head opens its eyes and fires its beam. Each eye takes
+// 2 arrows (only from the front); with both shut the head drops, mouth open for 300 frames. A
+// swallowed bomb explodes 60 frames later for 1 of the head's 3 health. Either way the head goes
+// back up with its eyes restored; after a bomb the hands take over again, after a miss the head
+// keeps the turn and the hands stay asleep. [asm]
+// With no arrows or no bombs left, the head sneezes out 10 arrows (left nostril) or else 5 bombs
+// (right), at most once every 600 frames (hana_demo). [asm]
+// The fight camera is forced to the camera type "Test01". [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bst.h"
@@ -312,6 +328,8 @@ static u16 fly_brk_d[] = {dRes_INDEX_BST_BRK_BST_e, dRes_INDEX_BST_BRK_LHAND_e, 
 static u16 damage_btk_d[] = {dRes_INDEX_BST_BTK_BST_DAMAGE_e, dRes_INDEX_BST_BTK_LH_DAMAGE_e, dRes_INDEX_BST_BTK_RH_DAMAGE_e};
 static u16 damage_brk_d[] = {dRes_INDEX_BST_BRK_BST_DAMAGE_e, dRes_INDEX_BST_BRK_LH_DAMAGE_e, dRes_INDEX_BST_BRK_RH_DAMAGE_e};
 
+// Hover: the head 1000 in front of Link (inside 1350 of the room center), the hands 800 to his
+// sides. A hand waking from sleep gets its 4 health back here. Also starts the ammo sneeze. [asm]
 /* 00000E58-000014E8       .text fly__FP9bst_class */
 static void fly(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -411,6 +429,7 @@ static void fly(bst_class* i_this) {
 
 static u16 downa_bck_d[] = {dRes_INDEX_BST_BCK_BST_FLY_e, dRes_INDEX_BST_BCK_LH_GOO_e, dRes_INDEX_BST_BCK_RH_GOO_e};
 
+// One hand: rises above Link, makes a fist and slams down. [asm]
 /* 000014E8-00001C14       .text down_attack__FP9bst_class */
 static void down_attack(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -522,6 +541,7 @@ static void down_attack(bst_class* i_this) {
 
 static u16 paa_bck_d[] = {0, dRes_INDEX_BST_BCK_LH_PAA_e, dRes_INDEX_BST_BCK_RH_PAA_e};
 
+// Both hands: line up on either side of Link and clap together. [asm]
 /* 00001C14-000023C8       .text paa_attack__FP9bst_class */
 static void paa_attack(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -654,6 +674,7 @@ static void paa_attack(bst_class* i_this) {
 
 static u16 awasu_bck_d[] = {0, dRes_INDEX_BST_BCK_LH_AWASE_e, dRes_INDEX_BST_BCK_RH_AWASU_e};
 
+// Both hands: meet above Link, lock together and smash down. [asm]
 /* 00002404-00002E08       .text kumi_attack__FP9bst_class */
 static void kumi_attack(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -806,6 +827,7 @@ static void kumi_attack(bst_class* i_this) {
     }
 }
 
+// One hand: a low sideways sweep around the room, with bigger hit spheres. [asm]
 /* 00002E08-0000318C       .text harai_attack__FP9bst_class */
 static void harai_attack(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -878,6 +900,7 @@ static void harai_attack(bst_class* i_this) {
 static u16 sleep_btk_d[] = {dRes_INDEX_BST_BCK_BST_SLEEP_e, dRes_INDEX_BST_BTK_LH_END_e, dRes_INDEX_BST_BTK_RH_END_e};
 static u16 sleep_brk_d[] = {dRes_INDEX_BST_BRK_BST_e, dRes_INDEX_BST_BRK_LH_END_e, dRes_INDEX_BST_BRK_RH_END_e};
 
+// A beaten hand: eye shut, drifting, harmless to touch, until m10FC[1] runs out. [asm]
 /* 0000318C-00003470       .text sleep__FP9bst_class */
 static void sleep(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -944,6 +967,9 @@ static void beam_set(bst_class* i_this) {
 
 static u16 charge_e_name[] = {dPa_name::ID_AK_SN_BSTENERGYCHARGE00, dPa_name::ID_AK_SN_BSTENERGYCHARGE01};
 
+// The head rises, charges for 45 frames, then fires a bolt every 4 frames for 50 frames (10 bolts,
+// beam_set and beam_move). Stops early if Link comes within 500. The wait before the next beam
+// shortens as the head loses health. [asm]
 /* 000035BC-00003B94       .text beam_attack__FP9bst_class */
 static void beam_attack(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1033,6 +1059,8 @@ static void beam_attack(bst_class* i_this) {
     }
 }
 
+// A hit on a hand or an eye. A hand at 0 health goes to sleep, and the first hand down changes the
+// music. [asm]
 /* 00003B94-00003DD8       .text damage__FP9bst_class */
 static void damage(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1077,6 +1105,8 @@ static void damage(bst_class* i_this) {
     }
 }
 
+// Same bomb calls as the Armos Knight's bomb_nomi_check (d_a_am), but d_a_bomb only (no d_a_bomb2)
+// and held for 200 frames instead of 100. On the head, mHandHurtCyl is the mouth. [asm]
 /* 00003DD8-00003EC4       .text bom_eat_check__FP9bst_class */
 static BOOL bom_eat_check(bst_class* i_this) {
     if (i_this->mHandHurtCyl.ChkCoHit()) {
@@ -1097,6 +1127,8 @@ static BOOL bom_eat_check(bst_class* i_this) {
     return FALSE;
 }
 
+// Both eyes out: the head falls, opens its mouth for 300 frames and waits for a bomb. A swallowed
+// bomb is held, eaten and explodes; at 0 health the end demo starts (m2E9A 50). [asm]
 /* 00003EC4-000049A8       .text head_damage__FP9bst_class */
 static void head_damage(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1419,6 +1451,9 @@ static BOOL player_way_check(bst_class* i_this) {
     return TRUE;
 }
 
+// player_way_check makes eye and palm hits count only while the part faces Link. A palm hit also
+// cancels the other hand's attack. The eye and palm colliders ignore the boomerang and the
+// Grappling Hook. [asm]
 /* 00005224-0000591C       .text damage_check__FP9bst_class */
 static void damage_check(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1533,6 +1568,7 @@ static void damage_check(bst_class* i_this) {
 
 static u16 item_smoke_name[2] = {dPa_name::ID_AK_ST_BSTNOSTRILSMOKEL00, dPa_name::ID_AK_ST_BSTNOSTRILSMOKER00};
 
+// The ammo sneeze (see the top of the file), with its own short camera (demo_camera case 1). [asm]
 /* 0000591C-00005D9C       .text hana_demo__FP9bst_class */
 static void hana_demo(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1755,6 +1791,11 @@ static void move(bst_class* i_this) {
     }
 }
 
+// The fight director, run by the head. m2E7C: 1 waits until Link is within 700 of the room center
+// (skipped, straight into the fight, once the stage boss demo flag is set), 10-11 hand attacks,
+// 12 the head's turn. Every 30 to 120 frames (faster as the head loses health) it picks a sweep
+// (20%), else the two-hand smash, the clap, or a one-hand slam; the smash grows likelier as the
+// head loses health. [asm]
 /* 00006418-00006DC0       .text main_cont__FP9bst_class */
 static void main_cont(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2025,6 +2066,11 @@ static void end_brkbtk_set(bst_class* i_this) {
     boss->mpBtkAnm->init(boss->m02C8->getModelData(), srt_key, TRUE, J3DFrameCtrl::EMode_NONE, 1.0f, 0, -1, true, FALSE);
 }
 
+// Cutscenes by m2E9A: 1-2 the sneeze, 10-15 the intro (messages 0x170D-0x170F; each hand, then the
+// head, lights up and pulls out of the wall; sets the stage boss demo flag), 50-57 the end
+// (messages 0x1710-0x1713; sets the stage boss flag, makes the warp, then the head goes back into
+// the wall and sneezes out the Heart Container). Leftover JUTReport "K SUB  COUNT" every frame,
+// as in d_a_bk. [asm] [data]
 /* 0000815C-00009FCC       .text demo_camera__FP9bst_class */
 void demo_camera(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2560,6 +2606,8 @@ void demo_camera(bst_class* i_this) {
     }
 }
 
+// Room light presets (dKy_custom_colset) by mRoomState: the intro glow, the beam charge and fire,
+// and the end. [asm]
 /* 00009FCC-0000A1A4       .text bst_kankyo__FP9bst_class */
 void bst_kankyo(bst_class* i_this) {
     switch (i_this->mRoomState) {
@@ -2607,6 +2655,8 @@ void bst_kankyo(bst_class* i_this) {
     }
 }
 
+// The head also drives the arena models (HBSITA1, HBYOKO1) and two ATT actors that give the eyes
+// lock-on and a 2-point health display. [asm]
 /* 0000A1A4-0000A9C8       .text daBst_Execute__FP9bst_class */
 static BOOL daBst_Execute(bst_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

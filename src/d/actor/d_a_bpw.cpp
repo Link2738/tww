@@ -2,6 +2,23 @@
  * d_a_bpw.cpp
  * Boss - Jalhalla
  */
+// Jalhalla, the Earth Temple boss. One profile, four kinds by param byte 0: [asm]
+//   0 the body; 1 its lantern (a child, picked back up after a stun); 2 a fire hazard, with
+//   byte 1 picking the lantern flame line (0) or a lobbed fireball (1); 3 the curse ghost that sits
+//   on Link's head
+// Body params: byte 2 is the first of three room switches that drive the arena lights
+// (light_on_off). Placed once each in M_DaiB and Xboss2 (the Ganon's Tower rematch), both with
+// lights on switches 0xE0-0xE2. [asm] [data]
+// The fight: he is a ghost that only light can touch. A light beam (AT_TYPE_LIGHT) slowly makes
+// him solid; a Light Arrow does it at once. Solid, he drops his lantern and falls, and can be
+// picked up for 450 frames. Thrown into a wall with the damage attribute (the spikes), he bursts
+// into as many Poes (d_a_pw) as he has health, 15 at the start. Poes killed within the 420-frame
+// window each take 1 health; when it ends, or his health reaches 10, 5 or 0, the rest fly back
+// into him. He grows meaner at 10 and 5 health (m3F6 1 and 2: the curse charge, body presses and
+// lights that switch on their own). [asm]
+// On a stage whose name starts with X (the rematch) he warps Link out on death and sets
+// JALHALLA_TRIALS_CLEAR; elsewhere he plays the full death scene. The demo build kills him on
+// Z + Down. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bpw.h"
@@ -477,6 +494,8 @@ static void anm_init(bpw_class* i_this, int bckFileIdx, f32 morf, u8 loopMode, f
     }
 }
 
+// While ghostly only light and Light Arrows register. While solid and down (mode 83) weapons only
+// bounce him (the thrown hit against the spikes is what counts). [asm]
 /* 00000F20-000015CC       .text body_atari_check__FP9bpw_class */
 static BOOL body_atari_check(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -619,6 +638,7 @@ static void BG_check(bpw_class* i_this) {
     actor->old.pos.y = actor->old.pos.y + i_this->m48C;
 }
 
+// 2 for a wall with the damage attribute (the spikes), 1 for any other wall. [asm]
 /* 00001658-00001798       .text wall_HIT_check__FP9bpw_class */
 static s32 wall_HIT_check(bpw_class* i_this) {
     cXyz acStack_24;
@@ -647,6 +667,8 @@ static s32 wall_HIT_check(bpw_class* i_this) {
     }
 }
 
+// Fades him out while he stands in a light zone (d_detect chk_light); at alpha 0 nothing can hit
+// him. Otherwise he flickers at about 150. [asm]
 /* 00001798-00001894       .text alpha_anime__FP9bpw_class */
 static void alpha_anime(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -731,6 +753,9 @@ static void kankyou_hendou(bpw_class* i_this) {
     }
 }
 
+// The curse: his charge or press touching Link confuses him (reversed controls) and spawns the
+// type 3 ghost on his head. In phase 1 or 2, Link within 530 during certain animations starts an
+// on-the-spot press. [asm]
 /* 00001A50-00001CBC       .text noroi_check__FP9bpw_class */
 static void noroi_check(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -908,6 +933,9 @@ static void next_status_clear(bpw_class* i_this, u8 param_2) {
     i_this->m49C = 400.0f;
 }
 
+// The arena lights, three room switches from param byte 2. m3F6 3 turns all on, 4 all off; in
+// phases 1 and 2 every 240 to 360 frames it flips them at random (phase 2 leaves two on, phase 1
+// two off). [asm]
 /* 00002114-0000242C       .text light_on_off__FP9bpw_class */
 static void light_on_off(bpw_class* i_this) {
     static s16 light_on_dt[] = {0x0000, 0x0001, 0x0002, 0x0001, 0x0002, 0x0000, 0x0002, 0x0000, 0x0001};
@@ -984,6 +1012,8 @@ static void* skull_search_sub(void* param_1, void* param_2) {
     return FALSE;
 }
 
+// Moves the live Bubbles (d_a_bl) in the room: pulled in while he inhales, blown out when he
+// breathes, stopped otherwise. [asm]
 /* 000024B0-000026F8       .text search_get_skull__FP9bpw_classUc */
 static void search_get_skull(bpw_class* i_this, u8 param_2) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1131,6 +1161,10 @@ static s32 kantera_pos_search(bpw_class* i_this) {
 /**
  * "action_move"
  */
+// Float, then attack. Phase 0 goes to action_kougeki (the breath from afar, the lantern swing
+// within 1050). Later phases breathe if Link stands in light, else press (half the time, near the
+// middle) or charge with the curse. Modes 10-13: fade out, fly to the dropped lantern and pick it
+// up. [asm]
 /* 00002BA8-000035F8       .text action_dousa__FP9bpw_class */
 static void action_dousa(bpw_class* i_this) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -1342,6 +1376,9 @@ static void action_dousa(bpw_class* i_this) {
 /**
  * "action_attack"
  */
+// Attacks. 40-43: inhale (pulls Link in) then blow (pushes him out). 50-53: the lantern flame
+// line, chosen first after he reforms. 60-61: lantern swings throwing fireballs every 7 frames (9
+// while Link is cursed). [asm]
 /* 00003A30-00004870       .text action_kougeki__FP9bpw_class */
 static void action_kougeki(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1673,6 +1710,7 @@ static void action_kougeki(bpw_class* i_this) {
 /**
  * "action_body_fall_down"
  */
+// Body presses: 70-76 a jump onto Link, 77-79 a press where he stands. [asm]
 /* 00004870-000051E0       .text action_karada_taore__FP9bpw_class */
 static void action_karada_taore(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1865,6 +1903,8 @@ static void action_karada_taore(bpw_class* i_this) {
     noroi_check(i_this);
 }
 
+// 80-83 turning solid and falling; 84 carried; 85 thrown, rolling until a wall; 90-92 bounced off
+// a plain wall; 100-101 hit the spikes and split into Poes. [asm]
 /* 000051E0-000062D8       .text action_damage__FP9bpw_class */
 static void action_damage(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -3095,6 +3135,8 @@ static void action_bunri_dousa(bpw_class* i_this) {
     }
 }
 
+// The intro: the Poes circle (d_a_pw type 4), gather into the mask, and he takes his lantern. Sets
+// the stage boss demo flag; skipped once seen and on X stages. [asm]
 /* 00008D3C-0000A064       .text action_start_demo__FP9bpw_class */
 static void action_start_demo(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -3494,6 +3536,7 @@ static void vib_mode_check(bpw_class* i_this) {
     }
 }
 
+// Holds the lantern in his hand and swings it; m3FC is the lantern actor. [asm]
 /* 0000A168-0000A494       .text kantera_calc__FP9bpw_class */
 static void kantera_calc(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -3683,6 +3726,7 @@ static BOOL kantera_atari_check(bpw_class* i_this) {
     return FALSE;
 }
 
+// The dropped lantern: falls, tips over, and is knocked about by the Skull Hammer. [asm]
 /* 0000A9DC-0000AD74       .text action_kantera_dousa__FP9bpw_class */
 static void action_kantera_dousa(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -4138,6 +4182,8 @@ static void damage_ball_execute(bpw_class* i_this) {
     dComIfG_Ccsp()->Set(&i_this->mDamageBallCoSph);
 }
 
+// The curse ghost on Link's head: lasts 150 frames (210 in the demo build), and ends early on
+// light, damage or a fairy. [asm]
 /* 0000BE50-0000C154       .text torituki_execute__FP9bpw_class */
 static void torituki_execute(bpw_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

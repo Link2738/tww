@@ -2,6 +2,18 @@
  * d_a_ki.cpp
  * Enemy - Keese
  */
+// Keese, and Fire Keese (byte 1 bit 7, the FK model: its attack burns and fire does not hurt it).
+// One health. [asm]
+// Params (daKi_Create): [asm]
+//   byte 0     start action: 0 hangs from the ceiling until Link moves nearby, 1 flies around its
+//              home, 2 bursts out of a flame (made by d_a_obj_flame), 3 attacks and never goes
+//              home (made by Puppet Ganon, d_a_bgn and d_a_bgn2)
+//   byte 1     bits 0-6 attack range: 0 300, 1 800, 2 1500, else 3000; bit 7 Fire Keese
+//   byte 2     room path to fly along, 0xFF for none; a point with arg3 6 deletes it
+//   byte 3     switch: hidden and inert until set; 0xFF for none
+// Placed on disc: keeth in Abship, Cave04, Cave09, Hyrule, M_Dai, M_NewD2, MiniHyo, Siren, TF_06,
+// ma3room, majroom and sea; Fkeeth in Cave09, Cave11, I_SubAN, M_NewD2 and MiniKaz. Actions 2 and
+// 3 are never placed. [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_ki.h"
@@ -278,6 +290,8 @@ void ki_pos_move(ki_class* i_this, s8 arg1) {
     i_this->actor.current.pos.z += i_this->actor.speed.z;
 }
 
+// Hanging: wakes when Link moves within range, opens its eyes and drops into the attack. Modes 10
+// and 11 fly back up to the ceiling spot found by ki_atack_move. [asm]
 /* 00001118-0000171C       .text ki_wait_move__FP8ki_class */
 void ki_wait_move(ki_class* i_this) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -419,6 +433,8 @@ void ki_fly_move(ki_class* i_this) {
     cLib_addCalcAngleS2(&i_this->actor.shape_angle.y, i_this->actor.current.angle.y, 1, 0x2000);
 }
 
+// Thrown up out of a flame, spinning, then bursts into a Fire Keese and attacks. Shrinks away when
+// Link is over 2000 away and out of sight. [asm]
 /* 00001A34-00001D84       .text ki_fire_set_move__FP8ki_class */
 void ki_fire_set_move(ki_class* i_this) {
     fopEn_enemy_c* a_this = (fopEn_enemy_c*)&i_this->actor;
@@ -485,6 +501,10 @@ void ki_fire_set_move(ki_class* i_this) {
     }
 }
 
+// Circles Link and swoops. ki_check counts the Keese attacking: past 7 the rest circle wide;
+// every 30 frames a close one swoops with a 20% chance, halved (and the wait doubled) when 3 or
+// more are attacking. Gives up after 300 to 800 frames or when Link is out of sight, then goes back
+// to its start action. [asm]
 /* 00001D84-00002A18       .text ki_atack_move__FP8ki_class */
 void ki_atack_move(ki_class* i_this) {
     fopEn_enemy_c* a_this = (fopEn_enemy_c*)&i_this->actor;
@@ -731,6 +751,8 @@ s16 wall_angle_get(ki_class* i_this) {
     return cM_atan2s(sp20.x, sp20.z) + 0x4000;
 }
 
+// Knocked back; hitting a wall at speed 15 or more sticks it there dazed for 50 frames before it
+// falls. Dies once it stops if it has no health. [asm]
 /* 00002E28-00003114       .text ki_damage_move__FP8ki_class */
 void ki_damage_move(ki_class* i_this) {
     bool bVar1 = false;
@@ -819,6 +841,11 @@ void* bgn_s_sub(void* ac1, void*) {
     return NULL;
 }
 
+// Death. In GanonK (the Puppet Ganon fight) it drops by Link's needs: a heart at 2 hearts or less;
+// otherwise, half the time, arrows if he has none, magic under half, arrows under 10, else random,
+// and nothing the other half.
+// Killed by Puppet Ganon itself (health -10) it drops nothing. Elsewhere it uses its item table.
+// The demo build checks for Puppet Ganon's actor instead of the stage name. [asm]
 /* 00003114-00003278       .text ki_fail_move__FP8ki_class */
 void ki_fail_move(ki_class* i_this) {
     fopEn_enemy_c* a_this = (fopEn_enemy_c*)&i_this->actor;
@@ -937,6 +964,9 @@ void ki_path_move(ki_class* i_this) {
     }
 }
 
+// Hits: an Ice Arrow freezes it for 300 frames, a Light Arrow vaporizes it, fire sets it alight
+// for 100 frames (its attack then also hits enemies), and wind blows it back without damage. A
+// debug HIO switch prints the attack counts (ALL, READY, FIGHT) with JUTReport. [asm]
 /* 000035D0-00003E04       .text daKi_Execute__FP8ki_class */
 static BOOL daKi_Execute(ki_class* i_this) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);

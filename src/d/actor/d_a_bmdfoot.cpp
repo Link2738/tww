@@ -2,6 +2,8 @@
  * d_a_bmdfoot.cpp
  * Boss - Kalle Demos (floor tentacles) / 森ボス足 (Forest boss feet)
  */
+// Kalle Demos' tentacles, 8 of them, made by d_a_bmd with param = index (45 degrees apart under
+// the body). They cannot be hurt; the boomerang does not even register. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bmdfoot.h"
@@ -169,6 +171,8 @@ static void wait(bmdfoot_class* i_this) {
     }
 }
 
+// The strike (m332 1): tentacles facing Link (within l_HIO.m06 = 3500 of him) rear back and lash
+// down. [asm]
 /* 0000087C-00000D8C       .text attack_1__FP13bmdfoot_class */
 static void attack_1(bmdfoot_class* i_this) {
     fopAc_ac_c* actor = (fopAc_ac_c*)&i_this->actor;
@@ -263,6 +267,7 @@ static void attack_1(bmdfoot_class* i_this) {
     }
 }
 
+// The burrowed tip: travels under the floor toward Link, up to 3000, until within 300. [asm]
 /* 00000D8C-00001180       .text ug_move__FP13bmdfoot_class */
 static int ug_move(bmdfoot_class* i_this) {
     fopAc_ac_c* actor = (fopAc_ac_c*)&i_this->actor;
@@ -324,6 +329,8 @@ static int ug_move(bmdfoot_class* i_this) {
     return uVar4;
 }
 
+// Underground (m332 2): all tentacles dig in, travel to Link (ug_move) and burst up, thrashing for
+// 180 frames. [asm]
 /* 00001180-00001B00       .text attack_2__FP13bmdfoot_class */
 static void attack_2(bmdfoot_class* i_this) {
     fopAc_ac_c* actor = (fopAc_ac_c*)&i_this->actor;
@@ -449,6 +456,7 @@ static void attack_2(bmdfoot_class* i_this) {
     dComIfG_Ccsp()->Set(&i_this->mSph[4]);
 }
 
+// Limp while the flower is down, until a vine holds again. [asm]
 /* 00001B00-00001CDC       .text damage__FP13bmdfoot_class */
 static void damage(bmdfoot_class* i_this) {
     fopAc_ac_c* actor = (fopAc_ac_c*)&i_this->actor;

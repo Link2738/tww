@@ -2,6 +2,19 @@
  * d_a_am.cpp
  * Enemy - Armos Knight
  */
+// Armos Knight: the big hopping statue that swallows bombs. Swords and most weapons only clank;
+// it dies only to a swallowed bomb, a Light Arrow in the eye, or a fall of 1500 below where it
+// was placed. [asm]
+// Params (daAM_Create): [asm]
+//   byte 0     bit 0 set: stays within byte 1's radius and hops home when outside it; clear:
+//              chases until Link is 2000 away or 300 above or below, then goes back to sleep
+//   byte 1     radius / 100 for bit 0 (0 or 0xFF for 400)
+//   byte 2     1: inactive (no map icon, cannot be hurt in the eye) until the byte 3 switch is set
+//   byte 3     switch. With byte 2 at 0, a set switch means it is not created; nothing in this
+//              file sets it
+// Placed on disc (amos): Cave08, Cave09 and Cave11 (Savage Labyrinth), Siren (Tower of the Gods,
+// waiting on switches 0x11 and 0x37), SubD44, TF_02, TF_03, TF_05 and kaze; bit 0 is set only in
+// Cave08 and kaze. [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_am.h"
@@ -147,6 +160,8 @@ static void anm_init(am_class* i_this, int bckFileIdx, f32 morf, u8 loopMode, f3
     }
 }
 
+// Body hits only make a sound, except the Skull Hammer, which shoves it back (the side swing much
+// farther, and sideways). [asm]
 /* 000004A4-00000784       .text body_atari_check__FP8am_class */
 static void body_atari_check(am_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -220,6 +235,9 @@ static void body_atari_check(am_class* i_this) {
     }
 }
 
+// The eye: an arrow wakes it while asleep and stuns it while awake (action_itai_move: mouth open
+// for 100 frames). A Light Arrow kills it outright. The Grappling Hook steals while it is awake;
+// health is set to 10 around the steal so it cannot die. [asm]
 /* 00000784-00000D14       .text medama_atari_check__FP8am_class */
 static BOOL medama_atari_check(am_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -368,6 +386,9 @@ static void bomb_move_set(am_class* i_this, u8 alwaysMoveY) {
     }
 }
 
+// Swallows a live bomb (d_a_bomb or d_a_bomb2) touching its mouth while the mouth is open and Link
+// is within 45 degrees of its front. bomb_move_set then holds the bomb in its mouth. Gohdan's
+// bom_eat_check (d_a_bst) makes the same bomb calls. [asm]
 /* 00000F04-00001138       .text bomb_nomi_check__FP8am_class */
 static BOOL bomb_nomi_check(am_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -486,6 +507,9 @@ static void medama_move(am_class* i_this) {
     cLib_addCalcAngleS2(&i_this->mEyeRot.y, i_this->mTargetEyeRot.y, 1, 0x500);
 }
 
+// Wakes when Link is within 1000 (and 300 vertically, not in the demo build) and in sight. Turns
+// to Link and hops at him three times with its needle ring out, then opens its mouth for 100
+// frames and hops in place: the window for a bomb or an arrow in the eye. [asm]
 /* 00001B00-00002564       .text action_dousa__FP8am_class */
 static void action_dousa(am_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -802,6 +826,9 @@ static void action_handou_move(am_class* i_this) {
     }
 }
 
+// Modes 40-43: stunned by an arrow, mouth open. Modes 44-47: the bomb is swallowed, it spins and
+// hops for 100 frames, then explodes and drops from its item table. Its health is never lowered.
+// [asm]
 /* 00002A6C-000034F4       .text action_itai_move__FP8am_class */
 static void action_itai_move(am_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

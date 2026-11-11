@@ -2,6 +2,10 @@
  * d_a_bmdhand.cpp
  * Boss - Kalle Demos (ceiling tentacles) / 森ボス触手 (Forest boss tentacle)
  */
+// Kalle Demos' ceiling vines, 20 of them, made by d_a_bmd with param = index. Each runs from a
+// petal tip (boss_joint_d) to the ceiling found by a line check, and is drawn as a textured 3D
+// line (mLineMat) with a grabbing hook model at the top. Any hit cuts it and takes one off the
+// boss's m331; it grows back after l_HIO.m0C = 1000 frames. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bmdhand.h"
@@ -327,6 +331,8 @@ void hand_open(bmdhand_class* i_this) {
     i_this->mpMorf->setAnm(pAnimRes, 0, REG0_F(6) + 5.0f, 1.0f, 0.0f, -1.0f, NULL);
 }
 
+// The ceiling grip: 250 or 350 out from the petal (param bit 0); moves its grip when the body
+// drifts more than 100 away. Counts itself into m331 once it takes hold. [asm]
 /* 000016AC-00001D30       .text hand_calc__FP13bmdhand_class */
 void hand_calc(bmdhand_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -457,6 +463,9 @@ void start_hand_calc(bmdhand_class* i_this) {
     }
 }
 
+// 0 holding; 1 cut (hangs limp, regrows); 2 limp while the flower is down, until m332 4; 3 the
+// intro (shoots up on m332 5); 4 the death. Only state 2 reacts to the death signal (m332 9), so
+// vines still holding when the boss dies stay up. [asm]
 /* 000025D4-00002E74       .text hand_move__FP13bmdhand_class */
 void hand_move(bmdhand_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
