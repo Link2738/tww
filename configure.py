@@ -234,12 +234,15 @@ cflags_base = [
     f"-i build/{config.version}/include",
     f"-i assets/{config.version}",
     "-i src",
-    "-i src/PowerPC_EABI_Support/MSL/MSL_C/MSL_Common/Include",
-    "-i src/PowerPC_EABI_Support/MSL/MSL_C/MSL_Common_Embedded/Math/Include",
-    "-i src/PowerPC_EABI_Support/MSL/MSL_C/PPC_EABI/Include",
-    "-i src/PowerPC_EABI_Support/MSL/MSL_C++/MSL_Common/Include",
-    "-i src/PowerPC_EABI_Support/Runtime/Inc",
-    "-i src/PowerPC_EABI_Support/MetroTRK",
+    "-i libs/dolphin/include",
+    "-i libs/JSystem/include",
+    "-i libs/PowerPC_EABI_Support/MSL/MSL_C/MSL_Common/Include",
+    "-i libs/PowerPC_EABI_Support/MSL/MSL_C/MSL_Common_Embedded/Math/Include",
+    "-i libs/PowerPC_EABI_Support/MSL/MSL_C/PPC_EABI/Include",
+    "-i libs/PowerPC_EABI_Support/MSL/MSL_C++/MSL_Common/Include",
+    "-i libs/PowerPC_EABI_Support/Runtime/Inc",
+    "-i libs/PowerPC_EABI_Support/MetroTRK",
+    "-i libs/TRK_MINNOW_DOLPHIN/include",
     f"-DVERSION={version_num}",
 ]
 if args.devtools:
@@ -327,10 +330,11 @@ config.linker_version = "GC/1.3.2"
 def DolphinLib(lib_name: str, objects: List[Object]) -> Dict[str, Any]:
     return {
         "lib": lib_name,
+        "src_dir": "libs/dolphin/src",
+        "strip_prefix": "dolphin/",
         "mw_version": "GC/1.2.5n",
         "cflags": cflags_dolphin,
         "progress_category": "sdk",
-        "host": False,
         "objects": objects,
     }
 
@@ -342,7 +346,6 @@ def Rel(lib_name: str, objects: List[Object]) -> Dict[str, Any]:
         "mw_version": "GC/1.3.2",
         "cflags": cflags_rel,
         "progress_category": "game",
-        "host": True,
         "objects": objects,
     }
 
@@ -360,10 +363,11 @@ def ActorRel(status, rel_name, extra_cflags=[]):
 def JSystemLib(lib_name, objects, progress_category="third_party"):
     return {
         "lib": lib_name,
+        "src_dir": "libs/JSystem/src",
+        "strip_prefix": "JSystem/",
         "mw_version": "GC/1.3.2",
         "cflags": cflags_framework,
         "progress_category": progress_category,
-        "host": True,
         "objects": objects,
     }
 
@@ -389,22 +393,26 @@ config.warn_missing_config = True
 config.warn_missing_source = False
 config.precompiled_headers = [
     {
-        "source": "d/dolzel.pch",
+        "source": "include/d/dolzel.pch",
+        "output": "d/dolzel.mch",
         "mw_version": "GC/1.3.2",
         "cflags": ["-lang=c++", *cflags_dolzel],
     },
     {
-        "source": "d/dolzel_rel.pch",
+        "source": "include/d/dolzel_rel.pch",
+        "output": "d/dolzel_rel.mch",
         "mw_version": "GC/1.3.2",
         "cflags": ["-lang=c++", *cflags_rel],
     },
     {
-        "source": "m_Do/machine.pch",
+        "source": "include/m_Do/machine.pch",
+        "output": "m_Do/machine.mch",
         "mw_version": "GC/1.3.2",
         "cflags": ["-lang=c++", *cflags_dolzel],
     },
     {
-        "source": "JSystem/JSystem.pch",
+        "source": "libs/JSystem/include/JSystem/JSystem.pch",
+        "output": "JSystem/JSystem.mch",
         "mw_version": "GC/1.3.2",
         "cflags": ["-lang=c++", *cflags_framework],
     },
@@ -415,7 +423,6 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_dolzel,
         "progress_category": "core",
-        "host": True,
         "objects": [
             Object(Matching,    "m_Do/m_Do_main.cpp"),
             Object(Matching,    "m_Do/m_Do_printf.cpp"),
@@ -441,7 +448,6 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_dolzel,
         "progress_category": "game",
-        "host": True,
         "objects": [
             Object(MatchingFor("GZLJ01", "GZLE01", "GZLP01"), "c/c_damagereaction.cpp"),
             Object(Matching,    "c/c_dylink.cpp"),
@@ -452,7 +458,6 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_dolzel,
         "progress_category": "core",
-        "host": True,
         "objects": [
             # f_ap
             Object(Matching,    "f_ap/f_ap_game.cpp"),
@@ -519,7 +524,6 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_dolzel,
         "progress_category": "game",
-        "host": True,
         "objects": [
             Object(Matching,    "d/d_stage.cpp"),
             Object(NonMatching, "d/d_map.cpp"),
@@ -693,7 +697,6 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_dolzel,
         "progress_category": "core",
-        "host": True,
         "objects": [
             Object(Matching,    "DynamicLink.cpp"),
         ],
@@ -703,7 +706,6 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_framework,
         "progress_category": "third_party",
-        "host": True,
         "objects": [
             Object(Matching,    "SSystem/SComponent/c_malloc.cpp"),
             Object(Matching,    "SSystem/SComponent/c_API.cpp"),
@@ -945,7 +947,6 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_dolzel,
         "progress_category": "game",
-        "host": True,
         "objects": [
             Object(Equivalent, "JAZelAudio/JAIZelBasic.cpp"),  # processLevObjSE: f1/f2 swap, regdiff-verified
             Object(MatchingFor("GZLE01"), "JAZelAudio/JAIZelAnime.cpp"),
@@ -959,10 +960,11 @@ config.libs = [
     },
     {
         "lib": "gf",
+        "src_dir": "libs/dolphin/src",
+        "strip_prefix": "dolphin/",
         "mw_version": "GC/1.3.2",
         "cflags": [*cflags_base, "-O3"],
         "progress_category": "sdk",
-        "host": False,
         "objects": [
             Object(Matching, "dolphin/gf/GFGeometry.cpp"),
             Object(Matching, "dolphin/gf/GFLight.cpp"),
@@ -1168,10 +1170,11 @@ config.libs = [
     ),
     {
         "lib": "exi",
+        "src_dir": "libs/dolphin/src",
+        "strip_prefix": "dolphin/",
         "mw_version": "GC/1.2.5n",
         "cflags": [*cflags_base],
         "progress_category": "sdk",
-        "host": False,
         "objects": [
             Object(Matching, "dolphin/exi/EXIBios.c", extra_cflags=["-O3,p"]),
             Object(Matching, "dolphin/exi/EXIUart.c", extra_cflags=["-O4,p"]),
@@ -1305,10 +1308,10 @@ config.libs = [
     ),
     {
         "lib": "Runtime.PPCEABI.H",
+        "src_dir": "libs",
         "mw_version": "GC/1.3",
         "cflags": cflags_runtime,
         "progress_category": "sdk",
-        "host": False,
         "objects": [
             Object(Matching,    "PowerPC_EABI_Support/Runtime/Src/__mem.c"),
             Object(Matching,    "PowerPC_EABI_Support/Runtime/Src/__va_arg.c"),
@@ -1324,10 +1327,10 @@ config.libs = [
     },
     {
         "lib": "MSL_C",
+        "src_dir": "libs",
         "mw_version": "GC/1.3",
         "cflags": cflags_runtime,
         "progress_category": "sdk",
-        "host": False,
         "objects": [
             Object(Matching, "PowerPC_EABI_Support/MSL/MSL_C/MSL_Common/Src/abort_exit.c"),
             Object(Matching, "PowerPC_EABI_Support/MSL/MSL_C/MSL_Common/Src/alloc.c", extra_cflags=["-inline noauto"]),
@@ -1383,10 +1386,11 @@ config.libs = [
     },
     {
         "lib": "TRK_MINNOW_DOLPHIN",
+        "src_dir": "libs/TRK_MINNOW_DOLPHIN/src",
+        "strip_prefix": "TRK_MINNOW_DOLPHIN/",
         "mw_version": "GC/1.3.2",
         "cflags": cflags_trk,
         "progress_category": "sdk",
-        "host": False,
         "objects": [
             Object(Matching,    "TRK_MINNOW_DOLPHIN/Portable/mainloop.c", extra_cflags=["-enum min"]),
             Object(Matching,    "TRK_MINNOW_DOLPHIN/Portable/nubevent.c", extra_cflags=["-enum min"]),
@@ -1419,7 +1423,6 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_dolphin,
         "progress_category": "sdk",
-        "host": False,
         "objects": [
             Object(Matching, "amcstubs/AmcExi2Stubs.c"),
         ],
@@ -1429,7 +1432,6 @@ config.libs = [
         "mw_version": "GC/1.2.5n",
         "cflags": cflags_runtime,
         "progress_category": "sdk",
-        "host": False,
         "objects": [
             Object(Matching, "OdemuExi2/DebuggerDriver.c"),
         ],
@@ -1439,7 +1441,6 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_dolphin,
         "progress_category": "sdk",
-        "host": False,
         "objects": [
             Object(Matching, "odenotstub/odenotstub.c"),
         ],
@@ -1451,13 +1452,13 @@ config.libs = [
         "mw_version": "GC/1.3.2",
         "cflags": cflags_rel,
         "progress_category": "sdk",
-        "host": False,
         "objects": [
             Object(Matching, "REL/executor.c"),
             Object(
                 Matching,
                 "REL/global_destructor_chain.c",
-                source="PowerPC_EABI_Support/Runtime/Src/global_destructor_chain.c",
+                src_dir="libs/PowerPC_EABI_Support/Runtime/Src",
+                source="global_destructor_chain.c",
             ),
         ],
     },
