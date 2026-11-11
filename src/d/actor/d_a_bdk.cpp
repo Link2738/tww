@@ -4,7 +4,7 @@
  */
 // Helmaroc King, the Forsaken Fortress boss. Placed once, in M2tower (the second visit). [data]
 // Two parts, by m2B4: [asm]
-//   1 the tower climb (the T_ actions, at 0.85 scale): it circles the tower, smashing the bridges
+//   1 the tower climb (the T_ actions, at 0.85 scale): it hovers inside the tower, smashing the bridges
 //     Link stands on (d_a_bdkobj) and kicking at him; once he reaches the top it perches on the
 //     edge and pecks. A Skull Hammer hit on its head there knocks it into the water
 //   0 the fight on top, after the intro shuts the tower top (shutters and spikes in this file)
