@@ -472,7 +472,7 @@ void dDlst_2DOutFont_c::messageSet(u32 i_msgNo) {
 
                             var_r25 += 2;
                             var_r24 += 2;
-                            var_f31 += rubyCharWidth(((u8)temp_r3_6 << 8) | (u8)temp_r0_2);
+                            var_f31 += rubyCharWidth(((u8)temp_r0_2 << 8) | (u8)temp_r3_6);
                         }
 
                         *var_r24 = 0;

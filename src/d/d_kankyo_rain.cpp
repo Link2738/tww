@@ -3723,7 +3723,9 @@ void dKyr_drawRain(Mtx drawMtx, u8** pImg) {
     GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
     GXSetVtxDesc(GX_VA_TEX0, GX_DIRECT);
     MTXRotDeg(rotMtx, 'Z', rot);
-    MTXConcat(camMtx, rotMtx, drawMtx);
+    // The result goes back into camMtx, not drawMtx: drawMtx is j3dSys's view matrix, and writing
+    // it here moved every model computed later in the frame while it rained.
+    MTXConcat(camMtx, rotMtx, camMtx);
     GXLoadPosMtxImm(drawMtx, GX_PNMTX0);
     GXSetCurrentMtx(GX_PNMTX0);
 

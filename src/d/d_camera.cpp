@@ -2821,7 +2821,7 @@ bool dCamera_c::followCamera(s32 param_1) {
             fVar37 = std::fabsf(dVar20 > dVar19 ? dVar20 : dVar19);
             f32 playerHeight = heightOf(mpPlayerActor);
 
-            w.m37C = int(std::sqrtf(playerHeight / (fVar37 > 10.0f ? fVar37 : 10.0f)) * f14) + 1;
+            w.m37C = int(std::sqrtf(fVar37 / (playerHeight > 10.0f ? playerHeight : 10.0f)) * f14) + 1;
         }
 
         w.m398 = w.m39C = mDirection.R();
@@ -6677,7 +6677,6 @@ bool dCamera_c::fixedFrameCamera(s32 param_1) {
     cXyz spE4;
     cXyz spD8;
     cXyz sp6C;
-    cSGlobe g;
     f32 sp30;
 
     Work::FixedFrame* p = (Work::FixedFrame*)mWorkBuf;
@@ -6689,7 +6688,8 @@ bool dCamera_c::fixedFrameCamera(s32 param_1) {
     if (m11C == 0) {
         p->m378 = cXyz(mCurRoomArrowEntry.position.x, mCurRoomArrowEntry.position.y, mCurRoomArrowEntry.position.z);
                 
-        p->m3A8 = p->m378 + cSGlobe(3000.0f, -mCurRoomArrowEntry.angle.x, mCurRoomArrowEntry.angle.y).Xyz();
+        cSGlobe g(3000.0f, -mCurRoomArrowEntry.angle.x, mCurRoomArrowEntry.angle.y);
+        p->m3A8 = p->m378 + g.Xyz();
         p->m39C = p->m3A8;
 
         cM3dGLin line;
