@@ -2,6 +2,13 @@
  * d_a_npc_os.cpp
  * Player - Servant of the Tower / お供石像 (Companion Statue)
  */
+// The three Command Melody statues in the Tower of the Gods (stage Siren). `argument` 0-2 picks the
+// statue; each has its own staff name (Os, Os1, Os2), pedestal (Hdai1-3), restart option (3-5), and
+// wake and finish bits: 0x1780/0x1710, 0x1740/0x1704, 0x1720/0x1B01. Param bits 16-23 are a switch
+// in room 7, the pedestal room. [asm] [data]
+// It is a daPy_npc_c, so it can be the player: after the Command Melody, dComIfGp_getPlayer(0) is the
+// statue and playerAction drives it from the stick. Otherwise npcAction runs it as a follower that
+// Link can call, carry and throw. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_os.h"
@@ -275,6 +282,8 @@ static BOOL nodeCallBack(J3DNode* node, int calcTiming) {
     return true;
 }
 
+// One model serves all three statues. Each shows only its own horn (tuno3, tuno2, tuno1 for statues
+// 0, 1, 2; see jointCheck) and the other two are scaled to 0.1. [asm]
 /* 000008CC-00000988       .text tunoNodeCallBack__FP7J3DNodei */
 static BOOL tunoNodeCallBack(J3DNode* node, int calcTiming) {
     if (calcTiming == J3DNodeCBCalcTiming_In) {
@@ -417,6 +426,8 @@ void daNpc_Os_c::setWakeup() {
     }
 }
 
+// Finished means placed on its pedestal. A finished statue skips the partner slot and player
+// control, and stands on its pedestal (pedestal + 240). [asm]
 /* 00000E3C-00000EE8       .text finishCheck__10daNpc_Os_cFv */
 BOOL daNpc_Os_c::finishCheck() {
     if(argument == 0) {
@@ -518,6 +529,9 @@ s8 daNpc_Os_c::getRestartNumber() {
     return 0;
 }
 
+// An awake statue entering room 7 orders Os_Finit0, or Os_Finit1 while Link carries it. A NEXT cut
+// queues Os_Finish, which walks it onto its pedestal (MOVE at Stick 0.5, then MOVEEND puts it on
+// top). [asm] [data]
 /* 000010C4-0000112C       .text checkGoalRoom__10daNpc_Os_cFv */
 BOOL daNpc_Os_c::checkGoalRoom() {
     if(fopAcM_GetRoomNo(this) == 7 && wakeupCheck() && !finishCheck()) {
@@ -541,6 +555,9 @@ void daNpc_Os_c::checkPlayerRoom() {
     }
 }
 
+// Once the room 7 switch is on, each statue orders its Os_Message event once. Statue 0's is message
+// 0xEF4 ("My kin wait beyond the doors"), which sets 0x2510 when it closes; statues 1 and 2 set
+// 0x2608 and 0x2604 as the event is accepted. [asm] [data]
 /* 000011C4-00001300       .text eventOrderCheck__10daNpc_Os_cFv */
 void daNpc_Os_c::eventOrderCheck() {
     if(field_0x7A5 == -1) {
@@ -584,6 +601,9 @@ void daNpc_Os_c::endBeam() {
     field_0x740.end();
 }
 
+// Returns the first wall circle that hit, or -1. carryNpcAction indexes mAcchCir with this result
+// even when only the roof hit and it is -1, reading the element before the array. Possible bug;
+// in-game effect not tested. [asm]
 /* 0000140C-00001454       .text wallHitCheck__10daNpc_Os_cFv */
 s32 daNpc_Os_c::wallHitCheck() {
     if(mAcch.ChkWallHit()) {
@@ -652,6 +672,8 @@ void daNpc_Os_c::setNpcAction(ActionFunc_t action, void* param_2) {
     setAction(&mNpcAction, action, param_2);
 }
 
+// While controlled, R reads "Return" and the A and Do icons are hidden. R or Start on the ground,
+// outside events, hands control back to Link through OPTION_CHAR_END (returnLinkCheck). [asm]
 /* 000016B0-00001760       .text playerAction__10daNpc_Os_cFPv */
 void daNpc_Os_c::playerAction(void* param_1) {
     if(!mPlayerAction) {
@@ -722,6 +744,9 @@ BOOL daNpc_Os_c::returnLinkCheck() {
     return false;
 }
 
+// Within 500 of Link the statue offers itself to the Command Melody (onNpcCall). Once called, a
+// sleeping statue orders its Os_Wakeup event, and an awake one more than 80 away starts walking to
+// Link. Only the statue in the partner slot (dComIfGp_getCb1Player) finishes waking. [asm]
 /* 00001A08-00001CD8       .text waitNpcAction__10daNpc_Os_cFPv */
 BOOL daNpc_Os_c::waitNpcAction(void*) {
     if(field_0x7A9 == 0) {
@@ -889,6 +914,8 @@ BOOL daNpc_Os_c::talkNpcAction(void*) {
     return true;
 }
 
+// Carried by Link. A wall or roof hit knocks it out of his hands, sliding off at speed 8 along the
+// wall; letting go while moving throws it, standing still sets it down with a puff. [asm]
 /* 00002118-000023A4       .text carryNpcAction__10daNpc_Os_cFPv */
 BOOL daNpc_Os_c::carryNpcAction(void* param_1) {
     if(field_0x7A9 == 0) {
@@ -1058,6 +1085,10 @@ f32 daNpc_Os_c::checkWallJump(s16 param_1) {
     return delta;
 }
 
+// Path finding for following Link. Off the ground it steps back and hops down drops of up to 100;
+// against a wall it jumps ledges under 80 high with speed 3.6 * sqrt(height). Otherwise the walk
+// angle is bent along any wall within 80 ahead. Stuck in either case more than 600 from Link, it
+// gives up. [asm]
 /* 00003210-0000375C       .text routeCheck__10daNpc_Os_cFfPs */
 BOOL daNpc_Os_c::routeCheck(f32 param_1, s16* param_2) {
     if(!mAcch.ChkGroundHit()) {
@@ -1107,6 +1138,8 @@ BOOL daNpc_Os_c::routeCheck(f32 param_1, s16* param_2) {
     return true;
 }
 
+// Following Link. It stops, and drops the call, when Link opens a door, hangs, is Z-targeting, or the
+// route bends more than 45 degrees from him. Stops within 80. [asm]
 /* 0000375C-000039EC       .text searchNpcAction__10daNpc_Os_cFPv */
 BOOL daNpc_Os_c::searchNpcAction(void*) {
     if(field_0x7A9 == 0) {
@@ -1311,6 +1344,9 @@ static char* cut_name_tbl[] = {
     "MOVEEND",
 };
 
+// field_0x7A5 is the event to order, as an index into event_name_tbl: 0 return to Link, 1/3/5 wake,
+// 2/4/6 finish, 7-9 message, 0xA-0xF the Finit events. Accepting a Finit event sets the finish bit
+// and frees the partner slot. [asm]
 /* 00003E98-00004228       .text eventProc__10daNpc_Os_cFv */
 BOOL daNpc_Os_c::eventProc() {
     if(eventInfo.checkCommandDemoAccrpt() && field_0x7A5 != -1) {
@@ -1558,6 +1594,9 @@ BOOL daNpc_Os_c::actionTurnEvent(int staffIdx) {
     return false;
 }
 
+// Type indexes anmBrkTbl. The beam is on while the animation index is 2 or 4 (the awake pose), so
+// for Types 2 and 7. Os2_Finish, statue 2's, gives all three statues Type 2 and lights all three
+// beams. [asm] [data]
 /* 000047D4-00004860       .text initialFinishEvent__10daNpc_Os_cFi */
 void daNpc_Os_c::initialFinishEvent(int staffIdx) {
     int* data = dComIfGp_evmng_getMyIntegerP(staffIdx, "Type");
@@ -1903,6 +1942,8 @@ void daNpc_Os_c::eventOrder() {
     }
 }
 
+// Talking needs field_0x7A5 to be 0x11 or 0x12, which nothing in this unit sets, so talkNpcAction is
+// unreachable; getMsg would return 0 anyway. [asm]
 /* 000053C8-00005454       .text checkOrder__10daNpc_Os_cFv */
 void daNpc_Os_c::checkOrder() {
     if(eventInfo.checkCommandTalk() && (field_0x7A5 == 0x12 || field_0x7A5 == 0x11)) {
@@ -2158,6 +2199,9 @@ void daNpc_Os_c::smokeSet(u16 particle) {
     dComIfGp_particle_set(particle, &current.pos, 0, 0, -1, &m_smoke);
 }
 
+// Falling into a void or onto ground code 4 for 30 frames returns the statue home if its home room
+// is unloaded, and otherwise restarts the room for Link. Landing in water restarts it at once.
+// [asm]
 /* 00005E5C-00006AF8       .text execute__10daNpc_Os_cFv */
 BOOL daNpc_Os_c::execute() {
     static JGeometry::TVec3<f32> splash_scale(0.6f, 0.6f, 0.6f);
@@ -2477,6 +2521,8 @@ static BOOL daNpc_Os_Delete(daNpc_Os_c* i_this) {
     return true;
 }
 
+// Statue 2 publishes its room as m_cattleRoomNo. d_a_obj_bemos with m6B9 == 1 (yellow eye) keeps
+// its beam off unless that statue is in its room. [asm]
 /* 00006E64-00006EA8       .text daNpc_Os_Execute__FP10daNpc_Os_c */
 static BOOL daNpc_Os_Execute(daNpc_Os_c* i_this) {
     BOOL ret = i_this->execute();

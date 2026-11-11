@@ -2,6 +2,14 @@
  * d_a_npc_hr.cpp
  * NPC - Zephos & Cyclos
  */
+// One actor for both wind brothers: shape type 0 (param & 0xFF) is Zephos, 1 is Cyclos. Param bits
+// 8-15 are a switch number. [asm] Cyclos uses a recolored body (R_BODY.bmt) and his own brow and
+// antenna models. [asm]
+// Zephos stays hidden at his spot. Playing the Wind Waker near him (the XY callbacks) starts TACT_HT,
+// where he teaches Wind's Requiem. [asm] [data]
+// Cyclos hides inside the field cyclone (Ytrnd00, d_a_tornado). When it catches the ship he appears,
+// and three arrow hits make him give in and teach the Ballad of Gales. That sets 0x2710, after which
+// he never appears again and d_a_tornado refuses to spawn. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_hr.h"
@@ -122,6 +130,11 @@ void daNpc_Wind_Eff::move() {
     mPos += mSpeed;
 }
 
+// Four wind lines orbit the actor during a "Wind" cut. WindPrm gives five floats: orbit center x
+// and y, radius, z spacing between lines, z offset. The radius swells and shrinks by 20% around the
+// orbit. Lines start 90 degrees apart and advance 0x100 a frame. [asm] [data]
+// daNpc_Wind_Eff::setspd sets the speed to the whole distance to this point, so each line's emitter
+// lands on it every frame rather than easing toward it. Only the alpha fades, up to 128. [asm]
 /* 000003D4-00000550       .text setSquallPos__18daNpc_Wind_ClothesFi */
 void daNpc_Wind_Clothes::setSquallPos(int param_1) {
     fopAc_ac_c* a_actor = fopAcM_SearchByID(mProcId);
@@ -240,6 +253,8 @@ int daNpc_Hr_c::getSwbit() {
     return fopAcM_GetParam(this) >> 8 & 0xFF;
 }
 
+// Zephos only: these are installed in wait_action for type 0. Showing the Wind Waker on X/Y starts
+// the TACT_HT event. [asm]
 /* 00000818-00000838       .text daNpc_hr_XyCheckCB__FPvi */
 static s16 daNpc_hr_XyCheckCB(void* i_this, int i_itemBtn) {
     return ((daNpc_Hr_c*)i_this)->XyCheckCB(i_itemBtn);
@@ -341,6 +356,8 @@ s32 daNpc_Hr_c::getNowEventAction() {
     return dComIfGp_evmng_getMyActIdx(mStaffIdx, action_table, ARRAY_SIZE(action_table), FALSE, 1);
 }
 
+// WIND0: Zephos's entrance at full wind power. He swoops in on a parabola that bottoms out 150 above
+// Link 40 frames in, keeps moving for 80 frames, and the cut lasts 140. [asm]
 /* 00000ADC-00000CD0       .text demoInitWind__10daNpc_Hr_cFv */
 void daNpc_Hr_c::demoInitWind() {
     dScnKy_env_light_c& env_light = g_env_light;
@@ -450,6 +467,8 @@ BOOL daNpc_Hr_c::demoProcPatten() {
     return TRUE;
 }
 
+// Cancelling the message skips the item and sets flag 0x200; TACT1 then ends the event early without
+// setting 0x2708. The item is fixed to Wind's Requiem, whichever brother runs this. [asm]
 /* 00001008-000010DC       .text demoProcTact0__10daNpc_Hr_cFv */
 BOOL daNpc_Hr_c::demoProcTact0() {
     if (chkFlag(HR_FLAG_00000002)) {
@@ -473,6 +492,8 @@ BOOL daNpc_Hr_c::demoProcTact0() {
     return TRUE;
 }
 
+// 0x2708 is only read by Zephos's states: ht_hide stops offering the Wind Waker prompt once it is
+// set, and ht_tact01 then sets the tact wind to direction 0 when the event ends. [asm]
 /* 000010DC-00001174       .text demoProcTact1__10daNpc_Hr_cFv */
 BOOL daNpc_Hr_c::demoProcTact1() {
     u16 temp = talk();
@@ -494,6 +515,8 @@ BOOL daNpc_Hr_c::demoProcTact2() {
     return TRUE;
 }
 
+// If Link's conducting was cancelled (getTactTimerCancel), switch to TACTM_RT: Cyclos complains
+// (0x1936) and shows the pattern again. [asm] [data]
 /* 000011AC-00001268       .text demoProcTact3__10daNpc_Hr_cFv */
 BOOL daNpc_Hr_c::demoProcTact3() {
     if(daPy_getPlayerLinkActorClass()->getTactTimerCancel() > 0) {
@@ -506,6 +529,7 @@ BOOL daNpc_Hr_c::demoProcTact3() {
     return TRUE;
 }
 
+// Returns 1 + 2 + ... + n. [asm]
 /* 00001268-0000128C       .text calcKaijou__10daNpc_Hr_cFi */
 int daNpc_Hr_c::calcKaijou(int param_1) {
     int sum = 0;
@@ -515,6 +539,10 @@ int daNpc_Hr_c::calcKaijou(int param_1) {
     return sum;
 }
 
+// MOVE: target is Pos (absolute), else Pos3 relative to the ship, else Pos2 relative to Link. With
+// Brake = B, demoProcMove scales the speed by t/(t+1) over the last B frames, so frame t moves v*t/B.
+// The divisor Timer - B + (1+...+B)/B is exactly that path's length in units of v, so the braked
+// move still ends on the target. [asm]
 /* 0000128C-000015B4       .text demoInitMove__10daNpc_Hr_cFv */
 void daNpc_Hr_c::demoInitMove() {
     daPy_lk_c* pLink = daPy_getPlayerLinkActorClass();
@@ -644,6 +672,8 @@ void daNpc_Hr_c::demoInitChange() {
     }
 }
 
+// Keys any cut may carry. TORNADE_OFF is the end of the Cyclos fight: it sets 0x2710 and the switch,
+// and mReturnState 1 makes rt_hit1 hide him when the event ends. [asm] [data]
 /* 000018C0-00001D84       .text demoInitCom__10daNpc_Hr_cFv */
 void daNpc_Hr_c::demoInitCom() {
     daShip_c* pShip = (daShip_c*)dComIfGp_getShipActor();
@@ -998,6 +1028,8 @@ static BOOL nodeCallBack_Hr(J3DNode* node, int calcTiming) {
     return TRUE;
 }
 
+// Antenna sway: a damped spring driven by the root joint's movement since last frame. Only the upper
+// bound of mAntennaRotation is clamped; negative values pass through. [asm]
 /* 00002550-00002868       .text node_Ht_ant__10daNpc_Hr_cFi */
 void daNpc_Hr_c::node_Ht_ant(int jntNo) {
     cXyz temp;
@@ -1204,6 +1236,9 @@ u16 daNpc_Hr_c::next_msgStatus(u32* pMsgNo) {
     return msgStatus;
 }
 
+// 0x5B3 is the conducting prompt. Showing it picks the melody to teach: Wind's Requiem for Zephos,
+// who also sets his switch, the Ballad of Gales for Cyclos. State 2 is a talk at Zephos's empty spot,
+// 0x1901 ("markings that indicate specific directions"). [asm] [data]
 /* 00002D88-00002E5C       .text getMsg__10daNpc_Hr_cFv */
 u32 daNpc_Hr_c::getMsg() {
     u32 msgNo = 0;
@@ -1320,6 +1355,8 @@ u16 daNpc_Hr_c::talk() {
     return msgStatus;
 }
 
+// Cyclos starts hidden once 0x2710 is set. Zephos always starts hidden but can be talked to. Only
+// Cyclos takes arrows: dNpc_hr_src has a tg for the four arrow types and no co. [asm]
 /* 000031AC-00003410       .text init__10daNpc_Hr_cFv */
 BOOL daNpc_Hr_c::init() {
     if(setAction(&daNpc_Hr_c::wait_action, NULL)) {
@@ -1508,6 +1545,9 @@ void daNpc_Hr_c::lookBack() {
 
 }
 
+// Waits for a cyclone (Ytrnd00); rt_hide keeps Cyclos 1500 below its base, at scale 11. The first
+// meeting plays INTRO_RT_F, with his speech (0x193A); after that, 0x3D01 picks the short INTRO_RT.
+// [asm] [data]
 /* 000039D0-00003B44       .text rt_search__10daNpc_Hr_cFv */
 bool daNpc_Hr_c::rt_search() {
     daNpc_Hr_c* ac = (daNpc_Hr_c*)fopAcM_searchFromName("Ytrnd00", 0, 0);
@@ -1540,6 +1580,8 @@ bool daNpc_Hr_c::rt_search() {
 
 }
 
+// Starts the intro 20 frames after the cyclone catches the ship (checkTornadoFlg). Temp bit 0x0404
+// marks the fight; d_a_tornado draws itself with the list mask off while it is set. [asm]
 /* 00003B44-00003CEC       .text rt_hide__10daNpc_Hr_cFv */
 bool daNpc_Hr_c::rt_hide() {
     daShip_c* pShip = dComIfGp_getShipActor();
@@ -1597,6 +1639,9 @@ void daNpc_Hr_c::to_rt_tact() {
     mDoAud_subBgmStop();
 }
 
+// The fight. Cyclos bobs 6000-8000 above his base, faces Link and follows the cyclone's joints. Each
+// arrow hit starts an 82-frame flash, during which further hits are ignored; the third hit starts
+// TACT0_RT. If the cyclone lifts the ship (checkTornadoUp) he wins and just rides it. [asm]
 /* 00003EE4-000041D8       .text rt_angry__10daNpc_Hr_cFv */
 bool daNpc_Hr_c::rt_angry() {
     cXyz* hitPos;
@@ -1718,6 +1763,8 @@ bool daNpc_Hr_c::rt_hit1() {
     return true;
 }
 
+// Zephos waiting. Link must face within 60 degrees of him (0x2AAA) to get the talk and Wind Waker
+// prompts. Talking hides Link's model for the message. [asm]
 /* 000043D8-0000456C       .text ht_hide__10daNpc_Hr_cFv */
 bool daNpc_Hr_c::ht_hide() {
     if (chkFlag(HR_FLAG_00000008)) {
@@ -1809,6 +1856,9 @@ void daNpc_Hr_c::setEmitFlash(f32 param_1) {
 
 }
 
+// Cyclos's hit flash: two frames dark, then the cloud pulses every 8 frames, and over the last 16
+// frames it fades back to normal. Actors and sky get a yellow tint that fades as the timer runs
+// down. [asm]
 /* 000047F4-000049B8       .text smokeProc__10daNpc_Hr_cFv */
 void daNpc_Hr_c::smokeProc() {
 #if VERSION > VERSION_DEMO
@@ -1870,6 +1920,7 @@ bool daNpc_Hr_c::ht_tact01() {
     return demoProc();
 }
 
+// _create only makes types 0 and 1, so the default case, wait01, is unreachable. [asm]
 /* 00004AEC-00004CB4       .text wait_action__10daNpc_Hr_cFPv */
 BOOL daNpc_Hr_c::wait_action(void*) {
     if(mActionStatus == ACTION_STARTING) {

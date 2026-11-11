@@ -15,6 +15,9 @@
 //   BOU_2    bit 0x520 set, day                    Ko2
 //   BOU_3    bit 0x520 set, night                  Ko2
 // Bits 0xE20 and 0x520 also pick Outset's stage layer; see dComIfG_play_c::getLayerNo.
+// Ko1 (HNA variants) is the younger brother and carries the snot-bubble model. Ko2 (BOU) is the
+// older one ("my little brother doesn't wet the bed anymore", 0xAF8), drawn with the KO02 material
+// table and a stick (koeda) on armR2. [asm] [data]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -948,6 +951,9 @@ bool daNpc_Ko1_c::chk_talk() {
     return o_retval;
 }
 
+// Joint conversations. partner_srch pairs HNA_1 with Ko2 and BOU_1 with Ko1; HNA_3 and BOU_2 also
+// bring in Ob1. The talk starts only once every partner has entered state 2, and the message camera
+// gets the speakers in order. [asm]
 /* 00001BCC-00001E0C       .text chk_manzai_1__11daNpc_Ko1_cFv */
 bool daNpc_Ko1_c::chk_manzai_1() {
 
@@ -1045,6 +1051,10 @@ void daNpc_Ko1_c::lookBack() {
     m_jnt.lookAtTarget(&current.angle.y,dstPos,local_30,desiredYRot,field_0x856,headOnlyFollow);
 }
 
+// 0xAFB branches on event register 0xBFFF: any bit set gives 0xAFC ("we named the pig you caught for
+// us after you"), none gives 0xAFD; getMsg_BOU_2 picks 0xB07 ("those other pigs you caught for us")
+// at two or more bits. [asm] [data] Presumably the register records the pigs Link brought them.
+// [inferred]
 /* 00001FFC-00002204       .text next_msgStatus__11daNpc_Ko1_cFPUl */
 u16 daNpc_Ko1_c::next_msgStatus(unsigned long* i_param_1) {
 
@@ -1351,6 +1361,9 @@ void daNpc_Ko1_c::partner_srch() {
     return;    
 }
 
+// Link landing an auto-jump at y 150, within 280 of (-198160, 319690), sets 0x104. Ko2 then stops
+// asking whether you can jump to that rock (0xAF1, 0xAF2) and says 0xAF3 ("I hope I'll be able to
+// jump like you some day"). Only BOU_0 checks it, while 0x104 is clear. [asm] [data]
 /* 000027CC-00002900       .text check_landOn__11daNpc_Ko1_cFv */
 bool daNpc_Ko1_c::check_landOn() {
     /* Nonmatching */
@@ -1575,6 +1588,7 @@ s32 daNpc_Ko1_c::routeCheck(float i_param_1, short* i_param_2) {
     return 1;
 }
 
+// The children swim where the water is more than 62 deep. [asm]
 /* 00003D34-00003DE8       .text chk_start_swim__11daNpc_Ko1_cFv */
 bool daNpc_Ko1_c::chk_start_swim() {
 
@@ -2369,6 +2383,8 @@ BOOL daNpc_Ko1_c::swim_2() {
     return 1;
 }
 
+// Running at Link. Bumping into the player (process name 0xA9) knocks the child back, state 9 with
+// speed.y 10 and speedF -3. In HNA_1, attk_3 chases Ko2 the same way. [asm]
 /* 00005A1C-00005B64       .text attk_1__11daNpc_Ko1_cFv */
 BOOL daNpc_Ko1_c::attk_1() {
     
@@ -2471,6 +2487,8 @@ BOOL daNpc_Ko1_c::down_1(signed char i_param_1) {
     return true;
 }
 
+// Bits set when a message closes: 0xAF1 0x210, 0xAFF 0x3801, 0xB06 0x3340, 0xB55 0x220, 0xB57 0x208
+// and 0x240, 0xB62 0x3101, 0xB64 0x2C04. [asm]
 /* 00005E1C-0000609C       .text talk_1__11daNpc_Ko1_cFv */
 BOOL daNpc_Ko1_c::talk_1() {
 
@@ -2621,6 +2639,8 @@ BOOL daNpc_Ko1_c::neru_1() {
     return 1;
 }
 
+// Ko1 asleep at night (HNA_4). After 3 to 10 sleep periods of 180-360 frames he blows a snot bubble
+// that pops with a particle and sound effect. [asm]
 /* 00006358-00006524       .text neru_2__11daNpc_Ko1_cFv */
 BOOL daNpc_Ko1_c::neru_2() {
 
@@ -3154,6 +3174,7 @@ BOOL daNpc_Ko1_c::_draw() {
     return 1;
 }
 
+// Outside the demo build, a child more than 3000 from its spawn point deletes itself. [asm]
 /* 0000728C-0000756C       .text _execute__11daNpc_Ko1_cFv */
 BOOL daNpc_Ko1_c::_execute() {
     /* Nonmatching */

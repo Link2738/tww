@@ -2,6 +2,12 @@
  * d_a_npc_md.cpp
  * Player - Medli / リト族（メドリ） ("Rito (Medli)" (Ritozoku (Medli)))
  */
+// Medli. Param bits 8-15 give her type for the Dragon Roost scenes: 0 Atorizk, 1 Adanmae, 2 M_Dra09,
+// 3 sea; create sets 4-6 for Edaichi, M_Dai and M_DaiB, and 7 while she rides the boat (Md_ship
+// archive, no wing model). Param bit 0 lets wind push her glide; bits 16-23 are a switch. [asm]
+// Like d_a_npc_os she is a daPy_npc_c: once 0x1620 is set the Command Melody can hand her the
+// controls, and only one such partner may exist (create refuses if dComIfGp_getCb1Player is taken).
+// [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_npc_md.h"
@@ -505,6 +511,9 @@ static s16 daNpc_Md_XyCheckCB(void* i_this, int param_1) {
     return static_cast<daNpc_Md_c*>(i_this)->XyCheckCB(param_1);
 }
 
+// Items she reacts to. On the sea: the Wind Waker always (XyEventCB starts Md_Tact), the Golden
+// Feather until 0x2E40, or again once she has talked there. In Edaichi and M_Dai: the Golden Feather
+// until 0x3B80. A feather she does not take sets 0x2C08 instead. [asm]
 /* 000006FC-000007FC       .text XyCheckCB__10daNpc_Md_cFi */
 s16 daNpc_Md_c::XyCheckCB(int i_itemBtn) {
     u8 selectItemNo = dComIfGp_getSelectItem(i_itemBtn);
@@ -550,6 +559,12 @@ static BOOL CheckCreateHeap(fopAc_ac_c* i_this) {
     return static_cast<daNpc_Md_c*>(i_this)->createHeap();
 }
 
+// Where she appears, by start stage. With collect byte 0 bit 2 (the half-powered Master Sword; see
+// d_meter) only in M_DaiB. Otherwise: sea needs 0x1820 and the Dragon Roost Cavern boss beaten;
+// Atorizk needs the letter not yet delivered (dNpc_chkLetterPassed), Adanmae needs it delivered;
+// M_Dra09 needs 0x1101 clear; all four also need 0x2E04 clear. Edaichi needs 0x2E04 and not 0x2920,
+// M_Dai needs both, and M_DaiB refuses her. 0x1608 without 0x2E04 makes her the boat passenger.
+// [asm]
 /* 00000884-00000D80       .text create__10daNpc_Md_cFv */
 cPhs_State daNpc_Md_c::create() {
     m313D = 0;
@@ -1296,6 +1311,9 @@ BOOL daNpc_Md_c::returnLinkCheck() {
     return FALSE;
 }
 
+// Light reaches her if d_detect reports light at her position, or a light attack hits her from in
+// front of the harp. While lit, the harp's capsule mCps fires a light attack along its -Z axis, cut
+// short by the first wall (setCollision), and draws the md_spot beam. [asm]
 /* 00003958-00003D20       .text lightHitCheck__10daNpc_Md_cFv */
 BOOL daNpc_Md_c::lightHitCheck() {
     BOOL lightHit = FALSE;
@@ -1376,6 +1394,8 @@ int daNpc_Md_c::wallHitCheck() {
     return -1;
 }
 
+// Only after 0x1620. Within 400 she offers herself to the Command Melody; once called she follows
+// when more than 180 away. [asm]
 /* 00003D68-00003E74       .text NpcCall__10daNpc_Md_cFPi */
 void daNpc_Md_c::NpcCall(int* r31) {
     if (!dComIfGs_isEventBit(dSv_event_flag_c::UNK_1620)) {
@@ -1476,6 +1496,8 @@ void daNpc_Md_c::waitGroundCheck() {
     }
 }
 
+// In Adanmae, gliding or falling inside the camera tag over ground 600-700 high orders MD_FLY, whose
+// CREATEITEM cut hands Link an Empty Bottle (initialLetterEvent). [asm]
 /* 0000433C-000043D4       .text chkAdanmaeDemoOrder__10daNpc_Md_cFv */
 BOOL daNpc_Md_c::chkAdanmaeDemoOrder() {
     if (isTypeAdanmae()) {
@@ -1993,6 +2015,8 @@ void daNpc_Md_c::changeCaught02() {
     setBitStatus(daMdStts_UNK1);
 }
 
+// Carried by Link. When he auto-jumps while holding her she spreads her wings and glides him
+// (fly-with-Link voice); in retail this also sets 0x4180 once 0x4001 is set. [asm]
 /* 00005AB0-000061A8       .text carryNpcAction__10daNpc_Md_cFPv */
 BOOL daNpc_Md_c::carryNpcAction(void*) {
     BOOL bVar1;
@@ -2242,6 +2266,9 @@ static void unused_7570_7575_7612() {
     md.setNpcAction(&daNpc_Md_c::fall02NpcAction);
 }
 
+// Glide steering. A wind within 45 degrees of her facing pushes her at full strength at once; any
+// other wind ramps up by 0.2 a frame. Wind from Link's items (a wind tg hit) counts even without
+// param bit 0. [asm]
 /* 00006764-00006B24       .text windProc__10daNpc_Md_cFv */
 s16 daNpc_Md_c::windProc() {
     f32 fVar1;
@@ -2702,6 +2729,9 @@ BOOL daNpc_Md_c::routeCheck(f32 param_1, s16* param_2) {
     return TRUE;
 }
 
+// Following Link. If the route bends more than 45 degrees, or Link opens a door, hangs or
+// Z-targets, she drops the call with her left-alone voice; a blocked route also plays the refusal
+// animation (kyohiNpcAction). [asm]
 /* 00008858-00008CEC       .text searchNpcAction__10daNpc_Md_cFPv */
 BOOL daNpc_Md_c::searchNpcAction(void*) {
     f32 fVar2;
@@ -3171,6 +3201,10 @@ BOOL daNpc_Md_c::jumpPlayerAction(void* param_1) {
     return TRUE;
 }
 
+// Flight while controlled. Each A press lets her climb for 5 frames; otherwise she sinks. She cannot
+// rise more than 1500 above the takeoff point. The flight timer running out, B, or 70 frames
+// without A drops her into a fall. In retail, 0x3310 is set when the flight timer goes below 300
+// with 0x3320 set. [asm]
 /* 00009E7C-0000A534       .text flyPlayerAction__10daNpc_Md_cFPv */
 BOOL daNpc_Md_c::flyPlayerAction(void*) {
     s16 sVar2;
@@ -3344,6 +3378,8 @@ BOOL daNpc_Md_c::landPlayerAction(void*) {
     return TRUE;
 }
 
+// Harp mirror stance, entered with A while lit (flyCheck). The stick bends her waist to aim the
+// reflected beam; B, or losing the light, ends it. [asm]
 /* 0000A698-0000A8D0       .text mkamaePlayerAction__10daNpc_Md_cFPv */
 BOOL daNpc_Md_c::mkamaePlayerAction(void*) {
     if (mActionStatus == ACTION_STARTING) {
@@ -3524,6 +3560,8 @@ BOOL daNpc_Md_c::actionWaitEvent(int) {
     return cLib_calcTimer(&m3118) == 0 ? TRUE : FALSE;
 }
 
+// CREATEITEM cut: Md_ItemGet gives the Father's Letter, Md_RopeGet the Grappling Hook, MD_FLY an
+// Empty Bottle. [asm]
 /* 0000ADCC-0000AEB8       .text initialLetterEvent__10daNpc_Md_cFi */
 void daNpc_Md_c::initialLetterEvent(int staffIdx) {
     u8 itemNo;
@@ -3937,6 +3975,9 @@ void daNpc_Md_c::initialEndEvent(int staffIdx) {
     }
 }
 
+// Md_Tact: if Link conducts the song named by prm0 she answers 0x19DD ("What a mysterious song...
+// It sounds so...familiar"), and its follow-up sets 0x1620 and 0x1608 and moves Link to sea point
+// 0xE3 in Dragon Roost's room 8, where she rides the boat. Another song gives 0x19DA. [asm] [data]
 /* 0000C12C-0000C250       .text actionTactEvent__10daNpc_Md_cFi */
 BOOL daNpc_Md_c::actionTactEvent(int staffIdx) {
     int* pPrm0 = dComIfGp_evmng_getMyIntegerP(staffIdx, "prm0");
@@ -4978,6 +5019,8 @@ void daNpc_Md_c::carryCheck() {
     }
 }
 
+// mCurEventMode 4-12 order event_name_tbl[mode - 4]. Nothing in this unit sets 8 or 9, so Md_Fly2
+// is never ordered from here; Md_Tact comes from XyEventCB instead. [asm]
 /* 0000D950-0000DAD4       .text eventOrder__10daNpc_Md_cFv */
 void daNpc_Md_c::eventOrder() {
     if (mCurEventMode == 1) {
@@ -5790,6 +5833,8 @@ BOOL daNpc_Md_c::draw() {
     return TRUE;
 }
 
+// On the sea her harp loop plucks a note on frames 11 and 38 (35 for the second loop). A random note
+// from C4, D4, E4, F#4 and G4 is picked and repeated for three plucks. [asm]
 /* 0000F8EC-0000FC18       .text animationPlay__10daNpc_Md_cFv */
 void daNpc_Md_c::animationPlay() {
     static const u32 l_harp_play_se[] = {
@@ -5885,6 +5930,8 @@ void daNpc_Md_c::checkPlayerRoom() {
     }
 }
 
+// Falling into a void or onto ground code 4 for 30 frames sends her home if her home room is
+// unloaded and otherwise restarts the room for Link, as in d_a_npc_os. [asm]
 /* 0000FC58-000108B0       .text execute__10daNpc_Md_cFv */
 BOOL daNpc_Md_c::execute() {
     f32 fVar1;

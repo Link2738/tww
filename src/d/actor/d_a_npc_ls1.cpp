@@ -2,6 +2,11 @@
  * d_a_npc_ls1.cpp
  * NPC - Aryll
  */
+// Param & 0xFF is the type (decideType). Type 0 exists only once 0x2A80 is set and runs the
+// birthday, telescope and Tetra-falls scenes; type 3 exists only before it and just says 0xBD9
+// ("Grandma is waiting for you back at the house"). Types 1, 2 and 4 are cutscene stand-ins driven
+// by demo data. [asm] [data]
+// The telescope she holds is Link's model, from the Link archive, on her right hand. [asm]
 // Uses the common NPC template. See d_a_npc_gk1.cpp for how its parts fit together. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
@@ -216,6 +221,7 @@ static BOOL CheckCreateHeap(fopAc_ac_c* i_this) {
     return ((daNpc_Ls1_c*)i_this)->CreateHeap();
 }
 
+// Her partner is the first d_a_npc_bm1 (Quill) found; the telescope scene follows him. [asm]
 /* 00000838-000008B0       .text searchActor_Bm1__FPvPv */
 void* searchActor_Bm1(void* i_actorP, void* i_unusedP) {
     UNUSED(i_unusedP);
@@ -232,6 +238,8 @@ void* searchActor_Bm1(void* i_actorP, void* i_unusedP) {
     return NULL;
 }
 
+// Set while she talks and cleared when the talk ends: seagulls (d_a_kamome) get status 0x4000,
+// NOSTOP_DEMO in these names. [asm] Presumably so they keep flying during the talk. [inferred]
 /* 000008B0-00000900       .text searchActor_kamome_Set_NOSTOP_DEMO__FPvPv */
 void* searchActor_kamome_Set_NOSTOP_DEMO(void* i_actorP, void* i_unusedP) {
     UNUSED(i_unusedP);
@@ -1092,6 +1100,8 @@ void daNpc_Ls1_c::anmAtr(u16 param_1) {
     ctrlAnmTag();
 }
 
+// On a file with a clear count, 0xBB9 continues with 0xBDA ("You always wear the same outfit")
+// instead of 0xBBA ("you look like you'd be way too hot in those clothes"). [asm] [data]
 /* 00001B88-00001C30       .text next_msgStatus__11daNpc_Ls1_cFPUl */
 u16 daNpc_Ls1_c::next_msgStatus(u32* o_msgNoP) {
     u16 msg_status = fopMsgStts_MSG_CONTINUES_e;
@@ -1131,6 +1141,10 @@ u16 daNpc_Ls1_c::next_msgStatus(u32* o_msgNoP) {
     return msg_status;
 }
 
+// After 0x0001 (Tetra has fallen): once, 0xBC4 or 0xBC5 ("go help her" / "she needs help"), then
+// 0xBC9 if 0x0280 is set, else 0xBC8, or 0xBC7 ("You need something to fight it off") without a
+// sword (collect byte 0 holds the sword levels; see d_meter). Before it: once 0xBBE after the gift, then a telescope hint
+// for whichever button holds it (0xBCB-0xBCD), else 0xBC0. [asm] [data]
 /* 00001C30-00001D48       .text getMsg_LS1_0__11daNpc_Ls1_cFv */
 u32 daNpc_Ls1_c::getMsg_LS1_0() { 
     if (dComIfGs_isEventBit(dSv_event_flag_c::UNK_0001)) {
@@ -1189,6 +1203,8 @@ u32 daNpc_Ls1_c::getMsg() {
     return result;
 }
 
+// m850: 1 orders a talk, 2 allows one, 3 and up order l_evn_tbl[m850 - 3]: zelda_fly, omedeto,
+// get_telescope, eTalk. [asm]
 /* 00001DAC-00001E38       .text eventOrder__11daNpc_Ls1_cFv */
 void daNpc_Ls1_c::eventOrder() {
     if (m850 == 1 || m850 == 2) {
@@ -1611,6 +1627,9 @@ int daNpc_Ls1_c::isEventEntry() {
     return dComIfGp_evmng_getMyStaffId(mEventCut.getActorName());
 }
 
+// Event chain. omedeto (started in wait_1 by Link coming within 200) is followed at once by
+// get_telescope, then she talks (0xBBE). After zelda_fly she first releases the scope, restores
+// the camera and BGM, then sets event bit 0x0001 and talks to Link straight away. [asm] [data]
 /* 00002A0C-00002BD0       .text event_proc__11daNpc_Ls1_cFi */
 void daNpc_Ls1_c::event_proc(int i_staffIdx) {
     if (dComIfGp_evmng_endCheck(mEventIDTbl[mEventIndex])) {
@@ -1739,6 +1758,8 @@ cXyz daNpc_Ls1_c::get_playerEvnPos(int param_1) {
     return sp08;
 }
 
+// Screen-space checks for the telescope scene. (319.5, 186.5) is the screen center; chkTelescope
+// scales the offset by fovy / 40 so zooming in widens the accepted area. [asm]
 /* 00002FD8-00003154       .text chkTelescope_sph__11daNpc_Ls1_cF4cXyzff */
 bool daNpc_Ls1_c::chkTelescope_sph(cXyz param_1, float param_2, float param_3) {
     bool chk;
@@ -1791,6 +1812,11 @@ bool daNpc_Ls1_c::chkTelescope(cXyz param_1, float param_2, float param_3) {
     return fabs(sp08.x) < param_2 && (sp08.z > param_3);
 }
 
+// Runs while Link looks through the telescope within 700 of her. Steps (m833): 1 hints 0xBC1
+// ("the red postbox") until Quill is within 50 of the center at zoom 2, then locks the camera on
+// him; 2 waits for zoom 9 and makes him notice; 3 says 0xBC2 after his surprise, and closing it
+// sets 0x0310; 4 says 0xBC3 ("Look up in the sky!") until the view is 2000 above him, which
+// starts zelda_fly. [asm] [data]
 /* 00003258-000036B0       .text telescope_proc__11daNpc_Ls1_cFv */
 bool daNpc_Ls1_c::telescope_proc() {
     int param;
@@ -2116,6 +2142,8 @@ BOOL daNpc_Ls1_c::talk_1() {
     return res;
 }
 
+// Type 0 picks its state once: 3 after 0x0001, 2 with the telescope, 1 before it. Type 3 lands in
+// state 4 because 0x2A80 is not set. [asm]
 /* 00003CD8-00003EA8       .text wait_action1__11daNpc_Ls1_cFPv */
 BOOL daNpc_Ls1_c::wait_action1(void* param_1) {
     UNUSED(param_1);
@@ -2474,6 +2502,8 @@ cPhs_State daNpc_Ls1_c::_create() {
 
 daNpc_Ls1_c::daNpc_Ls1_c() {}
 
+// Type 4, and every type on a file with a clear count, swaps the lsbody01 texture for lsbody02.
+// [asm]
 /* 00004C98-00005250       .text bodyCreateHeap__11daNpc_Ls1_cFv */
 BOOL daNpc_Ls1_c::bodyCreateHeap() {
     J3DModelData* a_mdl_dat = (J3DModelData*) dComIfG_getObjectIDRes(mArcName, dRes_ID_LS_BDL_LS_e);
