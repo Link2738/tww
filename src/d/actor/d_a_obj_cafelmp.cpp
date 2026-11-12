@@ -2,6 +2,7 @@
  * d_a_obj_cafelmp.cpp
  * Object - Lamp (Cafe Bar)
  */
+// A ceiling lamp (YLAMP) turning 0xDA per frame. Stage name Cafelmp: 5 placed, Opub 3. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_cafelmp.h"

@@ -2,6 +2,10 @@
  * d_a_obj_gnnbtltaki.cpp
  * Object - Ganondorf Fight - Background waterfalls (during fight)
  */
+// A waterfall texture model (GNN_BTL_TAKI). Param low nibble 1: hidden and frozen until the
+// g2before demo in GTower reaches frame 0x126F, then shown and playing; otherwise always shown.
+// Only the scale is applied, so it draws in model space. Stage name Gnbtaki: 4 placed, GTower 3
+// (one of them type 1), K_Teste 1. [asm] [data]
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_gnnbtltaki.h"
 #include "res/Object/Gnnbtltaki.h"

@@ -2,6 +2,11 @@
  * d_a_fm.cpp
  * Enemy - Floormaster
  */
+// Floormaster. 50 placed; the stage name matches the movement type and picks the item table:
+// Fmaster (type 0) 6, Fmastr1 (type 1) 7, Fmastr2 (type 2) 37. Most in M_Dai 16, kaze 10,
+// KATA_RM 12. [data]
+// Health 12 (l_HIO.mMaxHealth). Three Grappling Hook steals. A hand (mSph) and a floor hole
+// (mCyl) that grows and shrinks. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_fm.h"
@@ -555,6 +560,8 @@ static void* searchNearOtherActor_CB(void* param_1, void* param_2) {
     return ((daFm_c*)param_2)->searchNearOtherActor((fopAc_ac_c*)param_1);
 }
 
+// Things it grabs, within 500 and level with it: a bomb not in STATE_0, or a pot of type 0, 1,
+// 2, 4, 5 or 6 while Link is within 800 and the pot is 80 from him or in his hands. [asm]
 /* 00000D6C-00000F18       .text searchNearOtherActor__6daFm_cFP10fopAc_ac_c */
 fopAc_ac_c* daFm_c::searchNearOtherActor(fopAc_ac_c* i_actor) {
     if(dComIfGp_event_runCheck()) {
@@ -790,6 +797,10 @@ void daFm_c::setAttention() {
     }
 }
 
+// Hits on the hand. A Boomerang or Boko stick paralyses it for 100 frames, the Hookshot only
+// knocks it back, wind does nothing, an Ice Arrow freezes it for 120, a Light Arrow shrinks it
+// away. The Grappling Hook steals and knocks it back. Everything else damages it; a parry jump
+// (BT_VERTICALJUMPCUT) or a Skull Hammer front swing makes it twitch (BIKUBIKU) first. [asm]
 /* 00001C90-00002530       .text checkTgHit__6daFm_cFv */
 bool daFm_c::checkTgHit() {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -1121,6 +1132,8 @@ bool daFm_c::isGrab() {
     return true;
 }
 
+// Link standing over the hole: within 100, at its height, speed 4 or less, not flying, rolling
+// or holding something. [asm]
 /* 00002E7C-00002F98       .text isGrabFoot__6daFm_cFv */
 bool daFm_c::isGrabFoot() {
 #if VERSION <= VERSION_JPN
@@ -1174,6 +1187,8 @@ void daFm_c::modeSwWaitInit() {
     field_0x3E0 = l_HIO.field_0x120;
 }
 
+// Waits for the switch in byte 3. With the appearance event set (getArg, field_0x2E4) the hole
+// opens in DEFAULT_FM_SW_APEEAR. [asm]
 /* 00002FDC-000031B0       .text modeSwWait__6daFm_cFv */
 void daFm_c::modeSwWait() {
     resetInvKine();
@@ -1245,6 +1260,8 @@ void daFm_c::modeUnderFootInit() {
     field_0x3E0 = l_HIO.field_0x120;  
 }
 
+// Type 0: the hole follows under its base target for 40 frames, then grabs Link's feet, rises
+// when he is within 500 and in line of sight, or sinks to hide (HIDE, 90 to 240 frames). [asm]
 /* 00003344-000034E4       .text modeUnderFoot__6daFm_cFv */
 void daFm_c::modeUnderFoot() {
     if(cLib_calcTimer(&field_0x648) == 0) {
@@ -1278,6 +1295,7 @@ void daFm_c::modePathMoveInit() {
     field_0x3E0 = l_HIO.field_0x124;
 }
 
+// Type 1: the hole drifts along the room path in byte 2 and rises within 500 of its target. [asm]
 /* 00003528-00003670       .text modePathMove__6daFm_cFv */
 void daFm_c::modePathMove() {
     field_0x690 = current.pos;
@@ -1302,6 +1320,8 @@ void daFm_c::modeGoalKeeperInit() {
     field_0x3E0 = l_HIO.field_0x124;
 }
 
+// Type 2: holds its spot and rises when its base target comes within 800 and inside its range
+// (home.angle.z) of home. [asm]
 /* 000036B4-000038DC       .text modeGoalKeeper__6daFm_cFv */
 void daFm_c::modeGoalKeeper() {
     if(field_0x2E5 && dComIfGp_evmng_endCheck("DEFAULT_FM_SUIKOMI_NPC")) {
@@ -1414,6 +1434,9 @@ void daFm_c::modeWaitInit() {
     field_0x660 = current.pos;
 }
 
+// Risen: turns to the nearest target and reaches for it (ATTACK). Sinks when the ring of floor
+// around it fails areaCheck, when Link stands over it, when a type 2 target leaves its range, or
+// 60 frames after the target is past 800. [asm]
 /* 00003C5C-00003F90       .text modeWait__6daFm_cFv */
 void daFm_c::modeWait() {
     resetInvKine();
@@ -1492,6 +1515,9 @@ void daFm_c::modeAttackInit() {
     }
 }
 
+// The reach. Caught Link is pulled toward the hand (setOutPower) while he walks away. A bomb or
+// pot is lifted, an NPC carried (noCarryAction on d_a_npc_cb1 and d_a_npc_md); with Link past
+// 750 the NPC is taken straight down (GRAB_NPC_DEMO). [asm]
 /* 00003FF8-000049CC       .text modeAttack__6daFm_cFv */
 void daFm_c::modeAttack() {
     f32 dist;
@@ -1651,6 +1677,8 @@ void daFm_c::modeThrowInit() {
     setAnm(0xB, false);
 }
 
+// Throws what it holds toward Link at frame 16; bombs and pots fly farther the farther he is (to
+// 1000). An NPC is thrown at speed 25. [asm]
 /* 000049F4-00004CE4       .text modeThrow__6daFm_cFv */
 void daFm_c::modeThrow() {
     resetInvKine();
@@ -1731,6 +1759,8 @@ void daFm_c::modeGrabFootDemoInit() {
     field_0x630 = pLink->current.pos;
 }
 
+// DEFAULT_FM_GRAB_FOOT: pulls Link down by the feet, then sends him to exit byte 0 of the params
+// (0xFF: this stage, point 0 of this room). [asm]
 /* 00004D20-000050B4       .text modeGrabFootDemo__6daFm_cFv */
 void daFm_c::modeGrabFootDemo() {
     resetInvKine();
@@ -1866,6 +1896,9 @@ void daFm_c::modeGrabInit() {
     field_0x660 = field_0x690;
 }
 
+// Holding. Link is dragged under after 10 frames unless he breaks free or picks up a bomb; an NPC
+// after 150. A held bomb or pot is thrown once Link stops guarding for 17 frames. A type 2 near
+// Link carrying an NPC throws it toward the nearest other Floormaster (searchNearFm). [asm]
 /* 000053E0-00005A7C       .text modeGrab__6daFm_cFv */
 void daFm_c::modeGrab() {
     f32 dist;
@@ -1990,6 +2023,9 @@ void daFm_c::modeGrabDemoInit() {
     }
 }
 
+// DEFAULT_FM_GRAB sends Link to the exit as above. DEFAULT_FM_SUIKOMI_NPC with an NPC restart
+// point (home.angle.x high byte) sets event bit UNK_3408 for d_a_npc_cb1 or UNK_3404 for
+// d_a_npc_md and moves that NPC's restart there. [asm]
 /* 00005AD8-00005EDC       .text modeGrabDemo__6daFm_cFv */
 void daFm_c::modeGrabDemo() {
     resetInvKine();
@@ -2088,6 +2124,8 @@ void daFm_c::modePrepareItemInit() {
     cancelGrab();
 }
 
+// Makes a skull pot (prm_make_skull) in its hand to throw. Nothing switches to this mode (0xB).
+// [asm]
 /* 00005FF0-000061A4       .text modePrepareItem__6daFm_cFv */
 void daFm_c::modePrepareItem() {
     if(!checkTgHit()) {
@@ -2171,6 +2209,8 @@ void daFm_c::modePlayerStartDemoInit() {
     current.pos = dComIfGp_getPlayer(0)->current.pos;
 }
 
+// Created with Link as its parent: the hole Link is spat out of at the destination (cuts OPEN,
+// PL_OUT, CLOSE, DELETE). [asm]
 /* 000063C4-000066A0       .text modePlayerStartDemo__6daFm_cFv */
 void daFm_c::modePlayerStartDemo() {
     resetInvKine();
@@ -3237,6 +3277,14 @@ bool daFm_c::_draw() {
     return true;
 }
 
+// Params: byte 0 exit number (0xFF reload), bits 8-9 type (0 roams under its target, 1 path,
+// 2 stays home), bits 10-11 target (0 Link or d_a_npc_md, 1 Link only, 2 NPCs only), byte 2 path,
+// byte 3 a switch to wait for. home.angle.x low byte: a switch that, set, stops it being
+// created; high byte: the NPC restart point. home.angle.z low byte: range in hundreds (0 or
+// 0xFF: 3000). A nonzero home.angle.y with a byte 3 switch adds the appearance event, and it is
+// not created once that switch is on. [asm]
+// Placed type 2 targets: Link or NPC 15, NPCs only 12, Link only 10. 3 have the appearance event.
+// [data]
 /* 00008B4C-00008C78       .text getArg__6daFm_cFv */
 void daFm_c::getArg() {
     u32 params = fopAcM_GetParam(this);

@@ -2,6 +2,11 @@
  * d_a_wall.cpp
  * Object - Bombable walls
  */
+// A wall a bomb breaks (by bits 8+: 0 HBW1 300 by 240, 1 HTW1 1400 by 1000, 2 HBW2 360 by 180).
+// Param byte 0 the switch; not created once set, and never with 0xFF. Two TG triangles cover its
+// face; a bomb-type hit plays SHIREN_WL1-3 debris on both sides and the matching smoke,
+// JA_SE_OBJ_BOMB_WALL_BRK, releases the collision and sets the switch; the smoke fades and it
+// deletes itself. Stage name Wall: 8 placed, Siren 7, K_Test5. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_wall.h"

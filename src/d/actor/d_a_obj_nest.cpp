@@ -2,6 +2,9 @@
  * d_a_obj_nest.cpp
  * Object - Kargaroc nest
  */
+// A bird nest with collision (MTORISU; stage name MtoriSU, 10 placed, sea 7). Something riding it
+// away from its centre makes it wobble in proportion to that rider's speed; the wobble decays.
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_nest.h"

@@ -2,6 +2,9 @@
  * d_a_obj_hfuck1.cpp
  * Object - Hookshot target
  */
+// Stage name Hfuck1: 42 placed (kaze 18, Cave08 13, Hyrule 4). Moving-BG collision and a
+// Hookshot-only TG sphere, radius 90 set 50 behind the model (the demo build: 35 at its origin,
+// HIO-adjustable). A Hookshot hit makes the player carry to this actor with offset 0. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_hfuck1.h"

@@ -2,6 +2,12 @@
  * d_a_dr.cpp
  * NPC - Valoo (Overworld) / ドラゴン (Dragon)
  */
+// Stage name dragon: 4 placed (Adanmae 2, M_Dra09, sea). eyePos follows the tongue. Idle it loops
+// WAIT1 and yawns every 200-400 frames. Until the DRC boss is beaten, a quake while idle, the HIO
+// or setQuakeInfo (from d_a_tag_event) starts a fit: BIKU1 with DRPAINBIKU00, then for 300 frames
+// random ABARE1 (DRPAINABARE00) or ABARE2 (DRSPLASHMAGMA00, JA_SE_CM_DRG_MTOP_MAGMA), then HO1 with
+// DRPAINHO00. JA_SE_CM_DRG_MTOP_FIRE plays while its timer runs: 5 frames from BIKU1 frame 15 and
+// HO1 frame 34, 500 from each ABARE1. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_dr.h"

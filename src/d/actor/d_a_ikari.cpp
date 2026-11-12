@@ -2,6 +2,10 @@
  * d_a_ikari.cpp
  * Object - Forsaken Fortress - Anchors
  */
+// A hanging anchor (stage name Ikari; 55 placed, 11 each in sea, MajyuE, M2ganon, M2tower,
+// Mjtower). Params: byte 1 the model (0-2 S_IKARI2, 3 S_IKARI3, 4 S_IKARI4; 0xFF as 0), byte 0 the
+// look: 1 scales it 1.27 and lights it as BG with actor colours, 0xFF scale 1. It faces into the
+// wind and swings by wind power. Placed byte 0: 1 33, 0xFF 22. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_ikari.h"

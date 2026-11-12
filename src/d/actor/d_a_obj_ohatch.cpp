@@ -2,6 +2,12 @@
  * d_a_obj_ohatch.cpp
  * Object - Hatch door leading to the Nintendo Gallery
  */
+// A hatch (OHATCH) with closed and open collision. Param byte 0 the switch. With it set, cut OPEN
+// of event FIGURE_HATCH_OPEN (staff Ohatch) plays JA_SE_OBJ_FIG_HATCH_OPEN, swaps to the open
+// collision and shakes; the lid rattles, swings to 90 degrees with JA_SE_READ_RIDDLE_1 and a
+// shock, and wobbles to rest. Already set at create, it starts open. Retail never closes it
+// again; the demo build closes it when the switch goes off. Stage name Ohatch: 2 placed, sea
+// (switch 0x47) and K_Teste. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ohatch.h"

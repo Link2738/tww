@@ -2,6 +2,12 @@
  * d_a_race_item.cpp
  * Item - Barrel Item
  */
+// An item that d_a_obj_barrel2 holds (fopAcM_createRaceItem; stage name Ritem is never placed).
+// Params: bits 0-7 the item, bits 8-14 the item bit (not created once set unless 0x7F), bits 15-18
+// the get type (1: touching it collects it, the boomerang carries it, the Hookshot pulls it). The
+// state is set from d_a_race_item_static.cpp: 0 held by the barrel, 3 released (falls, deleted in
+// water, the sea or below -5000), 1 collected (jumps from Link's head, 23 up under gravity -6, and
+// deletes after 13 frames). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_race_item.h"

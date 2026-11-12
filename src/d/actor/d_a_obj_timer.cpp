@@ -2,6 +2,10 @@
  * d_a_obj_timer.cpp
  * Object - Timer
  */
+// Switch timer (stage name ObjTime; 6 placed, Asoko 4). Params: byte 0 the time in half seconds,
+// byte 2 the switch. When the switch is on it counts down (15 * byte 0 frames) with tick sounds
+// for the last 20 seconds, then turns the switch off; the switch going off early also ends it.
+// Placed times 0x78 and 0xC8 (2 each), 0x14 and 0x1E. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_timer.h"

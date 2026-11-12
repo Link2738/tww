@@ -2,6 +2,15 @@
  * d_a_sitem.cpp
  * Object - Hanging vines with item pods (Forbidden Woods)
  */
+// A seed pod hanging on a vine; breaking it drops an item. Placed in kindan (26), GanonD (8)
+// and the test map K_Test5. [data]
+// Params: byte 0 pod type (0 plain, 1 spiked, the only one that attacks on touch, 2
+// pinecone), byte 1 vine length 0-3 (100, 250, 400, 600), byte 2 item bit (& 0x7F), byte 3
+// item table. [asm]
+// Hitting the pod breaks it at once. Cutting the vine (any hit but the Boomerang on the vine,
+// or the Boomerang on its middle) drops it, and it breaks on landing. A Deku Leaf gust swings
+// it, and a pod swung hard into something breaks. The Grappling Hook is ignored. It deletes
+// itself 50 frames after breaking and does not come back. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_eff.h"

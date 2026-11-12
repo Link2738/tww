@@ -2,6 +2,13 @@
  * d_a_ph.cpp
  * Enemy - Peahat/Seahat
  */
+// Peahat and Seahat. Both placed under the stage name p_hat (107): byte 0 = 1 is a Seahat (37,
+// all on the sea), anything else a Peahat (the rest; sea 3, kaze 17, kindan 12, Cave08 and
+// Cave10 9 each, Hyrule 6, KATA_RM 6, K_Test4 6, GanonD 2). sea_hat is never placed. [data]
+// Params: byte 1 and byte 2 the notice range across and up in hundreds (0xFF: 1000 and 500 for
+// a Peahat, 12000 and 6000 for a Seahat). 1 health. A Seahat is the same actor 9 times the
+// size, using the SH archive. Items: the p_hat or sea_hat table; a Seahat kill adds one to
+// event register UNK_7EFF (the d_a_coming2 counter). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_ph.h"
@@ -370,6 +377,11 @@ static void fly_angle_set(ph_class* i_this, u8 param_2) {
     cLib_addCalcAngleS2(&actor->shape_angle.z, angleZ, 1, 0x200);
 }
 
+// While the propeller spins the body only takes bombs, the Boomerang, arrows, the Hookshot, the
+// Skull Hammer and the Grappling Hook. The Boomerang (and, on a Peahat, the Hookshot) knocks the
+// propeller off instead of killing (ph_bunri_move); the Hookshot kills a Seahat. Deku Leaf wind
+// blows it down (ph_wind_move). The Grappling Hook steals once from a Peahat. Everything else
+// that lands kills it. [asm]
 /* 000011F4-00001A10       .text body_atari_check__FP8ph_class */
 static BOOL body_atari_check(ph_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -578,6 +590,8 @@ static BOOL body_atari_check(ph_class* i_this) {
     return FALSE;
 }
 
+// Swords and shields only bounce it off the spinning propeller; it spins away and comes back.
+// [asm]
 /* 00001A10-00001C18       .text hajiki_check__FP8ph_class */
 static BOOL hajiki_check(ph_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -779,6 +793,8 @@ static s32 sea_water_check(ph_class* i_this, u8 param_2) {
     return iVar4;
 }
 
+// Peahat: hovers, and when Link comes within its range closes in and charges with the
+// propeller, 60 to 120 frames between charges. [asm]
 /* 00002318-0000263C       .text ph_fly_move__FP8ph_class */
 static void ph_fly_move(ph_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -860,6 +876,8 @@ static void ph_fly_move(ph_class* i_this) {
     }
 }
 
+// Seahat: only goes for Link while he is on the ship; it dives at it for up to 57 frames at
+// speed 98, then flies back toward where it started. [asm]
 /* 0000263C-00002E18       .text ph_fly_sea_move__FP8ph_class */
 static void ph_fly_sea_move(ph_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1067,6 +1085,8 @@ static void ph_hane_move(ph_class* i_this) {
     puropera_kaiten(i_this);
 }
 
+// Propeller knocked off: it drops and hops about, open to every weapon, for 900 frames (a
+// Seahat 150), then grows a new propeller and takes off (ph_fujyou_move). [asm]
 /* 00002F50-00003768       .text ph_bunri_move__FP8ph_class */
 static void ph_bunri_move(ph_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1557,6 +1577,8 @@ static void ph_damage_dead_move(ph_class* i_this) {
     }
 }
 
+// Blown by the Deku Leaf: tumbles, lands and lies open for 50 to 100 frames, then spins up
+// again. [asm]
 /* 00004988-00005134       .text ph_wind_move__FP8ph_class */
 static void ph_wind_move(ph_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

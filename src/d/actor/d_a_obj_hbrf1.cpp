@@ -2,6 +2,12 @@
  * d_a_obj_hbrf1.cpp
  * Object - Wind Temple - Elevator (giant fan room)
  */
+// A lift with collision (HBRF1) that moves 750 at 10 a frame, with JA_SE_OBJ_B_LIFT_MOVE, then
+// JA_SE_OBJ_B_LIFT_STOP and a shock. Params: byte 0 the switch, bit 8 the type (0 up while the
+// switch is off, 1 up while on), byte 2 the event set (0: event bits UNK_1540 up, UNK_1520 down;
+// 1: UNK_1510 up, UNK_1508 down; others none). The first move each way with its bit unset plays
+// LiftMove after 30 frames. Stage name Hbrf1: 4 placed (K_Testa 2 with set 0; kaze and Cave08
+// with 0xFF, so no event). M_evname is not used. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_hbrf1.h"
@@ -109,6 +115,7 @@ void daObjHbrf1::Act_c::daObjHbrf1_down_stop() {
     }
 }
 
+// Unlike down_demo_wait, this does not order the event again while waiting. [asm]
 /* 0000066C-0000068C       .text daObjHbrf1_up_demo_wait__Q210daObjHbrf15Act_cFv */
 void daObjHbrf1::Act_c::daObjHbrf1_up_demo_wait() {
     if (eventInfo.checkCommandDemoAccrpt()) {

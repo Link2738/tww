@@ -2,6 +2,10 @@
  * d_a_kytag04.cpp
  * Tag - Weather Tag 4
  */
+// Switch-driven colour pattern (stage name kytag4; 3 placed, Abship 2, M_NewD2 1). Params: byte 0
+// the pattern while off, byte 1 while on; angle.x the switch. Five frames after the switch turns
+// on it sets the on pattern (dKy_change_colpat); when it turns off again, the off pattern.
+// scale is stored but unused. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kytag04.h"

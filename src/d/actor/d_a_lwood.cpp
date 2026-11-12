@@ -2,6 +2,9 @@
  * d_a_lwood.cpp
  * Object - Normal tree
  */
+// A tree with collision (ALWD, stage name lwood; 100 placed, sea 25, A_mori 21). Its leaves joint
+// (J_Alwd_ha) sways with the local wind, at a random phase and a random strength 0.8 to 1.2; the
+// sway is skipped while the screen is monotone. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_lwood.h"

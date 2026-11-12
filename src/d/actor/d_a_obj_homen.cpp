@@ -2,6 +2,12 @@
  * d_a_obj_homen.cpp
  * Object - Wind Temple - Face stone Hookshot target
  */
+// A face stone pulled off the wall with the Hookshot. Homen1 (mType 0, the large face) 3 placed,
+// Homen2 (mType 1) 30; all in kaze (18), Cave08 (13) and K_Testc (2). [data]
+// Params: bits 8-11 arg0 (bit 0 the type), bits 12-17 an item table entry (0x3F none), bits 0-6
+// its item bit, bits 18-21 an enemy from make_enemy_dat (0xF none), byte 3 a switch set when it
+// lands (already set, it is not created). With an enemy it joins fopAc_ENEMY_e. [asm]
+// Placed with an enemy: 2 yellow ChuChus (Cave08, kaze) and 2 Bokoblins (kaze room 10). [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_homen.h"
@@ -401,6 +407,8 @@ void Act_c::exe_event() {
     }
 }
 
+// Entries 0-5 are d_a_bk (param 0x20 steps), 6-10 d_a_cc of each colour, behaviour 0. Spawned 6
+// frames after the pull starts, at 300 up and 350 out (large) or 25 out (small). [asm]
 /* 00001498-0000159C       .text make_enemy__Q210daObjHomen5Act_cFv */
 void Act_c::make_enemy() {
     struct enemy_dat_s {
@@ -513,6 +521,7 @@ BOOL Act_c::process_free_init() {
     return TRUE;
 }
 
+// On the wall until the Hookshot pulls it (fopAcM_checkHookCarryNow). [asm]
 /* 000018D8-0000196C       .text process_free_main__Q210daObjHomen5Act_cFv */
 void Act_c::process_free_main() {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -529,6 +538,7 @@ void Act_c::process_free_main() {
     set_co_collision();
 }
 
+// Starts the fall: the large face sets event bit UNK_3410. The item drops 20 frames later. [asm]
 /* 0000196C-00001AFC       .text process_wait_falldown_init__Q210daObjHomen5Act_cFv */
 BOOL Act_c::process_wait_falldown_init() {
     fopAcM_cancelHookCarryNow(this);
@@ -600,6 +610,8 @@ BOOL Act_c::process_falldown_init() {
     return TRUE;
 }
 
+// Tips over forward; the two capsules (set_at_collision) hit Link if he is under it. On landing
+// it spawns the d_a_obj_homensmk dust, sets the switch and is no longer drawn. [asm]
 /* 00001C84-00001EC8       .text process_falldown_main__Q210daObjHomen5Act_cFv */
 void Act_c::process_falldown_main() {
     set_at_collision();
@@ -689,6 +701,7 @@ BOOL Act_c::process_none_init() {
     return TRUE;
 }
 
+// Deletes itself once its enemy is gone. [asm]
 /* 00002054-000020AC       .text process_none_main__Q210daObjHomen5Act_cFv */
 void Act_c::process_none_main() {
     if (mEnemyID != fpcM_ERROR_PROCESS_ID_e) {
@@ -732,6 +745,8 @@ void Act_c::process_main() {
     }
 }
 
+// The Hookshot target sphere on the nose (radius 105 large, 57 small). The large face sets event
+// bit UNK_3880 when hooked. [asm]
 /* 000022A8-000023C8       .text set_co_collision__Q210daObjHomen5Act_cFv */
 void Act_c::set_co_collision() {
     if (mSph.ChkTgHit()) {

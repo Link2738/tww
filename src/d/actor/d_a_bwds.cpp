@@ -2,6 +2,12 @@
  * d_a_bwds.cpp
  * Enemy - Molgera Larva
  */
+// Molgera's larvae. Spawned by d_a_bwd with param 0x23 after each big hit, never placed. 4
+// health. They swim under the sand toward Link and leap at him from within 600. The head only
+// takes hits while it is out of the sand (m02FB); the body only deflects. A Hookshot hit
+// (m0544, a separate sphere) pulls one out and leaves it flopping on the sand for 220 frames.
+// On death the body blows up segment by segment and drops a heart. Molgera's death deletes
+// them (m04F4). [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/d_cc_uty.h"
@@ -216,6 +222,9 @@ static void pos_move(bwds_class* i_this, s16 param_2) {
     i_this->actor.current.angle.x = -cM_atan2s(actor->speed.y, std::sqrtf(actor->speed.x * actor->speed.x + actor->speed.z * actor->speed.z));
 }
 
+// Under the sand: step -10 is the first jump out at a random angle. 0-1 swim at Link, weaving;
+// within 600 they leap (2-3, the bite sphere on), dive back in (4), then hop about for 120 to
+// 170 frames (5) before hunting again. [asm]
 /* 00001198-000019CC       .text ug_move__FP10bwds_class */
 static void ug_move(bwds_class* i_this) {
     fopAc_ac_c* player = dComIfGp_getPlayer(0);
@@ -386,6 +395,8 @@ static void hook_on(bwds_class* i_this) {
     }
 }
 
+// Pulled out by the Hookshot: flops about on the sand for l_HIO.m014 (220) frames, open to any
+// weapon, then back under (ug_move step 3). [asm]
 /* 00001B38-00001DCC       .text hook_chance__FP10bwds_class */
 static void hook_chance(bwds_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -435,6 +446,7 @@ static void hook_chance(bwds_class* i_this) {
     i_this->m02FB = 1;
 }
 
+// Death: hops back from Link, blows up one body segment a frame, then leaves a heart. [asm]
 /* 00001DCC-00002178       .text fail__FP10bwds_class */
 static void fail(bwds_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

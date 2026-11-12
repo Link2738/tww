@@ -2,6 +2,12 @@
  * d_a_obj_ladder.cpp
  * Object - Drop-down ladder
  */
+// A ladder with collision that drops (MHSG6/9/12/15/4H: 600, 900, 1200, 1500 and 450 tall, by
+// param bits 0-2). Params: byte 1 the switch, byte 2 an event number. Already set or 0xFF: it
+// starts on the ground. When the switch is set it plays the event if the stage has it, shakes
+// for 15 frames, then falls under gravity -5 and bounces 3 times (JA_SE_OBJ_LADDER_FALL_1 with
+// the floor material and a shock, then _FALL_2 at 75, 50, 45). Stage names Mhsg6 7, Mhsg9 2,
+// Mhsg12 2, Mhsg15 2 and Mhsg4h 17 (Abship 7). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ladder.h"

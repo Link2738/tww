@@ -2,6 +2,8 @@
  * d_a_obj_Vteng.cpp
  * Object - Puppet Ganon curtains (intro cutscene)
  */
+// A ceiling model with collision (VTENG) whose animation plays once from frame 0x3B unless the
+// demo drives it. Stage name Vteng: 2 placed (GanonK, K_Teste). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_Vteng.h"

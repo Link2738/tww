@@ -2,6 +2,9 @@
  * d_a_swtdoor.cpp
  * Object - Forsaken Fortress tower (Helmaroc King fight) - gray "doors" blocking windows
  */
+// A wall that sinks when its switch (byte 3) is on, 10 per frame down to 300. Byte 0 is read and
+// unused. Stage name SWTdoor, 3 placed, all in M2tower with params 0xFFFFFFFF (switch 0xFF).
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_swtdoor.h"

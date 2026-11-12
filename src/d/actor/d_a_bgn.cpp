@@ -2,6 +2,17 @@
  * d_a_bgn.cpp
  * Boss - Puppet Ganon (Phase 1) / Ｇ（クグツ）(G (Puppet))
  */
+// Puppet Ganon, form 1 (the marionette), and the manager of the whole fight. Placed in GanonK:
+// param 1 on layers 0-1, param 0xFF on layers 8-9. [data] With 0xFF it only draws the floor
+// water and reflections. [asm]
+// Create spawns the other two forms (d_a_bgn2 spider, d_a_bgn3 worm) and eight d_a_att string
+// targets. All three forms stay alive the whole fight; the current one is m02B5, which is copied
+// from l_HIO.m024 every frame, so the phase lives in the HIO block. The inactive forms park far
+// away. Every form is drawn from here (daBgn2_Draw, daBgn3_Draw) so it can also draw them
+// mirrored on the floor (mDoExt_J3DModelPacketS). [asm]
+// The body is chains of spheres on eight strings (mAAA8: 0-1 head, 2 pelvis, 3-4 arms, 5-6 legs,
+// 7 tail); m2D0 marks a string cut. 3 health, taken only by Light Arrows on the tail tip
+// (mCoreSph). [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bgn.h"
@@ -444,6 +455,9 @@ static csXyz start_pause[] = {
 
 static cXyz center_pos(0.0f, 0.0f, 0.0f);
 
+// The floor reflection: draws a model again flipped in Y about a plane 30 below the origin, with
+// front faces culled, into the sky list. Used for the boss, the room (R00), the Vteng objects
+// and the Keese. l_HIO.m00C turns it off. [asm]
 void mDoExt_J3DModelPacketS::draw() {
     J3DShapePacket* shapePacket;
     J3DMatPacket* matPacket;
@@ -1436,6 +1450,8 @@ static void part_mtx_set(bgn_class* i_this, int param_2, part_s* param_3, int pa
     }
 }
 
+// Only mCoreSph, the tail tip, takes damage (Light Arrows only): one health and the damage hop;
+// at 0 the change into the spider (hensin). Hits on the other spheres just clank. [asm]
 /* 00003FD0-000044DC       .text damage_check__FP9bgn_class */
 static void damage_check(bgn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1940,6 +1956,12 @@ static void ki_set(bgn_class* i_this) {
     }
 }
 
+// Between attacks it drifts about and dances. The cycle (mC754) is a Keese dance (dance_A, with
+// 3, 4 or 5 Keese by health, at most 5 alive; 3, 5 or 8 in the demo build), then three rounds of
+// dance_B each ending in an attack. It never moves on while a Keese is alive. The attack follows
+// the strings: both arms on, the double punch; one arm, that punch; no arms, the tail spin if the
+// tail string holds, else the body slam. Both head strings cut, and 600 frames since the second,
+// it re-strings itself instead (head_recover). Dances speed up as health drops. [asm]
 /* 00005B2C-0000616C       .text dance_0__FP9bgn_class */
 static void dance_0(bgn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2046,6 +2068,8 @@ static void dance_0(bgn_class* i_this) {
     }
 }
 
+// Punches: the hand flies out along a line and lands on Link. With both head strings cut it
+// cannot see, and aims at a random point 1000 to 2000 in front of itself. [asm]
 /* 0000616C-00007108       .text punch_LR__FP9bgn_class */
 static void punch_LR(bgn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2272,6 +2296,7 @@ static void start(bgn_class* i_this) {
     }
 }
 
+// No arms and no tail: hops over Link and drops, chest and pelvis hurting, bouncing once. [asm]
 /* 000071C0-000076F4       .text body_attack__FP9bgn_class */
 static void body_attack(bgn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2367,6 +2392,7 @@ static void body_attack(bgn_class* i_this) {
     }
 }
 
+// No arms: spins for 60 frames chasing Link, the tail swinging low and hurting. [asm]
 /* 000076F4-000078D0       .text tail_attack__FP9bgn_class */
 static void tail_attack(bgn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2451,6 +2477,8 @@ static void damage(bgn_class* i_this) {
     }
 }
 
+// Rises to 4000 and re-strings the head, arms and tail. Each now takes 2 hits to cut (the tail 1
+// in the demo build). [asm]
 /* 00007B38-00007CF0       .text head_recover__FP9bgn_class */
 static void head_recover(bgn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2489,6 +2517,9 @@ static void head_recover(bgn_class* i_this) {
     }
 }
 
+// The change into the spider: all strings drop, it bounces three times, fades to black and
+// shrinks, and on the last frame hands its place and angle to d_a_bgn2 and bumps the phase
+// (l_HIO.m024). [asm]
 /* 00007CF0-000084B4       .text hensin__FP9bgn_class */
 static void hensin(bgn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2663,6 +2694,8 @@ static void himo_control(bgn_class* i_this, move_s* param_2, cXyz* param_3) {
 }
 
 #if VERSION > VERSION_DEMO
+// Not in the demo build: the rope that drops from the ceiling at (-15, 4441, 375) after the
+// worm dies, before the stage reload. [asm]
 /* 00008888-00008C20       .text last_himo_control__FP9bgn_class */
 static void last_himo_control(bgn_class* i_this) {
     cXyz* pcVar5;
@@ -3023,6 +3056,8 @@ static void move(bgn_class* i_this) {
     }
 }
 
+// Cameras by mCSMode: 1-3 marionette to spider, 10-12 spider to worm, 20-22 the death, which ends
+// by setting mCC90 to 2. Leftover JUTReport "K SUB  COUNT" every frame. [asm]
 /* 0000A104-0000AE8C       .text demo_camera__FP9bgn_class */
 static void demo_camera(bgn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -3277,6 +3312,9 @@ static void* bgn3_s_sub(void* param_1, void*) {
 }
 #endif
 
+// Also spawns the queued Keese at random points 3500 to 4000 up. The x offset is set twice and z
+// never, so z is whatever was on the stack. mCC90 1 (from d_a_bgn2) moves to the worm phase; 2
+// (the death) reloads GanonK, start 4 layer 9, and sets UNK_3F10. [asm]
 /* 0000AE8C-0000B134       .text daBgn_Execute__FP9bgn_class */
 static BOOL daBgn_Execute(bgn_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -3516,6 +3554,13 @@ static BOOL useHeapInit(fopAc_ac_c* a_this) {
     }
 }
 
+// With UNK_3F10 set (beaten) it goes inactive and spawns the real climbing rope: d_a_himo3
+// at x 375, z -15, with a d_a_kui turned 0x4000. [asm]
+// Note: the defeat-scene rope (last_himo_control) hangs at x -15, z 375, where the worm dies.
+// Same distance from the centre, a quarter turn apart. Whether the move is a slip or meant
+// for the reloaded room is not known 
+// Otherwise it spawns the string targets (3 hits each) and the other two forms and starts the
+// music. [asm]
 /* 0000B9DC-0000CA80       .text daBgn_Create__FP10fopAc_ac_c */
 static cPhs_State daBgn_Create(fopAc_ac_c* a_this) {
     static dCcD_SrcSph cc_sph_src = {

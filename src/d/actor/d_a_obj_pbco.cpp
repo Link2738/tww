@@ -2,6 +2,9 @@
  * d_a_obj_pbco.cpp
  * Object - Windfall Island - Bomb Shop - Flip up countertop/counter door
  */
+// A shop counter (stage name Pbco; 1 placed, Obombh). With event bit ENDLESS_NIGHT set and Nayru's
+// Pearl not yet obtained it uses the PBCO model with no collision; otherwise PBC2 with the PBCO
+// dzb. _execute returns false. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_pbco.h"

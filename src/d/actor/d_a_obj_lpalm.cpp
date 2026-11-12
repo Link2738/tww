@@ -2,6 +2,9 @@
  * d_a_obj_lpalm.cpp
  * Object - Palm tree
  */
+// A palm tree with collision (OYASHI; stage name Oyashi, 81 placed, sea 53). The trunk leans with
+// the wind (quaternion toward the wind direction, up to 0x600 at full power) and the two leaf
+// joints flutter. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_lpalm.h"
@@ -38,6 +41,7 @@ static BOOL nodeCallBack(J3DNode* joint, int calcTiming) {
     return TRUE;
 }
 
+// modelData is used for the joint callbacks before the NULL check below. [asm]
 /* 00000164-00000268       .text CreateHeap__12daObjLpalm_cFv */
 BOOL daObjLpalm_c::CreateHeap() {
     J3DModelData* modelData = (J3DModelData*)dComIfG_getObjectRes(M_arcname, dRes_INDEX_OYASHI_BDL_OYASHI_e);

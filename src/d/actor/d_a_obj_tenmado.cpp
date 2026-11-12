@@ -2,6 +2,10 @@
  * d_a_obj_tenmado.cpp
  * Object - Earth Temple - Doors blocking ceiling light beam
  */
+// A two-leaf skylight shutter with collision (stage name Tenmado; 4 placed, M_Dai 3, M_DaiMB 1).
+// Params: byte 0 the switch that opens it, byte 1 a switch it sets as it opens. When the first
+// switch turns on, the leaves slide apart 1 per frame to 100 each way, setting the second switch
+// past 80. The collision matrix does not follow the leaves. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_tenmado.h"
@@ -32,6 +36,8 @@ BOOL daObjTenmado::Act_c::CreateHeap() {
     return TRUE;
 }
 
+// Created with the switch already on, it opens the leaves to 200, twice the 100 they reach when
+// opening live. [asm]
 /* 000001B4-0000029C       .text Create__Q212daObjTenmado5Act_cFv */
 BOOL daObjTenmado::Act_c::Create() {
     fopAcM_SetMtx(this, mModel1->getBaseTRMtx());

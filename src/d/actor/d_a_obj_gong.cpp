@@ -2,6 +2,8 @@
  * d_a_obj_gong.cpp
  * Object - Gong (Tetra's Ship)
  */
+// A gong (VDORA) with a skinned hit animation and specular map, driven by the demo when one runs.
+// Stage name Vdora: 2 placed (sea, K_Testa). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_gong.h"

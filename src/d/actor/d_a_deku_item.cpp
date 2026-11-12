@@ -2,6 +2,11 @@
  * d_a_deku_item.cpp
  * Item - Deku Leaf (collectable)
  */
+// Param byte 0 the item bit; not created once it is set or before event bit UNK_1801. It falls
+// under gravity -3, shines (DEKULEAFSHINE00, JA_SE_OBJ_DEKU_HA_LIGHT every frame) and on contact
+// hides and orders DEFAULT_GETITEM with a Deku Leaf item; the item bit is set when that ends.
+// The VLFDK bck is held on its last frame; the VLFDM bck is loaded and never played. Stage name
+// itemDek: 3 placed, Omori 2, K_Test2. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_deku_item.h"

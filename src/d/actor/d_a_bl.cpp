@@ -2,6 +2,14 @@
  * d_a_bl.cpp
  * Enemy - Bubble
  */
+// Bubble. Every placement uses the stage name bable (105); bable_r is never placed. Most in
+// Xboss2 and M_DaiB (19 each) and M_Dai (10). [data]
+// Params: byte 0 m2D0 (bit 0 blue, the curse, else red, the fire; bit 1 follow the room path
+// in byte 2, speed from angle.z with a minimum of 4; 0x80 a bare skull), byte 1 a switch to
+// appear on, byte 3 m2D1 (0 floats over the ground below, else at its placed height). Placed
+// byte 0: red 24, blue 16, red on a path 19, blue on a path 8, skull 38. [asm] [data]
+// 2 health (a skull 1). Touching a flaming one sets Link on fire (red) or curses him (blue).
+// Items: the bable_r table for red, bable for blue. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bl.h"
@@ -243,6 +251,7 @@ static void anm_init(bl_class* i_this, int bckFileIdx, f32 morf, u8 loopMode, f3
     }
 }
 
+// The bare skull: any hit but wind or the Hookshot breaks it; those knock it about. [asm]
 /* 0000094C-00000C08       .text skull_atari_check__FP8bl_class */
 static BOOL skull_atari_check(bl_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -325,6 +334,10 @@ static BOOL skull_atari_check(bl_class* i_this) {
     return TRUE;
 }
 
+// Blue. While it burns (m2D3) most hits bounce off; the Deku Leaf, a bomb, an Ice Arrow or the
+// Hookshot knock it to the floor without its flame, and the Grappling Hook steals once. On the
+// floor normal damage applies and the Skull Hammer kills; an Ice
+// Arrow there freezes it. A Light Arrow kills it either way. [asm]
 /* 00000C44-00001768       .text blue_body_atari_check__FP8bl_class */
 static BOOL blue_body_atari_check(bl_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -535,6 +548,10 @@ static BOOL blue_body_atari_check(bl_class* i_this) {
     return TRUE;
 }
 
+// Red. Sword hits hurt it even while it burns, knocking it back, and the Skull Hammer always
+// kills. Plain or Fire Arrows put its flame out (plain fire does not), as do the hits that floor
+// a blue one. The Boomerang bounces off. A Light Arrow kills, an Ice Arrow freezes. A nearby
+// hammer quake only knocks a Bubble about once its flame is out. [asm]
 /* 00001768-000022BC       .text red_body_atari_check__FP8bl_class */
 static BOOL red_body_atari_check(bl_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -846,6 +863,8 @@ static s16 way_check(bl_class* i_this, s16 param_2) {
     return param_2;
 }
 
+// Rises when Link is within 1000, then wanders or follows its path, turning away from walls.
+// Within 600 with a clear line it charges (action_kougeki), giving up past 700. [asm]
 /* 00003054-000039F0       .text action_dousa__FP8bl_class */
 static void action_dousa(bl_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1185,6 +1204,8 @@ static void action_sagarimasu(bl_class* i_this) {
     }
 }
 
+// Knocked about: tumbles, lands without its flame and rolls; after 70 to 105 frames it rises
+// and lights again. [asm]
 /* 00004128-000046BC       .text action_kaze_move__FP8bl_class */
 static void action_kaze_move(bl_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1521,6 +1542,8 @@ static void action_come_wait(bl_class* i_this) {
     }
 }
 
+// The bare skull can be picked up and thrown; it breaks where it lands, dropping 0 or 1
+// heart. [asm]
 /* 00004DBC-00005104       .text action_normal_skull__FP8bl_class */
 static void action_normal_skull(bl_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1626,6 +1649,7 @@ static void action_normal_skull(bl_class* i_this) {
     skull_atari_check(i_this);
 }
 
+// Also deletes itself if it falls 500 below its float height over ground code 4. [asm]
 /* 00005104-00005504       .text daBL_Execute__FP8bl_class */
 static BOOL daBL_Execute(bl_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

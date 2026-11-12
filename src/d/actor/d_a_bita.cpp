@@ -2,6 +2,13 @@
  * d_a_bita.cpp
  * Object - Wooden platforms (Gohma fight)
  */
+// A board with collision (MBIT1 or MBIT2 by param byte 0, over 1 as 1, 0xFF as 0); stage name
+// Bita, 14 placed, M_DragB 7, Xboss0 7. Byte 1 picks scale 1.5, 2 or 3 for the models and the
+// cylinder, but the collision matrix has no scale; every placement has 0xFF (scale 1). Fire on its
+// cylinder (scale.x * 400 wide, 160 ahead and 80 down) burns it: the EF model's brk,
+// JA_SE_OBJ_BTD_BOARD_BURN at 20, BTDBURNEDBOARD00/01 and JA_SE_OBJ_BTD_BOARD_BRK at 88, deleted
+// at 90. Once daBtd's m6E16 reaches 100, boards within 1500 of the camera delete themselves.
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bita.h"

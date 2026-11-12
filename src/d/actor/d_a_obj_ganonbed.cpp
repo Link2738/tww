@@ -2,6 +2,8 @@
  * d_a_obj_ganonbed.cpp
  * Object - Bed (Puppet Ganon intro cutscene)
  */
+// A bed model with collision (K_GBED). Stage name Gbed: 1 placed, GanonK. The demo build's HIO can
+// delete it or switch its lighting. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ganonbed.h"

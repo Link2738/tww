@@ -2,6 +2,10 @@
  * d_a_bgn3.cpp
  * Boss - Puppet Ganon (Phase 3) / Ｇ（ハヤムシ）(G (Fast worm))
  */
+// Puppet Ganon, form 3 (the worm; HIO "G (Fast worm)"). Spawned by d_a_bgn, idle until the phase
+// is 2, and drawn by d_a_bgn. 3 health, taken only by Light Arrows on the tail tip (mParts[8]).
+// Hits on the face stun it, longer for heavier weapons (damage_check). The hairs are 3D lines
+// (ke_control), 40 on the head and fewer down the body. [asm]
 
 #include "d/dolzel_rel.h" // IWY pragma: keep
 #include "d/actor/d_a_bgn3.h"
@@ -333,6 +337,10 @@ static void pos_move(bgn3_class* i_this) {
     actor->speed.y += REG0_F(3) + -5.0f;
 }
 
+// Crawls at 50, 60 or 80 by health, curving at random. Every third wall hit it homes on Link,
+// weaving, for 60, 40 or 30 frames; All-Purpose Bait (d_a_esa) pulls it for as long as the bait
+// exists, turning twice as fast. Each wall hit turns it round and drops 3 Morths (d_a_ks, at
+// most 20 alive). [asm]
 /* 000018EC-00001D64       .text move0__FP10bgn3_class */
 static void move0(bgn3_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -502,6 +510,8 @@ static void damage(bgn3_class* i_this) {
     i_this->m0FDFC.OffAtSetBit();
 }
 
+// The death: bounces four times (camera 20), then spins up and fades. It drifts to (-15, 375),
+// under where the defeat rope drops (to the centre in the demo build). [asm]
 /* 00002100-00002524       .text end__FP10bgn3_class */
 static void end(bgn3_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -575,6 +585,8 @@ static void end(bgn3_class* i_this) {
 #endif
 }
 
+// Face hits stun for l_HIO.m26-m30 frames: Skull Hammer 250, bomb 200, sword 120 or 45 by hit
+// type, arrow 20, anything else 10. Light Arrows on the tail take one health. [asm]
 /* 00002524-00002C18       .text damage_check__FP10bgn3_class */
 static void damage_check(bgn3_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

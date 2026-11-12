@@ -2,6 +2,8 @@
  * d_a_floor.cpp
  * Object - Wind Temple - Breakable floor (Iron Boots, Bombs, etc.)
  */
+// A floor panel broken by the Iron Boots (stage name Hhyu1; 9 placed, kaze 7). Param byte 0 is a
+// switch: set on breaking, and already set, it is not created. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_floor.h"
@@ -16,6 +18,10 @@ namespace daFloor_prm {
 
 const char daFloor_c::m_arcname[6] = "Hhyu1";
 
+// Link on it without the boots arms it (field_0x2d9); any horizontal movement by Link disarms it
+// (Execute). Armed and then wearing the boots, it breaks 6 frames later. So it breaks only when
+// the boots go on while he stands still on it, not when he walks onto it already wearing them.
+// [asm]
 /* 00000078-000000DC       .text rideCallBack__FP4dBgWP10fopAc_ac_cP10fopAc_ac_c */
 static void rideCallBack(dBgW*, fopAc_ac_c* i_this, fopAc_ac_c* i_other) {
     if (fopAcM_GetName(i_other) == fpcNm_PLAYER_e && !((daPy_py_c*)i_other)->checkEquipHeavyBoots()) {

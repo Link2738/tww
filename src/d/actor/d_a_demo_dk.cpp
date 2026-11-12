@@ -2,6 +2,8 @@
  * d_a_demo_dk.cpp
  * NPC - Helmaroc King (Forsaken Fortress 1 exterior)
  */
+// A resting dragon model (DK_L) for a cutscene stage, idling with a 1-in-10 yawn after at least
+// three idle loops; height pinned to its placed y. Stage name Demo_Dk: 1 placed, MajyuE. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_demo_dk.h"

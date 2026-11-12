@@ -2,6 +2,12 @@
  * d_a_obj_vfan.cpp
  * Object - Ganon's Tower - Phantom Ganon door
  */
+// Stage name Vfan: 1 placed, GanonM, switch 0x18 in param byte 0; not created (cPhs_STOP_e) once
+// it is set. A TG cylinder (100 by 300) that only AT_TYPE_PGANON_SWORD hits: a hit releases the
+// collision and orders event Vfan. At its start: JA_SE_READ_RIDDLE_1, JA_SE_OBJ_GN_SW_DR_LIGHT,
+// GANONDOORSMOKE00 and GANONDOORFLASH00-09; 150 frames in the model hides with
+// JA_SE_OBJ_GN_SW_DR_BREAK. When the event ends it sets the switch and event bit UNK_3A08 (read by
+// d_a_fganon and d_a_boko) and deletes itself. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_vfan.h"

@@ -2,6 +2,14 @@
  * d_a_shand.cpp
  * Object - Forbidden Woods - Ceiling tentacle / 汎用触手 (general purpose tentacle)
  */
+// Not placed: the vines that hang Forbidden Woods platforms from the ceiling. Each d_a_kita
+// (hanging flower platform) spawns 4 with param 0x35, which also picks the leafy vine texture;
+// each d_a_kokiie (hanging flower house) spawns them with param 1, which draws them thicker.
+// The owner hands over its ID (field_308), an anchor point (field_310) and a status byte it
+// reads back (field_314: 1 cut, 2 reattached). [asm]
+// The top end finds the ceiling with a line check up to 4000. Any hit but water, wind or
+// light cuts it; it dangles for l_HIO.field_8 (50) frames, then reattaches, unless the owner's
+// health is 0, when it stays cut. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_shand.h"

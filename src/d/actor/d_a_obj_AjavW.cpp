@@ -2,6 +2,8 @@
  * d_a_obj_AjavW.cpp
  * Object - Water inside Jabun's cave
  */
+// A water surface with collision and a scrolling texture (AJAVW model, btk, dzb), placed
+// unrotated. Stage name AjavW: 2 placed, both Pjavdou. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_AjavW.h"

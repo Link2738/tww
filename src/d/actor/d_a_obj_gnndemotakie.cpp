@@ -2,6 +2,9 @@
  * d_a_obj_gnndemotakie.cpp
  * Object - Ganondorf Fight - Central waterfall (after fight)
  */
+// A looping waterfall texture model (GNN_DEMO_TAKI_E, btk). Stage name Gntakie: 2 placed, GTower at
+// 0,0,0 and K_Teste. Only the scale is applied to the model, never a translation or rotation, so it
+// draws in model space whatever its placed position. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_gnndemotakie.h"

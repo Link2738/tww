@@ -2,6 +2,9 @@
  * d_a_demo_kmm.cpp
  * NPC - Seagull (cutscenes)
  */
+// A cutscene-driven model (KA, wait animation KA_WAIT1) that takes position, rotation and animation
+// from the running demo (dDemo_setDemoData) and otherwise just plays its loop. It has no stage name
+// and nothing in the tree creates it by process name. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_demo_kmm.h"

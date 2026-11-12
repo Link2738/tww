@@ -2,6 +2,11 @@
  * d_a_obj_shelf.cpp
  * Object - Wooden shelf
  */
+// A shelf with collision (OTANA). A quake at it shakes it for 4 frames, then it topples 90 degrees
+// on X with up to 5 bounces (JA_SE_OBJ_RACK_BREAK on the first); a quake while fallen sets it
+// bouncing again. Param bit 0 (stage name OtanaG): while event bit UNK_0001 is unset, a quake holds
+// daNpc_Ba1's event and swings it back to upright instead. Stage names Otana 43 (Ojhous 13,
+// Ojhous2 13) and OtanaG 0. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_shelf.h"

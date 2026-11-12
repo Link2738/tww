@@ -2,6 +2,14 @@
  * d_a_fganon.cpp
  * Mini-Boss - Phantom Ganon
  */
+// Phantom Ganon, all forms (stage name Fganon). 16 placed: kind 1 12 (GanonJ 7, GanonC 4,
+// KATA_RM 1), kind 2 2 (GanonC, GanonM), kind 0 1 (sea), and one 0xF in KATA_RM. [data]
+// Params: low nibble m2BC kind (0 first fight, 30 health; 1 falls to one Master Sword hit and
+// stays away once the Light Arrow is owned; 2 appears only with the Light Arrow and only it
+// kills; 3 a spin-attack copy, high nibble its index), byte 1 m2BD trigger range in tens, byte 2
+// a switch: set, it is not created, and kind 2 then leaves its sword (d_a_boko
+// Type_PGANON_SWORD_e) unless event bit UNK_3A08 is set. Its cape is a d_a_mant. [asm] [data]
+// Only a Master Sword (any of the three) damages it. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_fganon.h"
@@ -186,6 +194,8 @@ void fly_se_set(fganon_class* i_this) {
     fopAcM_seStart(a_this, JA_SE_CM_PG_FLYING, uVar2);
 }
 
+// Hovers 1500 in front of Link (by his facing, re-read at random) and 400 up, then after 50 to
+// 100 frames throws an energy ball (shot). [asm]
 /* 00000C14-00001170       .text fly__FP12fganon_class */
 void fly(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -252,6 +262,9 @@ void fly(fganon_class* i_this) {
     }
 }
 
+// The energy ball rally: when the ball comes near him he swings it back, half the time each way.
+// Once Link has returned it 7 times (20 in the demo build), or after his own 4th swing with a 30%
+// chance per swing, he misses and it hits him. [asm]
 /* 000015A8-00001BD0       .text shot__FP12fganon_class */
 void shot(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -347,6 +360,8 @@ void shot(fganon_class* i_this) {
     }
 }
 
+// Appears behind Link (270 back, if the line is clear) and spins at him; the sword hits for 8.
+// [asm]
 /* 00001BD0-000020B8       .text spinattack__FP12fganon_class */
 void spinattack(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -575,6 +590,7 @@ void mahou_set(fganon_class* i_this) {
     i_this->m670 = 0;
 }
 
+// Charges a dark ball over his head and throws it; it bursts into eight d_a_fgmahou shots. [asm]
 /* 00002A38-000030C4       .text shot2__FP12fganon_class */
 void shot2(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -685,6 +701,9 @@ void shot2(fganon_class* i_this) {
     tama_set(i_this);
 }
 
+// Kinds 1 and up: he and four copies (kind 3, params index * 16 | 3) appear 600 around Link, 72
+// degrees apart, close in and spin. A hit on a copy deletes it; copies also vanish when he is
+// knocked down. [asm]
 /* 000030C4-00003690       .text spinattack2__FP12fganon_class */
 void spinattack2(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -764,6 +783,7 @@ void spinattack2(fganon_class* i_this) {
     }
 }
 
+// Knocked down: falls and lies for 150 frames (l_HIO.m48) open to the sword. [asm]
 /* 00003690-00003B3C       .text down__FP12fganon_class */
 void down(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -848,6 +868,8 @@ BOOL kabe_check(fganon_class* i_this) {
     return FALSE;
 }
 
+// Picks the next attack. Kind 0: rally or spin, even odds. Others: copies 40% when no wall is
+// within 500 of Link in eight directions (kabe_check), else dark ball or rally, even odds. [asm]
 /* 00004300-000044CC       .text deru__FP12fganon_class */
 void deru(fganon_class* i_this) {
     i_this->m3AE = 3;
@@ -937,6 +959,7 @@ void kieru(fganon_class* i_this) {
     }
 }
 
+// Kind 1 beaten: his sword drops and sticks in the floor, then becomes a d_a_boko PG sword. [asm]
 /* 00004584-00004BC8       .text fail__FP12fganon_class */
 void fail(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -1055,6 +1078,8 @@ void fail(fganon_class* i_this) {
     }
 }
 
+// Kinds 1 and up wait, hidden at y -20000 when the Light Arrow rule says so, until Link is
+// within the trigger range. [asm]
 /* 00004BC8-00004DB4       .text standby__FP12fganon_class */
 void standby(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -1165,6 +1190,7 @@ void start(fganon_class* i_this) {
     }
 }
 
+// Kind 0 beaten: sets event bit UNK_3F20, laughs and flies off. [asm]
 /* 00005128-00005350       .text end__FP12fganon_class */
 void end(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -1218,6 +1244,7 @@ void end(fganon_class* i_this) {
     }
 }
 
+// Kind 2 hit by a Light Arrow: shrinks away in a white fog and leaves his sword. [asm]
 /* 00005350-000056A4       .text last_end__FP12fganon_class */
 void last_end(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -1309,6 +1336,10 @@ void last_end(fganon_class* i_this) {
     cLib_addCalcAngleS2(&a_this->current.angle.x, 0, 4, 0x800);
 }
 
+// Kind 2: a Light Arrow ends him, any other hit makes him vanish. Five d_a_fgmahou shots sent
+// back into him knock him down. His own ball hitting him knocks him down. A Master Sword hit
+// while he spins knocks him down; while down, kind 0 takes the damage and teleports away after
+// 10 of it (m690), and kind 1 is beaten at once. [asm]
 /* 000056A4-00006288       .text damage_check__FP12fganon_class */
 void damage_check(fganon_class* i_this) {
     CcAtInfo atInfo;
@@ -1539,6 +1570,7 @@ void damage_check(fganon_class* i_this) {
     }
 }
 
+// Kind 0 vanishes whenever Link drops below y 710. [asm]
 /* 00006288-00006560       .text move__FP12fganon_class */
 s32 move(fganon_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -2034,6 +2066,10 @@ BOOL ball_bg_check(fganon_class* i_this) {
     }
 }
 
+// The ball, speed 45 (kinds 1 and up: 60 in the demo build), gaining 2 per return. Link
+// returns it with a Master Sword slash or a bottle swing within 100 (checkBottleSwing); each
+// return sets event bit UNK_3F20. Hitting Link makes him laugh; kind 2 vanishes when it comes
+// back to him. It breaks on walls or 10000 from home. [asm]
 /* 0000778C-00008614       .text energy_ball_move__FP12fganon_class */
 void energy_ball_move(fganon_class* i_this) {
     daPy_py_c* player;

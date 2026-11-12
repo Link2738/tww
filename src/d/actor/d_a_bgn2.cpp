@@ -2,6 +2,10 @@
  * d_a_bgn2.cpp
  * Boss - Puppet Ganon (Phase 2) / Ｇ（タラバ） (G (King crab))
  */
+// Puppet Ganon, form 2 (the spider; HIO "G (King crab)"). Spawned by d_a_bgn, idle until the
+// phase is 1, and drawn by d_a_bgn. 3 health, taken only by Light Arrows on the weak point on
+// its body (m2A48). A Skull Hammer or bomb hit on the head (m039C) stuns it (mahi) for
+// l_HIO.m2A frames (600, 200 in the demo build). Landings drop 3 Keese, at most 10 alive. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bgn2.h"
@@ -309,6 +313,8 @@ static void ki_set(bgn2_class* i_this) {
     i_this->m2ED2 = l_HIO.m2C;
 }
 
+// The press: from the top of its jump it eases to 3000 over Link, hangs for 60, 50 or 40 frames
+// by health, then drops on him. Afterwards it sits for l_HIO.m24-m28 frames, then jumps. [asm]
 /* 00001474-00001860       .text plesattack__FP10bgn2_class */
 static void plesattack(bgn2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -388,6 +394,8 @@ static void plesattack(bgn2_class* i_this) {
     }
 }
 
+// Jumps toward the arena centre. Reaching the edge (1500) or within 500 of the centre it
+// starts spinning, faster as health drops, and goes back to the press. [asm]
 /* 00001860-00001C5C       .text jumpattack__FP10bgn2_class */
 static void jumpattack(bgn2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -524,6 +532,8 @@ static void damage(bgn2_class* i_this) {
     i_this->m2E80 = 0x800;
 }
 
+// At 0 health: the change into the worm. Starts camera 10, fades out, then hands its place to
+// d_a_bgn3, sets d_a_bgn's mCC90 to 1 and starts the worm music. [asm]
 /* 00001EB4-00002320       .text hensin__FP10bgn2_class */
 static void hensin(bgn2_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

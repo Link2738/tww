@@ -2,6 +2,9 @@
  * d_a_obj_tower.cpp
  * Object - Tower of the Gods exterior
  */
+// A very large tower model with collision (X_TOWER). Until event bit UNK_1E40 is set its create
+// returns cPhs_STOP_e (no resources loaded, and delete skips releasing them). Position comes from
+// the demo when it drives it. Stage name X_tower: 2 placed (sea, ADMumi). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_tower.h"

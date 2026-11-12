@@ -2,6 +2,11 @@
  * d_a_syan.cpp
  * Object - Unused - Chandelier (Spaceworld 2001 trailer)
  */
+// A chandelier (SYAN, looping bck, drawn at scale 0.25) with six torch flames on joint8, lit 5
+// frames apart; each has a TORCH particle leaning with its motion, a KAGEROU00 heat haze, and a
+// flickering two-sphere glow. Stage name SYAN: 2 placed, both K_Test5. state starts 0 and nothing
+// here changes it, so the swing of states 1 and 2 never runs; state 0 only twists it on Y and Z
+// (amplitude 200). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_syan.h"

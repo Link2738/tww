@@ -2,6 +2,8 @@
  * d_a_obj_pbka.cpp
  * Object - Windfall Island - Bomb Shop - Ceiling fan
  */
+// A ceiling fan that turns 0x500 per frame with the JA_SE_OBJ_BOMB_SHOP_FAN sound (stage name
+// Pbka; 2 placed, Obombh and K_Testc). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_pbka.h"

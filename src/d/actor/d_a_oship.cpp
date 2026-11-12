@@ -2,6 +2,15 @@
  * d_a_oship.cpp
  * Enemy - Warship (Great Sea enemy ship)
  */
+// Enemy warship on the sea (55 placed). 3 health, and only bombs hurt it: the ship's cannon
+// or thrown bombs. On sinking it sets mSwitchA and marks a salvage point at the wreck
+// (d_a_salvage onSalvageForOship). [data] [asm]
+// Params: byte 0 mSubMode (0 still, 1 follows its path in ranges A and B, 2 in every range;
+// placed 11/20/24), low nibble of byte 1 a Triforce chart (0xF none: it only appears once
+// that chart is held), next nibble the random salvage point it belongs to, byte 2 path,
+// byte 3 mSwitchA (set: not created). home.angle.x: low byte mSwitchB (must be set to
+// appear), high byte != 0xFF = the special golden ship. 20 are chart-gated (charts 4 and 7),
+// one per random salvage point; the golden ship is the one in sea 29. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_oship.h"
@@ -176,6 +185,7 @@ void daOship_c::pathMove() {
     }
 }
 
+// Return fire: each shot from Link's ship cannon makes it fire back 10 to 30 frames later. [asm]
 /* 000007E4-000008A0       .text plFireRepeat__9daOship_cFv */
 bool daOship_c::plFireRepeat() {
     if (dComIfGp_getShipActor() && dComIfGp_getShipActor()->checkShootCannon()) {
@@ -200,6 +210,8 @@ bool daOship_c::lineCheck(cXyz* param_1, cXyz* param_2) {
     return (BOOL)dComIfG_Bgsp()->LineCross(&mLinChk);
 }
 
+// Range by Link's distance: A under 2500, B under 6000, C under 12000, D beyond (no firing).
+// [asm]
 /* 000008F8-00000990       .text changeModeByRange__9daOship_cFv */
 void daOship_c::changeModeByRange() {
     f32 search_ac_dist = fopAcM_searchPlayerDistanceXZ(this);
@@ -624,6 +636,9 @@ void daOship_c::modeDamage() {
     }
 }
 
+// Aim misses on purpose: short by 300, plus half the distance beyond 3500, plus 500 for each
+// step mAimCounter is below 6 (Link's cannon shots raise it, a hit sets it to 6); 3000 more
+// when Link is swimming. 10% of shots aim true. [asm]
 /* 00001C98-00001EC8       .text modeAttackInit__9daOship_cFv */
 void daOship_c::modeAttackInit() {
     mAttackTimer = -1;
@@ -659,6 +674,7 @@ void daOship_c::modeAttackInit() {
     mTargetPos.z -= target_dist * cM_scos(angle);
 }
 
+// Fires only when stopped and with a clear line to the target, one bomb per free slot. [asm]
 /* 00001EC8-00002044       .text modeAttack__9daOship_cFv */
 void daOship_c::modeAttack() {
     if (mPathId != 0xFF) {
@@ -706,6 +722,8 @@ void daOship_c::modeDeleteInit() {
     fopAcM_createDisappear(this, &current.pos, 5, daDisItem_IBALL_e);
 }
 
+// Sinking. The golden ship runs the GOLD_SHIP_DELETE event, and in retail sets UNK_3E80 when
+// it ends. [asm]
 /* 00002104-00002414       .text modeDelete__9daOship_cFv */
 void daOship_c::modeDelete() {
     if (isSpecial()) {

@@ -2,6 +2,12 @@
  * d_a_esa.cpp
  * Item - All-Purpose Bait
  */
+// Bait (Link's ESA model, scale 0.65-1). Params: byte 0 how many more to throw, byte 1 the kind;
+// kind 0 throws that many more from Link's left hand with params 0xFF. The player creates the
+// first with 0xFFFF0014, so 21 pieces. Each flies off at random, bounces with damping and turns
+// back off walls. On ground it is deleted after 200-250 frames; on water or the sea it floats with
+// a HAMON00 ripple for the same time, or 10000 frames once event SO_ESA_XY starts. Stage name Esa
+// is never placed; enemies, birds and the fishman look for it. [asm] [data]
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_esa.h"

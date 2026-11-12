@@ -2,6 +2,12 @@
  * d_a_itembase.cpp
  * Item - Base Item Class
  */
+// Shared base for the item actors. CreateItemHeap builds the model from the given archive and
+// index and each animation not given as -1; Arrows (30) gets two extra copies of the model and
+// Arrows (20) one. brk 1 is held on a fixed frame when dItem_data gives one. Draw uses the mask-off
+// list (P1 in monotone); bombs reset Link's bomb brk to frame 0 and skip the VBOMB joint; the Bomb
+// Bag, Skull Hammer and small key get a specular map. Items with dItem_data flag 0x10 cast a real
+// shadow, others a simple one. The last CreateItemHeap argument is unused. [asm]
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_itembase.h"

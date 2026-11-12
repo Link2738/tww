@@ -2,6 +2,10 @@
  * d_a_obj_roten.cpp
  * Object - Zunari's Shop models (wooden posts and curtains on top)
  */
+// Market stalls with collision (archive Roten): stage names Roten2, Roten3, Roten4 (types 0-2 in
+// byte 3), one of each, all on the sea. Created only when enough of the 12 bag reserve slots are
+// in use (dComIfGs_isGetItemReserve; slot 0 always counts): over 3 for type 0, over 6 for type 1,
+// over 9 for any. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_roten.h"

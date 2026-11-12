@@ -2,6 +2,12 @@
  * d_a_obj_ebomzo.cpp
  * Object - Bombable statues (outside Dragon Roost Cavern entrance)
  */
+// A statue with collision (EBOMZO; stage name Ebomzo, 3 placed, Adanmae 2, K_Testc). Param byte 0
+// the switch. A bomb TG sphere (radius 10) sits 320 up and 50 ahead; a bomb hit whose actor is
+// within 100 of it turns the switch on, plays JA_SE_OBJ_BOMB_DN_ST_S and BIRDSTATUEHAHEN00 tinted
+// with the K0 colour, and tips the statue forward, speeding up by 1/8 a frame from 8, to 90
+// degrees; then a shock, JA_SE_OBJ_BOMB_DN_ST_E and BIRDSTATUESPLASH00. Already on, it starts
+// fallen. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ebomzo.h"

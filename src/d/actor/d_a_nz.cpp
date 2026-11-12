@@ -2,6 +2,12 @@
  * d_a_nz.cpp
  * Enemy - Rat
  */
+// Rat (stage name nezumi). 20 placed: TF_04 8, Abship 5, majroom 3, Siren 2, KATA_RM 2; more
+// come out of rat holes (d_a_nzg). [data]
+// Params: byte 0 m2B4 (nonzero: started small, linked to a hole), byte 1 m2B5 (nonzero: a Bomb
+// Rat; none placed directly), byte 3 m979. 1 health; any hit kills except a nearby hammer
+// quake, which flips it for 45 frames. A Bomb Rat is immune to bombs. It deletes itself after
+// falling 1000 below where it started or over a pit (ground code 4). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_nz.h"
@@ -361,6 +367,7 @@ static BOOL daNZ_Draw(nz_class* i_this) {
     return TRUE;
 }
 
+// Drops what it carries: a bomb is thrown forward (lit, for a Bomb Rat), an item tossed. [asm]
 /* 0000178C-00001888       .text item_poi__FP8nz_class */
 static void item_poi(nz_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -491,6 +498,8 @@ static void* s_a_d_sub(void* param_1, void* param_2) {
     return FALSE;
 }
 
+// Finds something to take: an unlit, resting bomb (param 1) or an item that can be grabbed,
+// searching outward in 50 steps up to 2000 with a clear line. [asm]
 /* 0000214C-000027FC       .text search_get_obj__FP8nz_class */
 static daBomb_c* search_get_obj(nz_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -686,6 +695,9 @@ static s32 body_atari_check(nz_class* i_this) {
     return 0;
 }
 
+// Wanders, sticking to floors, walls and ceilings by line checks. Within 500 of Link: if he
+// faces it, it runs off; if not, it leaps at him (nz2_move). From a ceiling more than 400
+// above him it drops down. It goes after anything search_get_obj finds. [asm]
 /* 00003240-000042D8       .text nz_move__FP8nz_class */
 static void nz_move(nz_class* i_this) {
     /* Nonmatching - search_get_obj */
@@ -991,6 +1003,8 @@ static void nz_move(nz_class* i_this) {
     }
 }
 
+// The steal: 5 to 7 rupees knocked out of Link, sizes by rate_dt and how many he has (under
+// 50, 100, 300, 500, or more); each is taken off his count and dropped around him. [asm]
 /* 000042D8-000044B8       .text money_drop__FP8nz_class */
 static void money_drop(nz_class*) {
     static s32 rate_dt[] = {0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 0, 2, 2, 1, 2, 1, 2, 2, 1};
@@ -1156,6 +1170,9 @@ static void nz3_move(nz_class* i_this) {
     }
 }
 
+// Carrying: runs back to its hole (d_a_nzg) and vanishes into it with the prize, or, with no
+// hole, runs about for 200 to 400 frames and trips, dropping it. A bomb it turns and throws
+// at Link. [asm]
 /* 000049E8-00005B2C       .text nz4_move__FP8nz_class */
 static void nz4_move(nz_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1673,6 +1690,9 @@ static BOOL nezumi_move(nz_class* i_this, s16 param_2) {
 #endif
 }
 
+// Bomb Rat: spawns holding a bomb. Facing Link within 700 with a clear line it lights it, then
+// charges and trips, throwing it, when within 400 or the fuse is under 30. Killed while holding
+// it, the bomb goes off at once. [asm]
 /* 00006734-000072D8       .text nz6_move__FP8nz_class */
 static void nz6_move(nz_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

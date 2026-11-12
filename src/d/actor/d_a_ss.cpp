@@ -2,6 +2,15 @@
  * d_a_ss.cpp
  * Enemy - Thorned vine (Ss) with retractable core
  */
+// The eye bud that shuts when Link comes close, with ten thorny vines spreading from it along
+// the floor (mType 0) or across a wall (mType 1, the bud turned to face out). Placed in kindan
+// (12, all with byte 1 = 2; 11 with a switch) and the test map K_Test2. [data]
+// It has no attack and no body collision: neither the bud nor the vines can hurt Link. It
+// gates rooms through the switch it sets when killed. [asm]
+// Params: byte 0 mType, byte 1 mSubType, byte 3 a switch set on death (0xFF none; already set,
+// it is not created). mSubType: 0 always exposed, 1 always closed, 2 open until Link is within
+// 350, 3 the same within 1500. Only 2 is placed outside the test map. [asm] [data]
+// mOpen is named backwards: 1 means the bud is closed and shielded. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_ss.h"
@@ -155,6 +164,9 @@ static void hand_1_set_2(ss_class* i_this, ss_s* hand) {
     }
 }
 
+// A growing vine: one segment every 4 frames up to 20, with four hit spheres walking along it.
+// Any hit but the Grappling Hook cuts it (fire sets it burning) and sets event bit 0x2B20,
+// which nothing in the code reads. A cut vine flops on the floor, then grows back. [asm]
 /* 000011BC-0000152C       .text hand_1_move__FP8ss_classP4ss_s */
 static void hand_1_move(ss_class* i_this, ss_s* hand) {
     ss_s_s* joint = hand->mJoint;
@@ -393,6 +405,12 @@ static void hand_move(ss_class* i_this) {
     }
 }
 
+// The bud has 2 health and only takes hits while open; shut, hits bounce off, except fire.
+// Open, a Boomerang or anything thrown that is a d_a_tsubo, which includes the Forbidden Woods
+// nut (Kmi00x) (attack types 10 and 3), kills it outright. Other hits that reach it, such as
+// bombs or the Hookshot, do normal damage (cc_at_check). The Grappling Hook is ignored here
+// and on the vines. Fire kills it open or shut and burns the vines. On death the vines shrink back over 70 frames, the switch is set
+// and it deletes itself. [asm]
 /* 0000236C-00002B84       .text core_move__FP8ss_class */
 static void core_move(ss_class* i_this) {
     f32 dist = fopAcM_searchPlayerDistance(i_this);

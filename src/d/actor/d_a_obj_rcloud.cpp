@@ -2,6 +2,11 @@
  * d_a_obj_rcloud.cpp
  * Object - Dragon Roost Island - Clouds near Valoo
  */
+// Clouds (BVkumo, looping btk). Param bit 0: 0 is not created once event bit UNK_3908 is set, 1
+// not once dSymbol_NAYRU_e is set; both wait for event demo41 (l_dummy_name is also "demo41").
+// Past demo frame 428 the texture scrolls on V by -1/112 a frame; at -1 it sets UNK_3908 and
+// deletes itself. Stage names Rcloud 5 (bit 0; Adanmae, M_Dra09, M_NewD2, sea room 13, K_Testc)
+// and Ocloud 1 (bit 1; sea room 23). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_rcloud.h"

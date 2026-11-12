@@ -2,6 +2,11 @@
  * d_a_obj_ashut.cpp
  * Object - Metal bars (Pirate Ship rope minigame)
  */
+// Bars with collision (ASHUT) that rise 250. Params: byte 0 the switch, byte 1 an event number.
+// Switch on: up with JA_SE_OBJ_P_SHIP_SHTR_OP, bouncing 5 times (collision off past 150).
+// Switch off: down with JA_SE_OBJ_P_SHIP_SHTR_CL, bouncing 5 times, but only once Link is out of
+// the doorway (within 105 by 100 by 55). The first move plays the event if the stage has it.
+// Stage name Ashut: 3 placed (Asoko 2, switch 0xC0; sea, 0x29). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ashut.h"

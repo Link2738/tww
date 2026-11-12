@@ -2,6 +2,19 @@
  * d_a_swtact.cpp
  * Object - Wind Crest (Wind's Requiem blue floor decoration)
  */
+// Params: byte 0 the switch, byte 1 the song (0 Wind's Requiem, 1 Ballad of Gales, 2 Song of
+// Passing, 3 Command Melody, 4 Earth God's Lyric, 5 Wind God's Aria, 0xFF any of these six; other
+// values never match), bits 16-19 the model (1 draws ITACT with radius 100*scale.x; otherwise
+// invisible, 50*scale.x). With Link off the ship and within that XZ radius, raising the Wind
+// Waker registers this actor and the song with the player (setTactZev), which plays the
+// JA_SE_PRE_TAKT cue (not in JPN or the demo build, which cue only for an event name, and this
+// passes none). Playing that song then ends the song demo without the song's usual effect, and
+// the switch turns on as soon as no event runs. Stage names SWtact 8 (test and TF stages, ShipD,
+// SubD44) and SWtactB 11 (model 1; K_Teste 7, Cave06, Cave09, Siren, TF_04). [asm] [data]
+// This actor shows no message. A d_a_tag_msg with message 0x836 sits on the same spot in Cave09,
+// ShipD, Siren and TF_01-04; Cave06, SubD44 and the K_ test maps have none. [data]
+// In ShipD, TF_01-04 and SubD44 a tkrCTf chest 250-365 away uses the same switch (daTbox
+// getSwNo, param bits 12-19), so the song makes it appear. [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_swtact.h"

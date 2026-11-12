@@ -1,6 +1,8 @@
 /*
  * d_a_seatag.cpp
  */
+// Empty marker actor: create, execute and draw do nothing. Stage name Seatag, never placed.
+// [asm] [data]
 #include "d/actor/d_a_seatag.h"
 #include "f_op/f_op_actor_mng.h"
 

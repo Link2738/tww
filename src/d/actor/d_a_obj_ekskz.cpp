@@ -2,6 +2,11 @@
  * d_a_obj_ekskz.cpp
  * Object - Stone statue blowing strong gust of wind (Gale Isle)
  */
+// A statue with collision (EKSKZ) blowing a wind model (YOCWD00) and two WINDOCTOPUS smokes;
+// stage name Ekskz, 2 placed (sea, switch 0x38; K_Testc). Param byte 0 the switch; not created
+// once set. A Skull Hammer hit on its cylinder (100 by 300) plays sound 0x806, sets the switch,
+// stops the smokes, plays BREAKOCTOPUSHAHEN00 and BREAKOCTOPUSSMOKE00 and hides the statue; the
+// wind model's brk then plays and it deletes itself when that ends. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ekskz.h"

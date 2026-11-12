@@ -2,6 +2,11 @@
  * d_a_tori_flag.cpp
  * Object - Great Sea - Small red flag (Flight Control Platform, Horseshoe Island)
  */
+// A pole (ETHATA) with a 5 by 5 cloth flag 350 up (Cloth archive); stage name TrFlag, 16 placed,
+// sea 11, Adanmae 5. The flag follows the wind at that point, jumping to stronger wind and easing
+// to weaker. A 30 by 400 cylinder plays a hit sound; Link rolling into it within 40 crashes
+// (fopAcM_rollPlayerCrash).
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_tori_flag.h"

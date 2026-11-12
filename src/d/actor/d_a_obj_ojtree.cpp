@@ -2,6 +2,9 @@
  * d_a_obj_ojtree.cpp
  * Object - Tall thin poles leading to the Deku Leaf (Forest Haven interior)
  */
+// A tall tree with collision (OJTREE), locked as BG two frames after creation, that spawns a
+// d_a_jbo (daJbo_Type_NORMAL_e) 5000 above its base. Stage name Ojtree: 10 placed, all Omori.
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "res/Object/Ojtree.h"

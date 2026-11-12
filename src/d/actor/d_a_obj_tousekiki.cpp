@@ -2,6 +2,10 @@
  * d_a_obj_tousekiki.cpp
  * Object - Catapult (Tetra's Ship)
  */
+// The pirate ship's catapult: a child of d_a_obj_pirateship, which creates it. Each frame it sits
+// at (0, 700, 850) in the ship's frame with the ship's rotation unless the demo drives its
+// rotation and animation (ATOSK_NAGE, parked on its last frame). Drawn only while the ship's m2CC
+// is set. The stage name Touseki is never placed. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_tousekiki.h"

@@ -2,6 +2,8 @@
  * d_a_obj_aygr.cpp
  * Object - Lookout Platform
  */
+// A lookout tower with collision (AYGR), locked as BG. Param bit 0 adds the ladder model (AYGRH)
+// with its own dzb. Stage name Aygr: 28 placed, all on the sea. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_aygr.h"

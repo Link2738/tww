@@ -2,6 +2,17 @@
  * d_a_bwd.cpp
  * Boss - Molgera / 風ボス (Wind boss)
  */
+// Molgera, the Wind Temple boss. Placed in kazeB and in Xboss3, the Ganon's Tower rematch. [data]
+// Only the tongue tip can be hurt. A Hookshot hit drags it out (sita_hit); for l_HIO.m14 (120)
+// frames it lies on the sand and takes any weapon. Three hits there make one big hit; the fourth
+// big hit kills it. After the second big hit it surfaces flying (fly) instead of in place. [asm]
+// health starts at 12 and drops by one per tongue hit, but the death is driven by the big-hit
+// count (m1BB5), not by health. [asm]
+// Body spheres hurt Link on contact (8, 2 in the demo build) and only deflect hits. [asm]
+// It spawns d_a_bwdg (the quicksand floor) on its first frame and d_a_bwds (larvae) after each
+// big hit. HIO: m05 freezes it, m06 makes the next big hit kill, m07 forces the flying phase,
+// m18 bite range 700, m1C resurface range 3000, m20 head scale 1.3 on the ground, m24 larvae
+// per big hit 3, m26 larva cap 5, m28 sand base height 800. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bwd.h"
@@ -220,6 +231,8 @@ static BOOL daBwd_Draw(bwd_class* i_this) {
     return TRUE;
 }
 
+// Steers toward m18B4 at speedF. Running into the floor or a wall gives a shake and a dive (1)
+// or burst (2) splash in the sand, each with its own 110-frame cooldown. [asm]
 /* 00000760-00000FBC       .text fly_pos_move__FP9bwd_classss */
 static void fly_pos_move(bwd_class* i_this, s16 param_2, s16 param_3) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -316,6 +329,11 @@ static void fly_pos_move(bwd_class* i_this, s16 param_2, s16 param_3) {
     }
 }
 
+// The tongue tip (mTongueSph) takes only the Hookshot, or, while it lies out (m1BB1), almost
+// anything (not water, wind or light). Each hit runs cc_at_check with health set to 20, so the weapon's
+// damage never matters, then takes one off. m18D6 makes it immune for a few frames, and
+// eat_attack keeps that on (not in the demo build). USA only: the d_a_att (param 101) spawned
+// in create is kept at eyePos, the tongue tip; it is a Hookshot-only sphere of radius 90. [asm]
 /* 000013F4-00001640       .text damage_check__FP9bwd_class */
 static void damage_check(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -366,6 +384,9 @@ static void damage_check(bwd_class* i_this) {
     }
 }
 
+// First visit only. Once Link is within 3200 of the centre it starts the intro (camera 0x32):
+// the first three sandfalls start, the sand rises to 900, the centre platform is hidden, and
+// at frame 660 it bursts up into the intro flight (s_fly). [asm]
 /* 0000167C-000018E8       .text start__FP9bwd_class */
 static void start(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -414,6 +435,10 @@ static void start(bwd_class* i_this) {
     i_this->m1BB6 = 1;
 }
 
+// Head out of the sand, tongue swaying, turning to Link. Step -10 (fight start on a revisit)
+// waits for Link to drop below 900, onto the sand. Then, when m18D0 runs out: within 700 it
+// bites (eat_attack), beyond 3000 it dives and resurfaces near Link (reset). In between it
+// keeps waiting with the tongue out. [asm]
 /* 000018E8-00001AEC       .text wait__FP9bwd_class */
 static void wait(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -465,6 +490,8 @@ static void wait(bwd_class* i_this) {
     }
 }
 
+// Sinks for 150 frames, then resurfaces within 300 of Link, pulled back inside 3000 of the
+// centre. [asm]
 /* 00001AEC-00001CBC       .text reset__FP9bwd_class */
 static void reset(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -500,6 +527,10 @@ static void reset(bwd_class* i_this) {
     }
 }
 
+// Tongue dragged out. If the lie-out window ends first it goes back to wait. Three hits make a
+// big hit (m1BB5): the fourth goes to the death (end), the others play the damage dive and
+// spawn larvae on frames 48 to 50 while fewer than 5 are counted, switching to the larva music.
+// After 300 frames it resurfaces near Link, flying (fly) once it has taken two big hits. [asm]
 /* 00001CBC-000026A4       .text sita_hit__FP9bwd_class */
 static void sita_hit(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -659,6 +690,9 @@ static void sita_hit(bwd_class* i_this) {
     }
 }
 
+// The bite. If the jaw spheres touch Link or he is within 150 it swallows him (camera 1 holds
+// him out of sight) and 90 frames later spits him out with throw damage. If that fails he is
+// set at the mouth, under the sand. A miss goes back to wait sooner (100 frames). [asm]
 /* 000026A4-00002F30       .text eat_attack__FP9bwd_class */
 static void eat_attack(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -797,6 +831,9 @@ static void eat_attack(bwd_class* i_this) {
     }
 }
 
+// Flying phase, after two big hits: bursts from the sand with the body out, roams for 200 to
+// 250 frames, then dives at Link's head and goes under, to resurface in wait. The tongue is
+// pulled in but its collider stays live. [asm]
 /* 00002F30-00003694       .text fly__FP9bwd_class */
 static void fly(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -895,6 +932,8 @@ static void fly(bwd_class* i_this) {
     i_this->m1BB6 = 2;
 }
 
+// The intro flight: three fixed points (target_x/y/z), then a dive through the centre and under
+// to wait. [asm]
 /* 00003694-00003D3C       .text s_fly__FP9bwd_class */
 static void s_fly(bwd_class* i_this) {
     static f32 target_x[] = {-1500.0f, 1500.0f, 0.0f};
@@ -994,6 +1033,10 @@ static void s_fly(bwd_class* i_this) {
     i_this->m1BB6 = 2;
 }
 
+// The death. In an X stage (the rematch) it warps out at once, setting MOLGERA_TRIALS_CLEAR.
+// Otherwise it tells every larva to delete itself (ko_delete_sub), dives, bursts out flying
+// wildly for 180 frames, hardens segment by segment, and the body blows up from tail to head.
+// The death camera (100 on) drops the heart container and drains the sand. [asm]
 /* 00003D3C-00004ABC       .text end__FP9bwd_class */
 static void end(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1277,6 +1320,10 @@ static void control2(bwd_class* i_this) {
     }
 }
 
+// Tongue: 30 segments from the jaw joint to m1B88, the tip. While hooked (m1BB0) the tip
+// follows the Hookshot head until it returns or the tongue is stretched; while out (m1BB1) it
+// lies on the ground and thrashes on hits (m1BB3). m1BB6 1 or 2 pulls it back into the mouth;
+// 1 also turns off targeting. [asm]
 /* 00005438-00005D78       .text sita_move__FP9bwd_class */
 static void sita_move(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1429,6 +1476,9 @@ static void move(bwd_class* i_this) {
     }
 }
 
+// Cameras by m3C1E: 1-3 Link swallowed and spat out, 0x32-0x3C the intro (sets the stage boss
+// demo flag), 0x64-0x6A the death (heart container, sand drains, the stage boss flag, warp at
+// frame 520). Leftover JUTReport "K MAIN COUNT" and "K SUB  COUNT" every frame. [asm]
 /* 00005DFC-00007320       .text demo_camera__FP9bwd_class */
 static void demo_camera(bwd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1817,6 +1867,8 @@ static void demo_camera(bwd_class* i_this) {
     }
 }
 
+// Fades the room's custom light set (dKy_custom_colset) by m3C15: dives and bursts flash it,
+// the death and the clear switch it. [asm]
 /* 00007320-000074A4       .text bwd_kankyo__FP9bwd_class */
 static void bwd_kankyo(bwd_class* i_this) {
     if (i_this->m3C14 != 0) {
@@ -1856,6 +1908,11 @@ static void bwd_kankyo(bwd_class* i_this) {
     }
 }
 
+// Also: while m394C is set (wait, start) and Link is below 900, the quicksand pulls him toward
+// m17C8 (setOutPower, strength m10 fading to 0 at 4000). The platform shake sets m18A0.x twice
+// and never z. The X rematch forces the motion blur on every frame. m17C4 drives the sand
+// surface in d_a_bwdg: 0xFF a funnel while it dives or bursts, 0xC9 the intro, 0xCA the
+// clear, below 200 a dip counting down. The camera is "WindBoss", or "Boss03" in the air. [asm]
 /* 000074A4-00008C24       .text daBwd_Execute__FP9bwd_class */
 static BOOL daBwd_Execute(bwd_class* i_this) {
     static int jno[] = {
@@ -2384,6 +2441,10 @@ static BOOL useHeapInit(fopAc_ac_c* a_this) {
     return TRUE;
 }
 
+// Three starts: before the stage boss demo flag (and not an X stage), hidden for the intro
+// (start); after the boss flag, parked away (action 13) with the sand drained; otherwise
+// straight into the fight (wait step -10) with the sand up. Only 17 of the 19 body spheres are
+// set, and 9 are used. [asm]
 /* 00009720-00009C7C       .text daBwd_Create__FP10fopAc_ac_c */
 static cPhs_State daBwd_Create(fopAc_ac_c* a_this) {
     static dCcD_SrcSph body_sph_src = {

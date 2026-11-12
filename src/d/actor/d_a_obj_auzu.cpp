@@ -2,6 +2,17 @@
  * d_a_obj_auzu.cpp
  * Object - Big Octo/Jabun's cave whirlpool
  */
+// A whirlpool (AUZU, btk). Params: byte 0 a switch, byte 1 a link ID passed to the ship, bit 16
+// appear (1: starts gone and grows only when mbToAppear is set; 0: shown while the switch is off),
+// bits 20-23 the type (0 radius 2500 * 1.5, only created while event bit 0x0A02 ENDLESS_NIGHT is
+// set, and starts JA_BGM_DIOCTA_BATTLE when the ship is pulled; 1 radius 2500 * 2). It grows or
+// shrinks 0.02 a frame, fading the model and the JA_SE_ATM_SWIRL level, and keeps a d_a_kytag01
+// wave ring sized to it. The ship inside the outer radius is pulled (onWhirlFlgDirect, onWhirlFlg
+// inside the inner); Link on foot inside gets setWhirlId. [asm]
+// Two uses. Placed (stage name Auzu, sea room 44 layers 5 and 7, params 0x971C): type 0, shown
+// until switch 0x1C, which the d_a_obj_ajav on the same layers uses. Created by d_a_daiocta with
+// 0x1100FF: type 1, appear mode, no switch; daiocta calls to_appear and to_disappear (on its
+// DEATH1 cut). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_auzu.h"

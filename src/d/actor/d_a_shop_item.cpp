@@ -2,6 +2,12 @@
  * d_a_shop_item.cpp
  * Item - Shop Item
  */
+// An item on display, no pickup. Params: byte 0 the item (one with no model shows as a green
+// rupee), bits 8-11 the model (1 field model, 2 item model, 0 per mModelType). The four flag items
+// add a cloth packet (Vobj03/04/05/07) 94 or 97.5 up. Fountain Idol and Postman Statue skip joint
+// 0's calc; bombs, Bomb Bag, Skull Hammer, small key and the shop guru statue get a specular map.
+// Stand items light as actors, the rest as BG1. Stage name Sitem: 38 placed (kindan 26, GanonD
+// 8, K_Test5 4); d_shop, the auction and several NPCs create more. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_shop_item.h"

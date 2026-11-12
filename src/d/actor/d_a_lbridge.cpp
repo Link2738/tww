@@ -2,6 +2,12 @@
  * d_a_lbridge.cpp
  * Object - Tower of the Gods - Glowing light bridge
  */
+// A light bridge (GBRG00, btk, bpk, brk) with HHASHI1 collision. Param byte 0 the switch (0xFF
+// always on). Switch on: collision added, two RBRIDGE_APP00, JA_SE_OBJ_L_BRIDGE_ON, the bpk plays
+// in and the RBRIDGE_FLSH00 glow fades in after 31 frames; event EFFAPPEAR plays once (event bit
+// UNK_0E01). Switch off: collision removed, JA_SE_OBJ_L_BRIDGE_OFF, the bpk plays back and the
+// model hides when it ends; event BRIDGE_DISAPPEAR plays once (UNK_0F40). Stage name Gbrg00: 3
+// placed, Siren. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_lbridge.h"

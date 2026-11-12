@@ -2,6 +2,14 @@
  * d_a_gm.cpp
  * Mini-Boss - Mothula / Enemy - Mothula Larva
  */
+// Mothula and its loose wings. Every placement uses gmos (27); gmos_g and gmos_f are only item
+// tables. Kinds placed: ground 18, flying 7, miniboss 2 (kinMB and KATA_RM). [data]
+// Params: byte 0 m02CC, the lost-wing mask (bits 0-3; for a wing, its index), byte 1 m02CD
+// (nonzero: a cut-off wing, ACTION_HANE_RAKKA), byte 2 m02CE kind (0 miniboss, 1 wingless
+// ground form with 2 health and the gmos_g table, 2 flying with gmos_f and no entrance scene),
+// byte 3 a switch: already set, it is not created; set on death when angle.z is nonzero. [asm]
+// Health 12. Three Grappling Hook steals (ground form one). A wind cylinder (mWindCyl) circles
+// 300 around the floor under it while it has wings. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_gm.h"
@@ -290,6 +298,9 @@ static void anm_init(gm_class* i_this, int bckFileIdx, f32 morf, u8 loopMode, f3
     }
 }
 
+// Spawns the next wing still attached as a falling d_a_gm (param index + 1 | 0x100, 0x200 off a
+// wall) and marks it lost. It stops after one wing unless the hit killed it or was the Hookshot
+// (m02D1 10), which strips every remaining wing. [asm]
 /* 00000A34-00000D00       .text wing_cut_stat__FP8gm_class */
 static BOOL wing_cut_stat(gm_class* i_this) {
     // Register allocation only - 44 instructions, 45 bytes, and the whole 179-instruction
@@ -365,6 +376,11 @@ static BOOL wing_cut_stat(gm_class* i_this) {
     return FALSE;
 }
 
+// Wind (the Deku Leaf) blows a winged one back (ACTION_UCHIWA_DOUSA) without damage. The
+// Boomerang and the Hookshot do no damage, the Grappling Hook steals; fire, a Fire Arrow, a Light
+// Arrow or an Ice Arrow kills it at once. Every other hit, the Boomerang included, also cuts a
+// wing (wing_cut_stat); fire cuts them all. Losing the last wing drops it to the ground
+// (ACTION_GROUND_ATTACK) for 600 to 1200 frames. [asm]
 /* 00000D3C-0000170C       .text body_atari_check__FP8gm_class */
 static BOOL body_atari_check(gm_class* i_this) {
     fopEn_enemy_c* actor = (fopEn_enemy_c*)&i_this->actor;
@@ -580,6 +596,7 @@ static BOOL Line_check(gm_class* i_this, cXyz destPos) {
     return TRUE;
 }
 
+// Morth spawner: stops after 20 in total (10 for the ground form). [asm]
 /* 00001FBC-0000212C       .text ks_set_rtn__FP8gm_class */
 static BOOL ks_set_rtn(gm_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -671,6 +688,10 @@ static BOOL fly_move(gm_class* i_this) {
     return FALSE;
 }
 
+// Hovers 250 above Link, hopping to the side of him relative to the camera. Within 300 it lunges
+// (ATACK02, speed 50); a shield block knocks it back. Each time it may instead jet-charge
+// (ACTION_TOTUGEKI): 0.1, plus 0.1 per lost wing up to 0.3. The count stops at the first wing
+// still attached because the shift sits inside the if. [asm]
 /* 00002474-00002AB8       .text action_dousa__FP8gm_class */
 static void action_dousa(gm_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -929,6 +950,10 @@ static void dummy() {
     };
 };
 
+// Jet charge: climbs to 400 above Link, aims for 45 frames, then dives at him at speed 30. Hitting
+// a wall makes it fly back to its start, dropping Morths (d_a_ks param 4) at frames 4, 8, 12 and
+// 16 of each wing beat, and charge again from there. Both forward line checks finding a wall make
+// it cling to it (ACTION_KABEHARI). [asm]
 /* 000030FC-00003E54       .text action_totugeki__FP8gm_class */
 static void action_totugeki(gm_class* i_this) {
     static f32 check_x[] = {-1.0f, 1.0f, 0.0f};
@@ -1117,6 +1142,8 @@ static void action_totugeki(gm_class* i_this) {
     cLib_addCalc0(&i_this->m03B4.z, 1.0f, 5.0f);
 }
 
+// Clinging: climbs to 450 above Link, then charges again if this was its first charge, else
+// goes back to hovering. [asm]
 /* 00003E54-00004204       .text action_kabehari__FP8gm_class */
 static void action_kabehari(gm_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1278,6 +1305,10 @@ static void action_fly_damage(gm_class* i_this) {
     }
 }
 
+// On the ground: walks at Link and lunges within 400 (ATACK). Hurt, it turns away and sprays
+// Morths behind it (param 5, G_MACHINGUN) until the cap. A Skull Hammer front swing squashes it
+// dead. The winged kinds regrow their wings when the ground timer ends (G_HANE). The ground
+// form, with its path to Link blocked, steps sideways instead of stopping. [asm]
 /* 000046F0-00005C78       .text action_ground_attack__FP8gm_class */
 static void action_ground_attack(gm_class* i_this) {
     fopEn_enemy_c* actor = (fopEn_enemy_c*)&i_this->actor;
@@ -1697,6 +1728,8 @@ static void action_ground_attack(gm_class* i_this) {
     }
 }
 
+// Miniboss only: the entrance scene at fixed room positions (dives in, then JA_BGM_MBOSS) and the
+// death scene (IBALL drop, the switch). [asm]
 /* 00005C78-00006A98       .text action_demo__FP8gm_class */
 static void action_demo(gm_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

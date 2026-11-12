@@ -2,6 +2,10 @@
  * d_a_obj_otble.cpp
  * Object - Generic brown wooden tables
  */
+// Tables with collision that settle onto the floor under gravity (archive Okmono): stage names
+// Otble (sub 0, OTABLE, 14 placed) and OtbleL (sub 1, OTABLEL, longer, 20 placed); param byte 0
+// picks the model, clamped to 1. Simple shadow sized by type. M_attr's two skip flags are both 0.
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_otble.h"

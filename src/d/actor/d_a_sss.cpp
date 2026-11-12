@@ -2,6 +2,11 @@
  * d_a_sss.cpp
  * Enemy - Dexivine (Forbidden Woods, Wind Temple)
  */
+// Dexivine: a grabbing vine that rises from the ground. Placed in kaze (30), kindan (7) and
+// Cave08 (4). [data]
+// Params: byte 0 1 = in water (only the emerge sound differs; anything else becomes 0x23),
+// byte 1 emerge range in tens (0xFF = 1000), byte 2 a switch to emerge on instead (0xFF none).
+// field_0x2B8 is never 0 after create, so the hand_main branch in daSss_Execute is dead. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_sss.h"
@@ -291,6 +296,13 @@ void cut_control2(sss_class* i_this) {
     }
 }
 
+// States (field_0x2C0): 0 hidden; 1 up and swaying 250 high; 2 reaching for Link once he is
+// within 300; 3 holding him. It only grabs Link himself (player == link), not another
+// controlled character. While held, Link loses one magic every 32 frames and is pulled back
+// if he gets more than 400 away; past 800 it lets go. One hit on the stem (anything but the
+// Boomerang), or the Boomerang on the head, cuts it (5): the head falls, lies 100 frames and
+// it grows back. A Deku Leaf gust (attack type 8) only blows it back. health is set but
+// never used. [asm]
 /* 000014F4-00002614       .text hand_move__FP9sss_class */
 void hand_move(sss_class* i_this) {
     fopAc_ac_c* a_this = (fopAc_ac_c*) i_this;

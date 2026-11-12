@@ -2,6 +2,9 @@
  * d_a_yougan.cpp
  * Object - Unused - Lava bubbles
  */
+// Lava bubbles; stage name yg_awa, never placed. 16 bubble models (HIO count) at random points
+// with |x| + |z| up to 1250 * scale.x, 17.591 below the actor. Each grows to scale 0.2-0.7 over
+// 40-100 frames, plays its bck and btk once, then moves to a new point. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_yougan.h"

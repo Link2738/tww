@@ -2,6 +2,8 @@
  * d_a_obj_gaship2.cpp
  * Object - Ganon Room (destroyed) (Forsaken Fortress 3)
  */
+// A wreck model with collision (YAKEROM model and dzb). Stage name Gaship2: 3 placed, sea 2 and
+// K_Teste 1. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_gaship2.h"

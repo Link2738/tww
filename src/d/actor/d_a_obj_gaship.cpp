@@ -2,6 +2,9 @@
  * d_a_obj_gaship.cpp
  * Object - Ganon Room exterior (Forsaken Fortress)
  */
+// A large ship model (GASHIP) that raises two d_a_majuu_flag flags (param 1) at fixed offsets on
+// its masts, retrying each frame until both exist. No collision. Stage name Gaship1: 2 placed,
+// sea 1 and K_Teste 1. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_gaship.h"

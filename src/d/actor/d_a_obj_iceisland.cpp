@@ -2,6 +2,13 @@
  * d_a_obj_iceisland.cpp
  * Object - Icy clouds surrounding Ice Ring Isle
  */
+// Ice around an island (GICEL00: two looping btks and a brk); stage name GiceL, 1 placed, sea,
+// switch 0x1B in param byte 1, the same switch d_a_obj_dragonhead sets. Switch on: event MELT_ICE,
+// the smokes (ICEL_SMOKE00/01) stop and the brk plays forward; off: FREEZE_ICE, smokes back, brk
+// in reverse. JA_SE_ATM_ICEBERG_WIND plays at a level that falls to 0 while the switch is on and
+// rises to 100 while off. Already on at create, it starts melted; if Link also starts at point 2
+// (retail: in this room) it skips the events: the switch going off restarts the smokes and plays
+// the brk forward from its end frame, which leaves it melted. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_iceisland.h"

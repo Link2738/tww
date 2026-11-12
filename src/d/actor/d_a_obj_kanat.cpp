@@ -2,6 +2,9 @@
  * d_a_obj_kanat.cpp
  * Object - Forbidden Woods - Solid vine floor (blocks entry to B1)
  */
+// A breakable hut with collision (KANAT). Param byte 0 is a switch: when it turns on, the hut bursts
+// into debris and smoke, stops drawing and deletes itself once the smoke ends. Already set, create
+// returns cPhs_STOP_e. Stage name Kanat: 2 placed (kindan with switch 0x1C, K_Testc). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_kanat.h"

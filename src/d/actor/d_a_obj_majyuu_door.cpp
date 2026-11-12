@@ -2,6 +2,13 @@
  * d_a_obj_majyuu_door.cpp
  * Object - Forsaken Fortress - Large wooden barricade (blocks entrance, destroyed with Bombs)
  */
+// A barricade with collision (S_MSPDO) and ten 100 by 1350 cylinders 100 apart. Each daBomb hit
+// (fpcNm_BOMB_e only; the cylinders take most AT types but nothing else counts) on any cylinder
+// takes 1 from 30 health, so one blast can count more than once; below 0 it breaks:
+// switch set, JA_SE_OBJ_MJ_GATE_BREAK, MJMON debris, ripple and spray at the water line, a smoke
+// that fades out over 50 frames, collision off, and deletion after 600 frames. Param byte 0 the
+// switch (0xFF none); not created once set. Stage name MjDoor: 2 placed, MajyuE and sea (switch
+// 0x57). [asm] [data]
  
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_majyuu_door.h"

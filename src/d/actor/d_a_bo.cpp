@@ -2,6 +2,13 @@
  * d_a_bo.cpp
  * Enemy - Boko Baba
  */
+// Boko Baba (stage name bbaba). 37 placed: kindan 11, Cave10 8, sea 7, Cave03 4, KATA_RM 4,
+// K_Test8 2, I_SubAN 1. [data]
+// Params: byte 0 type (all placed are 0, the plant; 1 is the empty bud left after a Light
+// Arrow kill and 2 the head that flies off and becomes a Boko Stick, both spawned by type 0),
+// byte 1 = 1 (9 placed) makes the bud regrow as a Baba Bud (d_a_jbo) after death. [asm]
+// 1 health. Hits on the head only stun it; the stem (mBodyCyl) is the weak point, open while
+// the head reels (MODE_ATTACK_5). Items from the "bbaba" table. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bo.h"
@@ -380,6 +387,11 @@ static s16 pl_cut_real_no_dt[] = {
 static s8 nokezoru_on_off_dt[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x01, 0x01, 0x01, 0x01, DEMO_SELECT(0x02, 0x01),
                                   0x01, 0x01, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01};
 
+// Head hits. Sword cuts reel it or just knock it aside, by cut type (nokezoru_on_off_dt). The
+// Boomerang reels it and it then dies by itself. A Skull Hammer front swing or jump swing
+// kills it outright (the skewer death); the side swing and a nearby hammer quake reel it.
+// Fire, Ice and Light Arrows kill it by burning, freezing or withering. The Grappling Hook
+// steals (3 tries) without harm. [asm]
 /* 00000E24-000013A4       .text head_atari_check__FP8bo_class */
 static BOOL head_atari_check(bo_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -759,6 +771,9 @@ static void end_event_camera(fopAc_ac_c* a_this) {
 /**
  * Attacking
  */
+// Pops up when Link is within 600 and sinks back beyond 900. From 380 it lunges: half the
+// time a bite (1 damage), half the time a grab (bo2_move). Its head knocked around far enough
+// to face away from Link sends it back underground. [asm]
 /* 0000233C-00002FC4       .text bo_move__FP8bo_class */
 static void bo_move(bo_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1033,6 +1048,8 @@ static void bo_move(bo_class* i_this) {
 /**
  * Eating
  */
+// The grab: with Link in its mouth it chews for up to 120 frames, taking 1 health every 30.
+// Each stick direction change or A press takes 2 off the count. Then it spits him out. [asm]
 /* 00002FC4-0000380C       .text bo2_move__FP8bo_class */
 static void bo2_move(bo_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1205,6 +1222,9 @@ static void bo2_move(bo_class* i_this) {
 /**
  * Bud death
  */
+// Death: the head flies off as a type 2 (not after the hammer or elemental deaths) and the bud
+// withers, dropping from its table, or nothing if it regrows as a Baba Bud 50 frames later.
+// A Light Arrow death drops nothing. [asm]
 /* 0000380C-00003AD4       .text bo3_move__FP8bo_class */
 static void bo3_move(bo_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;

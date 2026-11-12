@@ -2,6 +2,9 @@
  * d_a_obj_gnndemotakis.cpp
  * Object - Ganondorf Fight - Background waterfalls (before fight)
  */
+// A waterfall texture model (GNN_DEMO_TAKI_S), frozen until the g2before demo in GTower reaches
+// frame 0x11D9, then playing once; at frame 0x126F it deletes itself. Only the scale is applied,
+// so it draws in model space. Stage name Gntakis: 2 placed (GTower, K_Teste). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "res/Object/Gnndemotakis.h"

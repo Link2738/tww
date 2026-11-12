@@ -2,6 +2,10 @@
  * d_a_branch.cpp
  * Object - Forest of Fairies - Tree branch (Tetra)
  */
+// Two Kwood_00 models: WS (bck SWING02) and WB (bck BREAK); stage name Branch, 2 placed, A_mori.
+// Shape 6 draws WS and shape 5 draws WB; it starts at 6. In a demo the demo actor's shape ID picks
+// the model and drives it with that model's anim_table bck and bas; outside one the current model
+// keeps playing. Every material is set to fog type 2. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_branch.h"

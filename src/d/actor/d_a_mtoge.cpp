@@ -2,6 +2,10 @@
  * d_a_mtoge.cpp
  * Object - Forsaken Fortress - Spikes
  */
+// Param byte 0 the switch (0xFF: stays up). Switch off: sunk 300; switch on: rises with
+// JA_SE_OBJ_TOGE_OUT, speed easing up to 30; off again: sinks with JA_SE_OBJ_TOGE_IN. If the next
+// switch (byte 0 + 1) is on at create it stays sunk for good. Stage name SMtoge: 1 placed, MajyuE,
+// switch 0xE0. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_mtoge.h"

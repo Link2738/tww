@@ -2,6 +2,13 @@
  * d_a_nzg.cpp
  * Enemy - Rat Group
  */
+// Params: byte 0 the trigger range (Link within byte 0 * 5), byte 1 the total rats (0 as 1), byte
+// 2 the mode (0 needs Link in range, 1 always, 2 a 50% roll each frame or Link in range; over 2 as
+// 0), byte 3 a path stored and not used here. Each rat is a daNZ child with params byte 3 kept,
+// bit 0 set and 0x100 when spawned by mode; it also needs Link over 200 away. Spawns are 20-50
+// frames apart and the count never goes back down. Anything but a rat, bomb, item or bait touching
+// the 40-cylinder blocks spawning until it is 80 away in XZ. Mode 0 also creates an NpcNz child at
+// create. Stage name nezuana: 22 placed, KATA_RM 4, ma2room 4, ma3room 4, sea 4. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_nzg.h"

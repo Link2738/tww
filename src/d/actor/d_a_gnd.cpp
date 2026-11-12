@@ -2,6 +2,18 @@
  * d_a_gnd.cpp
  * Boss - Ganondorf / ガノンＤ (Ganon D)
  */
+// Ganondorf, the final fight, with Zelda (d_a_pz) helping. Placed in GTower: low param nibble
+// 0xF on layers 0-1 (the fight), 0 on layers 8-9 (a cutscene actor, driven by j_demo). Also
+// in KATA_RM room 29. [data]
+// 75 health (90 in the demo build), taken by sword hits and arrows. Three phases (m03D8):
+//   0 health stops at 50 until one of Zelda's arrows hits him; then he knocks her down
+//     (attackPZ) and the phase is 1
+//   1 health stops at 25; reaching it, Zelda gets up (camera 0xA) and the phase is 2
+//   2 he can only be hurt while stunned, and the only way to stun him is a Light Arrow
+//     reflected off Link's shield into his chest. Below 25 health a stun ends in his
+//     finisher, which Link parries to win (attack_last)
+// In the demo build the floors are 60 and 30 and the phase lives in l_HIO.m10; in retail a
+// nonzero l_HIO.m10 forces phase m10 - 1. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_gnd.h"
@@ -590,6 +602,8 @@ static void ke_pos_set(gnd_class* i_this, gnd_ke_s* param_2, int index) {
     }
 }
 
+// His hair: four strands of 20 points as 3D lines (drawn only with l_HIO.m07, on by default).
+// They go limp from frame 300 of the "endhr" event. [asm]
 /* 00000F68-00001140       .text ke_move__FP9gnd_class */
 static void ke_move(gnd_class* i_this) {
     gnd_ke_s* pDst;
@@ -650,6 +664,10 @@ static void wait_set(gnd_class* i_this) {
     }
 }
 
+// Walks at Link; within 629 he stops and faces him, beyond 1200 he leaps at him. Facing Link,
+// when the attack cooldown is out: within 100 he hops back, otherwise 35% a single swing
+// (attack1), else a combo (attack0): combo A in phase 0, combo B in phase 1, either in phase 2.
+// [asm]
 /* 00001334-00001974       .text move0__FP9gnd_class */
 static void move0(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -792,6 +810,12 @@ static void move0(gnd_class* i_this) {
     cLib_addCalcAngleS2(&actor->shape_angle.y, actor->current.angle.y, 2, 0x1000);
 }
 
+// The combos. A: three slashes. B: two slashes, then a charged leap that crashes down on Link.
+// If Link blocks the second slash of either, he kicks instead (KERI). A kick that lands is
+// followed by a long pause in phase 0 and by the jump attack (JATTACK) later; a missed kick leaves
+// a roll-parry opening. While a combo runs in phases 0 and 1 he cannot block, but his body
+// does not take sword hits either (m03D7). Parry openings are set on the late frames of each
+// swing. [asm]
 /* 00001974-000028D0       .text attack0__FP9gnd_class */
 static void attack0(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1137,6 +1161,7 @@ static void attack0(gnd_class* i_this) {
     }
 }
 
+// A single swing, one of two (NOM_ATTACK1/2), tracking Link until it lands. [asm]
 /* 000028D0-00002B68       .text attack1__FP9gnd_class */
 static void attack1(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1188,6 +1213,7 @@ static void attack1(gnd_class* i_this) {
     }
 }
 
+// The counter after a block (defence0), left or right. [asm]
 /* 00002B68-00002D7C       .text attack2__FP9gnd_class */
 static void attack2(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1232,6 +1258,8 @@ static void attack2(gnd_class* i_this) {
     }
 }
 
+// End of phase 0: he notices Zelda, jumps over to her (moving her within 1000 first) and
+// slaps her down (BINTA; Zelda setDown). Cameras 1-5 cover it. [asm]
 /* 00002D7C-00003688       .text attackPZ__FP9gnd_class */
 static void attackPZ(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1382,6 +1410,9 @@ static s32 bougyo_d[] = {
     dRes_INDEX_GND_BCK_BOUGYO5_e
 };
 
+// His finisher, used while stunned in phase 2 below 25 health. It opens the
+// OPENING_GANONDORF_FINISHER_PARRY window; once Link is in the last-combo wait it goes to
+// finish and the ending camera (0x64). [asm]
 /* 00003688-000038B0       .text attack_last__FP9gnd_class */
 static void attack_last(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1427,6 +1458,11 @@ static void attack_last(gnd_class* i_this) {
     }
 }
 
+// Blocking. He shuffles guard poses (bougyo_d) as blocks pile up (mBlockHitCount). After 4
+// blocks there is a 50% chance of a 13-frame jump-parry opening; after 8, a 30% chance he
+// backflips toward the centre and then either steps in or does combo B's leap. After 3, a 20%
+// chance he hops back and counters 10 frames after landing (attack2). In phase 2, Link more
+// than 300 above the floor gets the plain guard pose. [asm]
 /* 000038B0-000042D0       .text defence0__FP9gnd_class */
 static void defence0(gnd_class* i_this) {
     /* Nonmatching */
@@ -1669,6 +1705,8 @@ static void finish(gnd_class* i_this) {
     }
 }
 
+// Stunned for l_HIO.m86 (70) frames, groaning. In phase 2 below 25 health, once 40 frames in,
+// facing Link and within 600, he goes into the finisher instead. [asm]
 /* 00004330-00004760       .text damage__FP9gnd_class */
 static void damage(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1754,6 +1792,12 @@ static void damage(gnd_class* i_this) {
     i_this->m02F8 = 0.0f;
 }
 
+// Swords blocked by his blades (mSwordSphs) count toward mBlockHitCount. A blade landing on a
+// guarding Link during a combo's second slash sets up the kick. Zelda's arrows (mChestSph)
+// hit only from behind in phases 0 and 1; arrows reflected by Link always hit. Anything else
+// on the chest is blocked when he can guard, by a backflip if it was one of Zelda's. Damage
+// goes through cc_at_check, with the health floors for each phase applied after. The demo
+// build has leftover JUTReport "YA HIT2" and "YA HIT3". [asm]
 /* 00004760-0000501C       .text damage_check__FP9gnd_class */
 static void damage_check(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1955,6 +1999,8 @@ static void demowait(gnd_class* i_this) {
 }
 
 #if VERSION > VERSION_DEMO
+// Not in the demo build: pins him to the floor. d_a_arrow sets his param to 0x23 when Link
+// reflects a Light Arrow while locked on to him, which gives this and camera 0x14. [asm]
 /* 000050B0-000050C8       .text yawait__FP9gnd_class */
 static void yawait(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1963,6 +2009,10 @@ static void yawait(gnd_class* i_this) {
 }
 #endif
 
+// Also: in phase 2 he is kept invulnerable except while stunned (damage). In phases 0 and 1 a
+// jump cut or roll cut gets past his guard. Otherwise, if he can block (m13CE), Link swinging
+// within 400 or a fast projectile closing in makes him block. Zelda's arrows coming at his
+// front get the backflip dodge. [asm]
 /* 000050C8-000054F0       .text gnd_move__FP9gnd_class */
 static void gnd_move(gnd_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2085,6 +2135,10 @@ static void gnd_move(gnd_class* i_this) {
 
 static f32 f_fovy[] = {66.75f, 64.25f, 64.25f, 44.25f, 44.25f};
 
+// Cameras by m155E: 1-5 Zelda knocked down (ends in phase 1; l_HIO.m88 swaps Link's reaction),
+// 0xA-0xB Zelda gets up (ends in phase 2), 0x14-0x16 a reflected Light Arrow (not in the demo
+// build), 0x64-0x66 the final blow (fade to white at 74, then GTower start 2 layer 9). The
+// demo build replays the final blow on Down. Leftover JUTReport "K SUB  COUNT". [asm]
 /* 000054F0-00006B04       .text demo_camera__FP9gnd_class */
 static void demo_camera(gnd_class* i_this) {
     /* Nonmatching */
@@ -2559,6 +2613,9 @@ static void body_flash(gnd_class* i_this) {
 }
 #endif
 
+// Also: d_a_pz sets stealItemBitNo to 0x23 at Zelda's message 0x3564, which changes the music
+// here (a borrowed field). The blades only hurt Link while he is near the floor, and not
+// during his jump cut before phase 2. [asm]
 /* 00006D0C-000076B8       .text daGnd_Execute__FP9gnd_class */
 static BOOL daGnd_Execute(gnd_class* i_this) {
     static s32 w_d[] = {GND_JNT_GND_KENL_e, GND_JNT_GND_KENR_e};

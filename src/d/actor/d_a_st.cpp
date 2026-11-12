@@ -2,6 +2,16 @@
  * d_a_st.cpp
  * Enemy - Stalfos / スタ (Stal)
  */
+// Stalfos (stage name Stal). 68 placed: SubD45 16, SubD71 12, PShip2 and PShip3 6 each, Cave10
+// and KATA_RM 5 each, M_Dai 4, M_DaiMB and kaze 3 each, 2 each in Cave11, GanonE, K_Test4, TF_02.
+// [data]
+// Params: low nibble of byte 0 the behaviour (BehaviorType; any other value stands normally),
+// byte 1 ambush range in tens (0xFF: 500), byte 2 unused, byte 3 ambush switch (0xFF: wait for
+// the range instead). angle.z a death switch, set on death; already set, it is not created. A
+// death switch of 1 to 0x7F also marks it a boss (rumble as it climbs out). [asm]
+// Placed behaviours: vertical coffin 31, underground 22, normal 12, horizontal coffin 3. [data]
+// Holds a d_a_boko Stalfos mace (Type_STALFOS_MACE_e). Body toughness m1E84 16, head health 16.
+// Three Grappling Hook steals from the Stal table. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_st.h"
@@ -501,6 +511,8 @@ static void speed_pos_calc(st_class* i_this) {
     i_this->mAcch.CrrPos(*dComIfG_Bgsp());
 }
 
+// Walks at Link 100 to 160 frames, stands 100 to 160, and within 280 attacks: with its mace a
+// single swing or a spinning one (fight), without it fight2. [asm]
 /* 00002320-00002604       .text jyunkai__FP8st_class */
 static void jyunkai(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -611,6 +623,9 @@ static void buki_smoke_set(st_class* i_this) {
     }
 }
 
+// Swing right or left, then totters 30 to 80 frames. Then, half the time or when Link is within
+// 300, it recovers or does an overhead smash (dust and a hammer sound where it lands); otherwise
+// it spins. A spin moves at speed 10 and stops early if the mace hits a wall. [asm]
 /* 000029F8-00003F4C       .text fight__FP8st_class */
 static void fight(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -929,6 +944,9 @@ static void fight(st_class* i_this) {
     }
 }
 
+// No mace (m1DD0 0, as when Link has taken it): pulls off its left arm and swings it on its
+// chain (m1DC8, nun_*) for 0, 40 or 80 frames. When the mace comes back it puts the arm back
+// first. [asm]
 /* 00003F4C-000044C8       .text fight2__FP8st_class */
 static void fight2(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1036,6 +1054,8 @@ static void fight2(st_class* i_this) {
     }
 }
 
+// Underground: hidden and untargetable until the switch or range, then climbs out (BCK_START).
+// [asm]
 /* 000044C8-00004784       .text ground_wait__FP8st_class */
 static void ground_wait(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1090,6 +1110,7 @@ static void ground_wait(st_class* i_this) {
     }
 }
 
+// Coffin: the same wait, then steps out after 70 frames (l_HIO.m18). [asm]
 /* 00004784-00004990       .text kan_wait__FP8st_class */
 static void kan_wait(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1143,6 +1164,9 @@ static void kan_wait(st_class* i_this) {
     }
 }
 
+// Fallen apart: after 200 frames (l_HIO.m1A) the parts fly back together. If it is not whole
+// again 500 frames after starting (m02F8, not in the demo build), it dies where it is: a
+// disappear IBALL drop and the death switch. [asm]
 /* 00004990-00004CF0       .text st_break_wait__FP8st_class */
 static void st_break_wait(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1246,6 +1270,7 @@ static void st_break_wait(st_class* i_this) {
 #endif
 }
 
+// Hit on the attached head: the head spins round and it carries on. [asm]
 /* 00004CF0-00005098       .text head_damage__FP8st_class */
 static void head_damage(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1300,6 +1325,7 @@ static void head_damage(st_class* i_this) {
     }
 }
 
+// Upper body alone (behaviour 14): hops away from Link and keeps 480 to 530 from him. [asm]
 /* 000050D4-00005484       .text ue_move__FP8st_class */
 static void ue_move(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1389,6 +1415,8 @@ static void ue_move(st_class* i_this) {
 #endif
 }
 
+// Legs alone: walk at Link and kick within 260. After 350 to 550 frames the upper body is deleted
+// and its parts fly back onto the legs. [asm]
 /* 00005484-000057A0       .text sita_move__FP8st_class */
 static void sita_move(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1551,6 +1579,12 @@ static void St_move(st_class* i_this) {
 
 static u8 hit_bit[] = {0x01, 0xFF, 0xFF, 0x02, 0x04, 0x08, 0x10};
 
+// Seven spheres; 0 is the head, which also takes arrows. A Light Arrow anywhere shrinks it away.
+// Player hits anywhere, head included, and bombs wear down the body (m1E84; a bomb empties it);
+// at 0 it falls apart (st_break_wait) and the head comes off. A spin attack (cut bit 0x80) as the
+// last blow instead splits it: the legs stay (sita_move) and a new d_a_st with param 0xE is the
+// upper body. Other hits spin the attached head (head_damage) or stagger the body. With the head
+// off only its sphere is live (health 16); the Skull Hammer or a bomb kills it outright. [asm]
 /* 00005950-000060B4       .text damage_check__FP8st_class */
 static void damage_check(st_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1867,6 +1901,9 @@ static f32 part_posmove(st_class* i_this, st_p* param_2) {
     return f31;
 }
 
+// Each of the 26 parts falls and bounces on its own. The loose head hops around (state 6). If the
+// mace is lying free when it pulls together, it takes it back. A killed head bursts every part
+// and drops an IBALL item where it lands. [asm]
 /* 0000665C-00007D38       .text part_move__FP8st_classi */
 static void part_move(st_class* i_this, int jointIndex) {
     fopAc_ac_c* actor = &i_this->actor;

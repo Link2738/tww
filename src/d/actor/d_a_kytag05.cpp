@@ -2,6 +2,11 @@
  * d_a_kytag05.cpp
  * Tag - Weather Tag 5
  */
+// Snow and cycling wind (stage name kytag5; 1 placed, Adanmae). Stopped once dSymbol_DIN_e is
+// owned. Sets snow 200 and haze (mode 3, but 0 in the USA build). The wind cycles through four
+// directions (wind_table), blowing 150 frames then pausing (10, 10, 0, 90). Position bands on z
+// (and x past 520), by Link or the camera, override the direction. In the demo41 event, from frame
+// 0x186 the snow and the custom colour fade out over 100 frames. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kytag05.h"
@@ -18,6 +23,8 @@ static BOOL daKytag05_Draw(kytag05_class*) {
     return TRUE;
 }
 
+// The `demoFrame == 0x187` branch (daYkgr_c::stop) is unreachable: it sits in the else of
+// `demoFrame >= 0x186`. [asm]
 /* 00000080-000003F4       .text daKytag05_Execute__FP13kytag05_class */
 static BOOL daKytag05_Execute(kytag05_class* a_this) {
     static const s16 wind_table[] = {

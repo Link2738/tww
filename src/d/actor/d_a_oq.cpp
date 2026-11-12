@@ -2,6 +2,20 @@
  * d_a_oq.cpp
  * Enemy - Octorok
  */
+// Octorok. Stage names Oq (kindan, sea, ma2room) and Oqw (the sea). [data]
+// Type by byte 0 (m02C0):
+//   0 the small Octorok in ponds and rivers; byte 1 picks rocks (0) or bombs (1)
+//   1 the big red sea Octorok (always bombs)
+//   2 not an Octorok: d_a_salvage creates it on a failed salvage. It spawns a type 4 1000 in
+//     front of Link (+-200) and fails its own create
+//   3 a spawner with no model: within byte 2 x 1000 of Link (0 or 0xFF: 80000) it spawns
+//     type 5s ahead of him in waves of 2 or 3, and deletes itself after 16 of them die
+//   4 the salvage-miss Octorok: fires after a delay, dives and is gone
+//   5 the spawner's child; deletes after diving
+//   6 the spat rock
+// Placed: type 0 in kindan 12 (3), sea 41 (3), ma2room 3 (1, bombs); type 1 in sea (20); type
+// 3 in sea 18 and 25. [data]
+// 1 health. The sea types' red glow animates at night. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_coming2.h"
@@ -166,6 +180,9 @@ static void anm_init(oq_class* i_this, int bckFileIdx, f32 morf, u8 loopMode, f3
     }
 }
 
+// Any hit kills it except: the Grappling Hook (steals from a type 0, no damage), Deku Leaf wind
+// and Ice Arrows (frozen). The sea types' body attack ramming the ship or Link plays the
+// SHIP_HIT recoil and then they dive. [asm]
 /* 00000608-00000D50       .text body_atari_check__FP8oq_class */
 static BOOL body_atari_check(oq_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -413,6 +430,8 @@ static void search_y_check(oq_class* i_this, s16 param_2) {
     cLib_addCalcAngleS2(&actor->shape_angle.y, actor->current.angle.y, 1, param_2);
 }
 
+// Dives when Link gets far (type 0 2000, or 5000 with bombs; types 1 and 4 5000; type 5 6500)
+// or when its spawner tells it to. A type 0 that touches a wall dies on the spot. [asm]
 /* 0000198C-00001B24       .text moguru_check__FP8oq_class */
 static BOOL moguru_check(oq_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -450,6 +469,9 @@ static BOOL moguru_check(oq_class* i_this) {
     return FALSE;
 }
 
+// Surfacing: type 0 comes up within range, but not within 400 of Link or under a roof lower
+// than 150; type 4 always does. Once up, a type 0 in water dives again if Link comes within
+// 400. Types 1 and 5 only threaten (IKAKU) inside 1700 and only fire beyond it. [asm]
 /* 00001B24-00002270       .text action_dousa__FP8oq_class */
 static void action_dousa(oq_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -616,6 +638,9 @@ static void action_dousa(oq_class* i_this) {
     search_y_check(i_this, 0x500);
 }
 
+// The shot: rocks (a type 6 child) or a bomb. Retail still rolls the demo build's random yaw
+// spread for bombs when Link is off the ship, but throws the result away. Next shot in 60
+// (rock) or 100 frames, plus up to as much again. [asm]
 /* 00002270-00002BEC       .text action_kougeki__FP8oq_class */
 static void action_kougeki(oq_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -800,6 +825,8 @@ static void action_kougeki(oq_class* i_this) {
     }
 }
 
+// The rock: rolls forward for 200 frames. A shield or sword hit bounces it back, and it then
+// hits enemies. Two rocks meeting break each other; water, the floor or a wall breaks it. [asm]
 /* 00002BEC-000032A4       .text action_tama_shoot__FP8oq_class */
 static void action_tama_shoot(oq_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -917,6 +944,9 @@ static void action_tama_shoot(oq_class* i_this) {
     fopAcM_delete(actor);
 }
 
+// Death: spins, drops from its item table (daDisItem_IBALL) and deletes. A type 5 counts the
+// kill to its spawner. Types 1 and 5 add one to event register UNK_7EFF, the d_a_coming2
+// counter (starts at 0xE, capped at 0xFF). [asm]
 /* 000032A4-0000369C       .text action_itai__FP8oq_class */
 static void action_itai(oq_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1021,6 +1051,9 @@ static void action_itai(oq_class* i_this) {
     actor->scale.y = actor->scale.z = actor->scale.x;
 }
 
+// Type 3: spawns its type 5s 3500 to 6000 ahead of where Link faces (+-7000 angle), 2 to 3 at
+// a time, then waits 90 to 140 frames; once Link is 500 beyond its range it waits again.
+// With all slots full it tells the oldest to dive. [asm]
 /* 0000369C-00003BC4       .text action_wakidasi__FP8oq_class */
 // The only function in this unit that is not byte-exact, and it is off by exactly
 // one instruction: the extsh that narrows the MODE_WAKIDASI_53 rotation argument

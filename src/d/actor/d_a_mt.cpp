@@ -31,6 +31,18 @@
  * Enemy - Magtail
  */
 
+// Magtail (stage name magtail). 28 placed: Cave09 6, Cave01 5, M_NewD2 4, Cave02 3, Cave11 3,
+// KATA_RM 2, MiniKaz 2, SubD51 2, K_Test8 1. [data]
+// This source is not byte-exact (see above), so the behaviour notes in this file are read from
+// it as written and marked [inferred].
+// Params: byte 0 m2B4 (below 10 crawls; 10 and up circles, turning by byte 1: 1, 2, 3 = 1000,
+// 500, 250 one way, 11, 12, 13 the other; every placement is 0 or 0xFF), byte 1 bits 0-6 m2B5
+// (1: turn straight to the target), bit 15 m2B6, byte 2 a room path to crawl, byte 3 a switch to
+// wait for. angle.z is a death switch (m2B6 0; already set, not created) or, with m2B6 1, a switch
+// that stops it respawning: deleted before that switch is on, it recreates itself at home. 8
+// placed respawn until switch 0x80. [inferred] [data]
+// Health 8 for the curled ball; m18FB, 2, is the toughness of the eye. Item table magtail.
+// [inferred]
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_mt.h"
 #include "res/Object/Mt.h"
@@ -882,6 +894,7 @@ static BOOL daMt_Draw(mt_class* i_this) {
     return TRUE;
 }
 
+// Bursts: drops an IBALL item and sets the death switch, then the segments fly apart. [inferred]
 /* 0000361C-000037B0       .text bakuha__FP8mt_class */
 static void bakuha(mt_class* i_this) {
     fopAcM_createDisappear(i_this, &i_this->eyePos, 10, daDisItem_IBALL_e);
@@ -904,6 +917,9 @@ static void bakuha(mt_class* i_this) {
     dComIfGp_particle_set(dPa_name::ID_IT_SN_MAGT_HAHEN_A, &i_this->current.pos);
 }
 
+// Crawling: six line checks keep it on floors, walls and ceilings. It heads for Link (or along its
+// path); within 450, in line of sight and with its body straight, it rears up (mC01) and fights.
+// Ten frames with no surface under it drop it into the fight state as well. [inferred]
 /* 000037B0-000042C4       .text mt_move__FP8mt_class */
 static void mt_move(mt_class* i_this) {
     static f32 check_x[6] = {0.0f, 0.0f, 50.0f, -50.0f, -1.0f, 1.0f};
@@ -1066,6 +1082,11 @@ static void mt_move(mt_class* i_this) {
     }
 }
 
+// Fighting: holds 350 in front of Link, spread around him by how many Magtails are fighting
+// (mt_check); the one he locks on to takes the first slot. Every 15 frames, half the time, it
+// lunges (frames 43 to 70). A shield block knocks it back. A parry jump (BT_VERTICALJUMPCUT) while
+// it lunges and Link has it locked on pins it (mode 6). Over 250 above the ground it falls.
+// [inferred]
 /* 000042C4-00005088       .text mt_fight__FP8mt_class */
 static void mt_fight(mt_class* i_this) {
     float fVar1;
@@ -1330,6 +1351,9 @@ switch_end:
     }
 }
 
+// Curled into a ball (mode 2): rolls down slopes, bounces off walls and can be picked up and
+// thrown. It uncurls after 600 frames (l_HIO.m54) with health and eye toughness restored.
+// [inferred]
 /* 00005088-00005A04       .text mt_move_maru__FP8mt_class */
 static void mt_move_maru(mt_class* i_this) {
     f32 fVar1;
@@ -1517,6 +1541,11 @@ static void water_damage_se_set(mt_class* i_this) {
     i_this->m348 = 1;
 }
 
+// Body: a bomb, water or an Ice Arrow curls it at once; other hits while it fights only make it
+// recoil. Eye (mEyeSph): every hit takes its damage off m18FB first (retail; the demo build does
+// not), but only a bomb, a pot, water, a thrown Magtail (type 6) or any hit during the lunge's
+// wind-up then acts: curl at 0, else recoil. Ball: a bomb or a thrown Magtail bursts it, other
+// hits take its health, bursting at 0. A Light Arrow shrinks it away. [inferred]
 /* 00005C54-0000614C       .text damage_check__FP8mt_class */
 static void damage_check(mt_class* i_this) {
     fopAc_ac_c* actor = i_this;
@@ -1699,6 +1728,8 @@ static void damage_check(mt_class* i_this) {
     }
 }
 
+// In lava it sinks slowly, and a freshly curled ball jumps its timer to 71, uncurling about 20
+// frames later. Pinned (mode 6) under a held parry jump, an eye hit kills it. [inferred]
 /* 00006188-000074D4       .text daMt_Execute__FP8mt_class */
 static BOOL daMt_Execute(mt_class* i_this) {
     CcAtInfo atInfo;

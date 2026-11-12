@@ -2,6 +2,9 @@
  * d_a_kytag06.cpp
  * Tag - Weather Tag 6
  */
+// Storm for the ARRIVAL_BRK event (stage name kytag6; 1 placed, sea). Not created once the
+// dSymbol_NAYRU_e symbol is owned. Only while that event runs: the clock moves 0.05 per frame
+// between 90 and 345, colour pattern 1, rain builds toward 250 and thunder is on. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kytag06.h"

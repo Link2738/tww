@@ -2,6 +2,16 @@
  * d_a_bb.cpp
  * Enemy - Kargaroc
  */
+// Kargaroc (stage name Bb). 58 placed: sea 38, KATA_RM 6, I_SubAN 3, and 2 each in A_mori,
+// K_Test8, M_NewD2, Siren and kindan, 1 in M_Dra09. [data]
+// Params: byte 0 mode (unk_2D8): 3 attacks at once, 4 and 7 perch at home (bb_wait_move and
+// bb_su_wait_move are the same code), 5 carries a Moblin and 6 a Bokoblin, anything else roams.
+// Byte 1 sight range in hundreds (0xFF: 8000, or 1500 when perched), byte 2 a room path (0xFF
+// none), byte 3 a switch it stays hidden and inactive until. home.angle.z: with event bit
+// UNK_1101 set and this switch on, it is not created. [asm]
+// Placed modes: 4 26, 0xFF 17 (11 of them on sea paths), 7 5, 5 5, 6 3, 0 2. [data]
+// 2 health; head and body take everything but wind, light and water. Items from the Bb table,
+// dropped as a disappear on death (bb_fail_move). [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bb.h"
@@ -364,6 +374,8 @@ void anm_init(bb_class* i_this, int animFileIdx, f32 morf, u8 loopMode, f32 spee
     }
 }
 
+// Collects d_a_esa not yet claimed (field_0x298) with a clear line from it. search_esa takes the
+// nearest, widening by 50 up to 10000, and claims it. [asm]
 /* 00000D74-00001048       .text s_a_d_sub__FPvPv */
 static void* s_a_d_sub(void* ac1, void* ac2) {
     dBgS_LinChk linChk;
@@ -469,6 +481,8 @@ BOOL bb_setpos_bg_check(bb_class* i_this) {
     return FALSE;
 }
 
+// Sees Link within its range, with a clear line, within 3000 up or down (2000 perched) and inside
+// a 0x6D60 cone (0x59D8 perched). [asm]
 /* 00001C50-00001DF8       .text bb_player_view_check__FP8bb_class */
 s32 bb_player_view_check(bb_class* i_this) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -713,6 +727,9 @@ void bb_ground_pos_move(bb_class* i_this) {
     }
 }
 
+// Follows the room path, aiming within 150 of each point when not carrying. Point arg3: 1 land
+// on it and walk between points, 2 take off again, 3 wait 50 to 100 frames, 5 drop the carried
+// enemy, 6 delete itself. Bait or a sighting of Link breaks off the path. [asm]
 /* 00002854-00003224       .text bb_path_move__FP8bb_class */
 void bb_path_move(bb_class* i_this) {
     fopAc_ac_c* a_this = (fopAc_ac_c*)&i_this->actor;
@@ -942,6 +959,8 @@ void bb_path_move(bb_class* i_this) {
     }
 }
 
+// Roams to random spots within 2500 of home. Goes for bait first: lands near it, walks up and
+// eats it (deletes it). Link within 400 while it is on the ground sends it off. [asm]
 /* 00003224-00003F88       .text bb_auto_move__FP8bb_class */
 void bb_auto_move(bb_class* i_this) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -1252,6 +1271,8 @@ void* pl_name_check(void* ac1, void* ac2) {
     return NULL;
 }
 
+// Used in place of the attack while the player actor is a d_a_npc_kam: it weaves around in
+// front of it, snapping. [asm]
 /* 0000404C-000044EC       .text bb_kamome_attack__FP8bb_class */
 void bb_kamome_attack(bb_class* i_this) {
     daPy_py_c* player = daPy_getPlayerActorClass();
@@ -1335,6 +1356,10 @@ void bb_kamome_attack(bb_class* i_this) {
     }
 }
 
+// Flies to 350 of Link, then circles above him for 600 to 1200 frames (450 to 750 for a percher),
+// swooping at him when 200 to 350 away. A swoop blocked by the shield stuns it for 45 frames,
+// sinking to 50 above the ground. Except in mode 3 it returns to its mode when the circling time
+// ends, past 10000, or with no clear line to Link or to home. [asm]
 /* 000044EC-00005534       .text bb_atack_move__FP8bb_class */
 void bb_atack_move(bb_class* i_this) {
     fopAc_ac_c* a_this = &i_this->actor;
@@ -1641,6 +1666,8 @@ void bb_atack_move(bb_class* i_this) {
     }
 }
 
+// Perched: sits at home and takes off at Link 100 frames after it last landed, once it sees him.
+// [asm]
 /* 00005534-00005BB4       .text bb_wait_move__FP8bb_class */
 void bb_wait_move(bb_class* i_this) {
     cXyz v;
@@ -2058,6 +2085,8 @@ void bb_key_move(bb_class* i_this) {
 }
 #endif
 
+// An Ice Arrow freezes it for 300 frames, a Light Arrow shrinks it away. The Grappling Hook
+// (result type 14) steals without damage. Any hit sends it into the attack. [asm]
 /* 00006278-0000696C       .text damage_check__FP8bb_class */
 void damage_check(bb_class* i_this) {
     fopAc_ac_c* a_this = (fopAc_ac_c*)&i_this->actor;
@@ -2200,6 +2229,8 @@ void damage_check(bb_class* i_this) {
     }
 }
 
+// Modes 5 and 6 hold the enemy between their feet until a path point with arg3 5 drops it
+// (damagereaction action 31). [asm]
 /* 000069A8-00007778       .text daBb_Execute__FP8bb_class */
 static BOOL daBb_Execute(bb_class* i_this) {
     s16 z;

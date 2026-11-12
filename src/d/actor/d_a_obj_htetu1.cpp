@@ -2,6 +2,11 @@
  * d_a_obj_htetu1.cpp
  * Object - Tower of the Gods - Large yellow gate (blocks room containing Small Key)
  */
+// A gate with collision (HTETU1) that sinks 2300 when the switch in param byte 0 is set: event
+// htetu1_open, JA_SE_READ_RIDDLE_1, a shock, 70 frames of rattling with JA_SE_OBJ_ST_KOUSHI_MOVE,
+// a 200-frame quake, then 5 a frame down. SIRENWATERGATE00/01 splashes follow the water line
+// 400 in front while the gate is near it. Already set, it starts sunk. Stage name Htetu1: 1
+// placed, Siren, switch 5. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_htetu1.h"

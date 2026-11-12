@@ -2,6 +2,11 @@
  * d_a_lamp.cpp
  * Object - Generic wall lamp
  */
+// A hanging oil lamp with a torch flame and a point light (stage name Lamp; 22 placed, Otkura 4).
+// Param byte 0 (0xFF as 0): 0 sways a fixed small amount; otherwise a quake or a sound over 400
+// within 1000 swings it harder for 20 frames. Wind or AT 0x400000 on its sphere bends the flame
+// away from Link for 40 frames. Its TG list also takes fire and Fire Arrows, which do nothing.
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_lamp.h"

@@ -2,6 +2,10 @@
  * d_a_daiocta_eye.cpp
  * Mini-Boss - Big Octo (eye)
  */
+// One Big Octo eye, spawned by d_a_daiocta and shown when it surfaces (mbAppear). 4 health:
+// arrows, Ice and Fire Arrows and the Hookshot take 2, a Light Arrow 4, the Boomerang 1;
+// nothing else hurts it (checkTgHit). A STATE_4 bomb (a cannon shot) touching it kills it
+// (_coHit). The eyes roll to random angles every 30 to 90 frames (setRotEye). [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_daiocta_eye.h"

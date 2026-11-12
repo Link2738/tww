@@ -2,6 +2,10 @@
  * d_a_obj_monument.cpp
  * Object - Wind's Requiem stone monument
  */
+// Stone monuments with collision: stage names Esekh (type 0, ESEKH) and Esekh2 (type 1, ESEKH2),
+// 2 each, one of each on the sea and in K_Testa. Param bit 0 is the type, byte 1 a switch. With
+// the switch on it stops drawing, but its collision stays registered. The sea Esekh uses switch
+// 0x30. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_monument.h"

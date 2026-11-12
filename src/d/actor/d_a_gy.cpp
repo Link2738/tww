@@ -2,6 +2,13 @@
  * d_a_gy.cpp
  * Enemy - Gyorg
  */
+// Gyorg. Never placed: d_a_gy_ctrl spawns them as children, and one with no live controller
+// parent deletes itself. Neither exists until Link has the Boomerang. [asm] [data]
+// 4 health. Only these hurt it: a bomb kills outright; arrows, Fire Arrows, the Hookshot and
+// the Boomerang take 2. An Ice or Light Arrow kills it after a short delay. Sword hits and
+// everything else do nothing (checkTgHit). [asm]
+// Each one owns a slot on the controller's circle (mIndex) and swims around Link or the ship
+// from it. The head turns to track Link within 0x2000 of its facing and 4000 away. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_gy.h"
@@ -661,6 +668,8 @@ void daGy_c::modeDiveInit() {
     m508 = 0.0f;
 }
 
+// Under water, heading for its slot. It stays down while the controller hides or terrain lies
+// ahead (mE80); at the slot, with Link more than 350 away, it surfaces and circles. [asm]
 /* 00000FDC-000012DC       .text modeDive__6daGy_cFv */
 void daGy_c::modeDive() {
     if (mD15 == 5) {
@@ -716,6 +725,9 @@ void daGy_c::modeCircleInit() {
     m508 = 0.0f;
 }
 
+// Circling. After 90 to 240 frames (Link swimming) or 180 to 360 (on the ship) it attacks:
+// modeAttackPlayer when swimming, modeAttack on the ship. A ship moving faster than 20 makes
+// it pace the ship instead (modeWithCircle). [asm]
 /* 0000141C-000016E4       .text modeCircle__6daGy_cFv */
 void daGy_c::modeCircle() {
     if (mD15 == 5) {
@@ -771,6 +783,8 @@ void daGy_c::modeWithCircleInit() {
     m914 = l_HIO.m110 + m4F8;
 }
 
+// Pacing a moving ship: matches its heading and speed, and from just off its bow (0x800 to
+// 0x1500 from the ship's facing) leaps at it (modeWithAttack). [asm]
 /* 00001788-000019AC       .text modeWithCircle__6daGy_cFv */
 void daGy_c::modeWithCircle() {
     if (mD15 == 5) {
@@ -916,6 +930,8 @@ void daGy_c::modeAttackPlayerInit() {
     m924 = 0;
 }
 
+// Swimming Link: closes in, snaps (ATTACK1, l_HIO.m198 times), then lunges (ATTACK2); the
+// head hurts for the first 18 frames of the lunge. Then it dives. [asm]
 /* 00001F40-000022F8       .text modeAttackPlayer__6daGy_cFv */
 void daGy_c::modeAttackPlayer() {
     if (mpCtrl->m320 == 1) {
@@ -1045,6 +1061,8 @@ void daGy_c::modeDamage() {
     }
 }
 
+// Death by anything but a bomb adds one to event register 0x7EFF (the d_a_coming2 counter);
+// a bomb death (modeDeleteBomb) does not. Both drop from the GyCtrl item table. [asm]
 /* 00002754-000028B8       .text modeDeleteInit__6daGy_cFv */
 void daGy_c::modeDeleteInit() {
     fopAcM_OffStatus(this, fopAcStts_SHOWMAP_e);

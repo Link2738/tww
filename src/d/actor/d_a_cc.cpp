@@ -2,6 +2,21 @@
  * d_a_cc.cpp
  * Enemy - ChuChu
  */
+// ChuChu. The five stage names differ only in GBA name; the colour is byte 1. Placed:
+// c_green 89, c_red 83, c_kiiro (yellow) 46, c_black 32, c_blue 26. [data]
+// Params: byte 0 behaviour (0xFF = 0), byte 1 colour (0 green, 1 red, 2 blue, 3 dark, 4 yellow),
+// byte 2 notice range in tens (0: 1000, 1200 for behaviour 1), byte 3 a switch to wait for before
+// appearing (action_tomaru), or for behaviour 3 the item bit of its drop. [asm]
+// Behaviour: 0 rises from the floor, 1 drops from the ceiling, 2 the d_a_npc_de1 set (below),
+// 3 stays within angle.z * 10 (at least 100) of its spot and never lunges, 4 hides under a pot.
+// Placed behaviours: 0 63, 1 102, 0xFF 72, 3 24 (all blue; 23 on the sea, byte 3 item bits
+// 0x01 to 0x17), 4 15. [data]
+// Colour 10 and up: 10 is taken off and the notice range becomes 60000 (Wizzrobe summons, via
+// d_a_wz cc_birth_dt: green, red or yellow, never dark). Colour 15 is a red that any non-player
+// hit kills with no drop, and a player kill drops a heart, magic or arrows by need (m304);
+// nothing creates it. d_a_obj_homen spawns behaviour 0 of each colour. [asm] [data]
+// Health by colour (cc_HP_kind): green 2, red 1, blue 2, dark 4, yellow 1. Drops come from the
+// c_* item tables as a disappear IBALL. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_cc.h"
@@ -292,6 +307,8 @@ void* s_b_sub(void* arg0, void* arg1) {
     return FALSE;
 }
 
+// Deleted after 50 frames over ground code 4 (or below y -500 there) and 20000 below its start.
+// In water deeper than 40 it swims (action_oyogu); as stone, sinking 100 deletes it. [asm]
 /* 00000D30-00001028       .text naraku_check__FP8cc_class */
 void naraku_check(cc_class* i_this) {
     if (i_this->mAcch.GetGroundH() != -G_CM3D_F_INF && dComIfG_Bgsp()->ChkPolySafe(i_this->mAcch.m_gnd) &&
@@ -364,6 +381,8 @@ void naraku_check(cc_class* i_this) {
     }
 }
 
+// Blue and yellow only: switches the body attack on and the TG special to dCcG_Tg_Spl_UNK1 while
+// charged. Cleared on damage (action_damage_move), restored when it stands again. [asm]
 /* 00001028-00001068       .text denki_start__FP8cc_class */
 void denki_start(cc_class* i_this) {
     if ((i_this->mColorType != 2) && (i_this->mColorType != 4)) {
@@ -401,6 +420,8 @@ void denki_end(cc_class* i_this) {
     }
 }
 
+// A bomb going off or a Skull Hammer quake within 1000 (flat distance) stuns it
+// (damage_mode_move). The bomb stun fires once per blast via m302. [asm]
 /* 000010D8-00001344       .text shock_damage_check__FP8cc_class */
 BOOL shock_damage_check(cc_class* i_this) {
     daPy_py_c* player = (daPy_py_c*)dComIfGp_getPlayer(0);
@@ -444,6 +465,8 @@ BOOL shock_damage_check(cc_class* i_this) {
     return FALSE;
 }
 
+// Dark: standing in light (dComIfGp_getDetect().chk_light) turns it to stone (action_up_check).
+// [asm]
 /* 00001344-000013B8       .text black_light_check__FP8cc_class */
 void black_light_check(cc_class* i_this) {
     if (i_this->mColorType == 3) {
@@ -457,6 +480,13 @@ void black_light_check(cc_class* i_this) {
     }
 }
 
+// Swords do nothing while charged (m2F7). The Boomerang and the Grappling Hook stun it (the hook
+// steals once; three times from dark); wind blows it. The Hookshot does no damage and makes it
+// stand up. Not dark: a Skull Hammer front swing or jump swing flattens it outright
+// (action_dead_move 0x34). Fire burns
+// it, an Ice Arrow freezes it, a Light Arrow shrinks it away. Dark: light turns it to stone; the
+// Boomerang, Grappling Hook and wind still work, every other hit does no damage and it splits
+// and reforms (action_damage_move 0x2D). [asm]
 /* 000013B8-00001F78       .text body_atari_check__FP8cc_class */
 BOOL body_atari_check(cc_class* i_this) {
     fopAc_ac_c* a_this = (fopAc_ac_c*)&i_this->actor;
@@ -756,6 +786,10 @@ BOOL search_angle_set(cc_class* i_this) {
     return FALSE;
 }
 
+// Wakes when Link is within its notice range. Then stands and creeps 10 to 25 frames, lies flat
+// and slides 70 to 85, and stands again, lunging if Link is within 380. Lying flat only bombs,
+// the Boomerang, arrows, the Hookshot, the Skull Hammer, light and the Grappling Hook reach it.
+// Red and yellow never lie down; they lunge whenever Link comes within 380. [asm]
 /* 00002180-00002A20       .text action_nomal_move__FP8cc_class */
 void action_nomal_move(cc_class* i_this) {
     switch (i_this->m2F5) {
@@ -1038,6 +1072,8 @@ void action_oyogu(cc_class* i_this) {
     }
 }
 
+// The lunge: a hop at speed 18; a shield hit bounces it back. Blue and yellow keep the body
+// attack on after landing. [asm]
 /* 00002E24-000032A0       .text action_attack_move__FP8cc_class */
 void action_attack_move(cc_class* i_this) {
     switch (i_this->m2F5) {
@@ -1127,6 +1163,8 @@ void action_attack_move(cc_class* i_this) {
     }
 }
 
+// Knockback, with a bigger wobble for strong cuts or a kill. A Boomerang, bomb or quake stun
+// lasts 90 frames plus 60 waking; a Grappling Hook stun 20. [asm]
 /* 000032A0-00003C58       .text action_damage_move__FP8cc_class */
 void action_damage_move(cc_class* i_this) {
     fopAc_ac_c* a_this = (fopAc_ac_c*)&i_this->actor;
@@ -1356,6 +1394,7 @@ void action_damage_move(cc_class* i_this) {
     }
 }
 
+// Behaviour 3 drops only with an item bit set; colour 15 drops by need as above. [asm]
 /* 00003C58-000040E4       .text action_dead_move__FP8cc_class */
 void action_dead_move(cc_class* i_this) {
     fopAc_ac_c* a_this = (fopAc_ac_c*)&i_this->actor;
@@ -1575,6 +1614,10 @@ void deku_ret_demo(cc_class* i_this) {
     }
 }
 
+// Behaviour 2: spawned by d_a_npc_de1 (10, green and red alternating) and held on its joints
+// through m7EC. Link's front roll crash (checkFrontRollCrash) drops every one hanging; the first
+// runs the CyuCyu_STR event and they fight as normal. After 600 frames the first to lie down
+// sends all living ones back up (CyuCyu_RET), to drop again on the next roll crash. [asm]
 /* 00004518-00004CAC       .text action_noboru__FP8cc_class */
 void action_noboru(cc_class* i_this) {
     fopAc_ac_c* a_this = (fopAc_ac_c*)&i_this->actor;
@@ -1758,6 +1801,8 @@ void action_noboru(cc_class* i_this) {
     }
 }
 
+// Stone: can be lifted and thrown. A throw that lands, or a Skull Hammer hit, shatters it and
+// drops its item; it thaws 600 frames after it last stood in light. [asm]
 /* 00004CAC-0000561C       .text action_up_check__FP8cc_class */
 void action_up_check(cc_class* i_this) {
     fopAc_ac_c* a_this = (fopAc_ac_c*)&i_this->actor;
@@ -2013,6 +2058,9 @@ static void* tsubo_search(void* arg1, void* arg2) {
     return NULL;
 }
 
+// Behaviour 4: deletes itself unless a pot sits at exactly its x and z (y within 10). It waits
+// inside until Link is within the notice range, or until the pot is gone; with byte 2 at 0 or
+// 0xFF only breaking the pot lets it out. 9 of the 15 placed have a range. [asm] [data]
 /* 00005778-000059B8       .text action_tubo_search__FP8cc_class */
 void action_tubo_search(cc_class* i_this) {
     fopAc_ac_c* pfVar2;

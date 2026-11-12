@@ -2,6 +2,9 @@
  * d_a_obj_adnno.cpp
  * Object - Unused - Triforce prayer mural
  */
+// A 4x4 grid of 16 tiles, 40 apart. Each tile is drawn, with its own material table, only once its
+// event bit is set: LITHOGRAPH_1 to LITHOGRAPH_10, then UNK_3602, 3601, 3780, 3740, 3720 and 3710.
+// Stage name Adnno; never placed, and nothing else creates it. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_adnno.h"

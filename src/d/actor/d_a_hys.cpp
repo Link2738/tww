@@ -2,6 +2,12 @@
  * d_a_hys.cpp
  * Object - Eye switch
  */
+// Params: byte 0 the switch, byte 1 the type (0 sphere radius 35; 1 radius 70 and scale 2; both
+// use the same Hys files, and higher values index past the tables). An arrow of any kind on the
+// sphere turns the switch on with JA_SE_OBJ_ARROW_SW_ON and steps the btp to frame 3; the switch
+// going off steps it back to 0 and re-arms it. Already on at create, it starts at frame 3.
+// Stage names Hys 3 (type 0; I_SubAN, K_Test5, Siren) and Hys2 5 (type 1; Siren 3, K_Test5,
+// SirenMB). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_hys.h"

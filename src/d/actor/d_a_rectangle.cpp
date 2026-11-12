@@ -2,6 +2,7 @@
  * d_a_rectangle.cpp
  * Unused Dummy Actor
  */
+// Does nothing in any method. Stage name hotest, never placed. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_rectangle.h"

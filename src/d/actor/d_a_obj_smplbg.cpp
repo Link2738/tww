@@ -2,6 +2,9 @@
  * d_a_obj_smplbg.cpp
  * Object - Top/"head" of Tingle Tower
  */
+// Simple moving BG with one type in M_attr: Qtkhd, a tower top that turns 0x5B per frame with
+// JA_SE_OBJ_TC_TOWER_ROUND unless stopped. d_a_npc_tc stops and restarts it (onStop / offStop).
+// Any type param above 0 falls back to 0. Stage name Qtkhd: 1 placed, sea. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_smplbg.h"

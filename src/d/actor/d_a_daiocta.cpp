@@ -2,6 +2,14 @@
  * d_a_daiocta.cpp
  * Mini-Boss - Big Octo (body)
  */
+// Big Octo. Placed six times on the sea: four eyes in sea 46, eight in 20, 33 and 36, twelve
+// in 6 and 17. [data] The body only reacts to hits; it dies when every eye is dead
+// (d_a_daiocta_eye children, one per mEyeAlloc slot). [asm]
+// Params (getArg): byte 0 eye count (0 four, 1 eight, 2 twelve; 3 allocates no eyes and is
+// not placed), byte 1 appear radius x 100 (0xFF = 5000), byte 2 the start point to reload at
+// after being swallowed (0xFF: restart the room instead; all placed use 0x28), byte 3 a switch
+// set on death (set: not created). home.angle.z = 1 (only sea 46) plays DAIOCTA_DEAD_ELF
+// instead of DAIOCTA_DEAD. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_daiocta.h"
@@ -164,6 +172,8 @@ static void coHit_CB(fopAc_ac_c* i_this, dCcD_GObjInf*, fopAc_ac_c* i_actor, dCc
     ((daDaiocta_c*)i_this)->_coHit(i_actor);
 }
 
+// A bomb in STATE_4 (how the ship cannon fires them) touching the body plays the bomb flinch
+// (MODE_DAMAGE_BOMB); it does no damage. [asm]
 /* 00000358-000003DC       .text _coHit__11daDaiocta_cFP10fopAc_ac_c */
 void daDaiocta_c::_coHit(fopAc_ac_c* i_actor) {
     if (i_actor != NULL && fpcM_GetName(i_actor) == fpcNm_BOMB_e) {
@@ -877,6 +887,9 @@ void daDaiocta_c::modeHideInit() {
     current.pos.y = mWaterY - 3000.0f;
 }
 
+// Hidden 3000 under the sea until Link is on the ship within the appear radius (or 4500). It
+// then rises 4500 from him inside a whirlpool (d_a_obj_auzu; in the demo and JPN builds the
+// whirlpool is created here, later ones create it in createInit and move it). [asm]
 /* 00001EB8-00001F34       .text modeHide__11daDaiocta_cFv */
 void daDaiocta_c::modeHide() {
     f32 dist_xz = fopAcM_searchPlayerDistanceXZ(this);
@@ -1087,6 +1100,9 @@ void daDaiocta_c::modeDemoInit() {
     );
 }
 
+// The swallow (DAIOCTA_SUIKOMI), started from _execute when the ship is within 1800 and in
+// front of the mouth: the ship is pulled in (SUIKOMI1, SUIKOMI2), spat out (HAKIDASU), and the
+// stage reloads at the byte 2 start point. [asm]
 /* 000028FC-00003150       .text modeDemo__11daDaiocta_cFv */
 void daDaiocta_c::modeDemo() {
     current.pos.y = mWaterY;
@@ -1224,6 +1240,8 @@ void daDaiocta_c::modeDeleteInit() {
     setEffect(dPa_name::ID_IT_SN_DO_HITC_SHIBUKIB00);
 }
 
+// Death: thrashes, sinks with bubbles, sets the switch and plays the riddle-solved jingle. The
+// DAIOCTA_DEAD_ELF version plays no jingle and does not delete itself here. [asm]
 /* 00003284-000036A8       .text modeDelete__11daDaiocta_cFv */
 void daDaiocta_c::modeDelete() {
     if (eventInfo.checkCommandDemoAccrpt()) {

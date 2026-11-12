@@ -2,6 +2,13 @@
  * d_a_tornado.cpp
  * Object - Ballad of Gales tornado
  */
+// A tornado (YTRND00 and the water base YWUWT00) whose joints sway in a spiral. Param 1 (created
+// by the player when warping) starts 2000 down at small scale, sways by the ship's height above
+// it and grows its joints in; 2 (the player and the ship) is small and shrinks away, then
+// deletes. Anything else becomes 0: not created once event bit UNK_2710 is set; it chases Link
+// at up to 20, kept within 7500 of home, with TORNADOWIND00, WINDUPWATER00 and
+// JA_SE_OBJ_TORNADE_SUS, and grabs the ship within 10000 (onTornadoFlg). When UNK_2710 is set
+// it lets go and fades out with its brk. Stage name Ytrnd00: 3 placed, sea. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_tornado.h"

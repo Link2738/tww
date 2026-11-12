@@ -2,6 +2,11 @@
  * d_a_obj_hat.cpp
  * Object - Hats (Traveling Merchants)
  */
+// Param bits 0-1 the hat (RO_HAT, RO_HAT2, RO_HAT3; 3 as 0), each with its looping wind bck, plus
+// ground and wall checks and gravity -5. A wind-only TG cylinder (70 by 80): each gust sends it
+// 20 along the wind and 50 up; a wall stops it and the ground slows it. At create it takes the
+// same push from its parent's daNpcRoten wind vector. Stage name RoHat is never placed, nothing
+// creates this actor, and d_a_npc_roten never writes that vector. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_hat.h"

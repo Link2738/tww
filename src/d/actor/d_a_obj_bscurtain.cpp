@@ -2,6 +2,10 @@
  * d_a_obj_bscurtain.cpp
  * Object - Curtains (Beedle's Shop)
  */
+// Shop curtain models (archive Ptc). Stage names Ptco (sub 0, 3 placed) and Ptcu (sub 1, 1
+// placed), all in Obshop. Param byte 0 == 1 with event bit UNK_1F08 not set uses PTCU, anything
+// else PTCO. The model matrix is a translation by cXyz::Zero, so it draws in model space whatever
+// its placed position. _execute returns false. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_bscurtain.h"

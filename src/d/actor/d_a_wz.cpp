@@ -2,6 +2,16 @@
  * d_a_wz.cpp
  * Enemy - Wizzrobe / Mini-Boss - Wizzrobe (Wind Temple)
  */
+// Wizzrobe, its fireballs, summon shots and summoning portals in one actor. Every placement
+// uses wiz_r (59); wiz_s, wiz_m and wiz_o are never placed. Most in sea 9, Cave10 8, Cave07 6,
+// kaze 5. [data]
+// Params: byte 0 behaviour (BehaviorType: 0 or 0xFF attack, 1 attack and summon, 2 the miniboss,
+// 3 attack with brk frame 3; 10 fireball, 11 summon shot, 12 and 13 portals, all spawned), byte 1
+// a switch set on death (already set, it is not created), byte 2 a switch it waits for before
+// appearing, byte 3 a room path whose points it warps between. angle.z the summon group. [asm]
+// Placed behaviours: 1 21, 0 19, 0xFF 9, 3 9 (all on the sea), 2 1 (kazeMB). [data]
+// Health 4, a summoner 8, the miniboss 12. Items: wiz_r, or wiz_s for a summoner. Three
+// Grappling Hook steals. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_wz.h"
@@ -325,6 +335,10 @@ static void rod_size_set(wz_class* i_this, u8 param_2) {
     i_this->m308.y = fVar1;
 }
 
+// The Grappling Hook, wind and the Boomerang do no damage; the hook and the Boomerang stun it, wind
+// blows it back. An Ice Arrow freezes it for 200 frames, a Light Arrow shrinks it away. Everything
+// else damages it. The plain-arrow case sets mHitType 5 and falls through to default, which sets 0.
+// [asm]
 /* 00000A58-00001258       .text body_atari_check__FP8wz_class */
 static BOOL body_atari_check(wz_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -491,6 +505,8 @@ static void fuwafuwa_calc(wz_class* i_this) {
     actor->current.pos.y = (i_this->m32C.y + 15.0f) + (cM_ssin(i_this->m3E8) * 5.0f);
 }
 
+// 0: three fireballs (behaviour 10) fanned 3000 apart at Link. 1: one summon shot (behaviour 11)
+// at 300 above the first point of the next room path, only with a path set. [asm]
 /* 00001780-00001B38       .text weapon_shoot__FP8wz_classUc */
 static void weapon_shoot(wz_class* i_this, u8 param_2) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -542,6 +558,10 @@ static void weapon_shoot(wz_class* i_this, u8 param_2) {
     }
 }
 
+// Fades in when Link is within 7500, charges 90 frames and casts at frame 35 of the attack. A
+// summoner with no summon out (m354) casts a summon shot, otherwise fireballs. Then it spins and
+// fades out, and reappears at a random point of its path, or within 200 of its spot. With a
+// summon out it waits 100 to 200 frames before reappearing. Only hittable while visible. [asm]
 /* 00001B38-00002528       .text action_dousa__FP8wz_class */
 static void action_dousa(wz_class* i_this) {
     static GXColor eff_prm_color_dt[] = {{0xFF, 0x47, 0x00, 0xFF}, {0xFF, 0xFF, 0x08, 0xFF}, {0xFF, 0xFF, 0xA0, 0xFF}};
@@ -740,6 +760,9 @@ static void action_dousa(wz_class* i_this) {
     body_atari_check(i_this);
 }
 
+// A Skull Hammer front or jump swing presses it flat (PRESS1-3). On death it drops an IBALL item
+// and sets its death switch, except in kazeMB. A summoner whose summons are still out stays
+// hidden until they are gone. [asm]
 /* 00002528-00002E3C       .text action_itai__FP8wz_class */
 static void action_itai(wz_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -987,6 +1010,10 @@ static void action_itai(wz_class* i_this) {
     }
 }
 
+// kazeMB only. The miniboss (60 for the other one) waits until Link is within 1250, then runs the
+// entrance scene: two scale-4 portals (behaviour 13) at x 215 and -250, and a d_a_tn (param
+// 0xFFFFFF2C) at x 215. come_flag hands over to the second Wizzrobe, which fades in at x -250 and
+// joins once the first scene ends. The miniboss's death runs its own scene. [asm]
 /* 00002E3C-000047C8       .text action_demo__FP8wz_class */
 static void action_demo(wz_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -1471,6 +1498,10 @@ static void next_tama_move(wz_class* i_this, cXyz param_2) {
     i_this->mMode = MODE_TAMA_DOUSA_104;
 }
 
+// The portal's summons, once its timer reaches 1. The entry is the summon group * 8 plus the round
+// (m3F0, 0 to 3, random start) * 2: birth_dt of that enemy, then the next entry's count if it is
+// not 0x7FFF. ChuChus get a random colour 10 and up. Groups 7 (the miniboss) and 13 move to group
+// 10 after 8 rounds. [asm]
 /* 00004810-00004BF4       .text summon_call_sub__FP8wz_class */
 static void summon_call_sub(wz_class* i_this) {
     /* Nonmatching */
@@ -1953,6 +1984,8 @@ static s32 sea_water_check(wz_class* i_this) {
     return FALSE;
 }
 
+// Fireball: flies at speed 45 for up to 300 frames and burns where it lands for 80 frames. Water
+// puts it out. Summon shot: on reaching its point it opens a scale-5 portal (behaviour 12). [asm]
 /* 00004D18-00005760       .text action_tama_dousa__FP8wz_class */
 static void action_tama_dousa(wz_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2134,6 +2167,9 @@ static void action_tama_dousa(wz_class* i_this) {
     }
 }
 
+// Portal: summons, then waits until every summon is gone (in kazeMB, also any that leave the
+// arena: more than 1800 from the centre, or below -200 or above 2100), then frees the summoner
+// to summon again. Behaviour 13 deletes itself once its animation ends. [asm]
 /* 00005760-00005B64       .text action_summon_dousa__FP8wz_class */
 static void action_summon_dousa(wz_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
@@ -2525,6 +2561,8 @@ static BOOL useHeapInit2(fopAc_ac_c* a_this) {
     return FALSE;
 }
 
+// Before the USA build, a behaviour 12 portal is refused whenever its summoner still exists (the
+// check is the other way round from USA's) and does not copy the shot's fields. [asm]
 /* 00006888-000071C4       .text daWZ_Create__FP10fopAc_ac_c */
 static cPhs_State daWZ_Create(fopAc_ac_c* a_this) {
     static dCcD_SrcCyl body_co_cyl_src = {

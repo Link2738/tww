@@ -2,6 +2,14 @@
  * d_a_jbo.cpp
  * Object - Baba Bud
  */
+// Param byte 0 the type (0xFF as 0; REG8_S(9) overrides): 0 normal; 1 plays UMARERU1 with
+// JA_SE_CM_BV_BASE_POPUP first (d_a_bo creates these); 2 also sets m2BA after a launch, which
+// nothing reads; 3 hidden with no collision until event bit UNK_1801. Link touching its sphere
+// (55, 30 up) with player status 0x80 plays IN1 and JA_SE_OBJ_JFLOWER_IN and sets item magic count
+// 4; it wobbles faster for 70 frames, then forces Link's launch. When the player reports the
+// launch: OUT1, JA_SE_OBJ_JFLOWER_OUT and JMPFLOWER_SMOKE00. Stage name jbaba: 36 placed (kindan
+// 19, K_Test2 7, Omori 5, GanonK 4; type 3 three times); d_a_obj_ojtree also creates type 0.
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_jbo.h"

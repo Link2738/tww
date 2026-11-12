@@ -2,6 +2,11 @@
  * d_a_obj_hole.cpp
  * Object - Grotto
  */
+// A pit Link drops into. Params: byte 0 the exit (SCLS index; 0xFF reloads this stage at point
+// 0), byte 1 any non-zero value draws the AANA model, facing the camera and tilted to the ground.
+// angle.z adds 10 each to the radius (65 * scale.x; 0xFFFF as 0). Link inside it, within 20 in
+// height, starts DEFAULT_PITFALL; when it ends the next stage is set. Stage names Ypit00 1
+// (K_Test2) and Pitfall 84 (Cave09 21, Cave10 20, Cave11 20, sea 20). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_hole.h"

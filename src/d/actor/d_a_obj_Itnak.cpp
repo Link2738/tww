@@ -2,6 +2,11 @@
  * d_a_obj_Itnak.cpp
  * Object - Unused - Darknut statue
  */
+// Stage name Itnak, never placed. Params: byte 0 the state (1 shown until the byte 1 switch is set,
+// 0 hidden until it is set, other values always shown), byte 1 the switch. While shown it has
+// three cylinders (the L_attr sizes, written as literals in set_collision): a hit plays a hit
+// sound, a noise of 100 and sparks; Link rolling into it within 68 crashes. It casts a real
+// shadow. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_Itnak.h"

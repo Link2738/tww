@@ -2,6 +2,12 @@
  * d_a_toge.cpp
  * Object - Wind Temple - Floor spikes
  */
+// Floor spikes (HTOGE1, toge joint) with a fixed base collision and a moving spike collision.
+// Params: byte 0 the switch (0xFF: follow the room's wind tag instead, up while its mOffsY is
+// above 0), bits 8-11 non-zero to play sounds. Switch off: they come up and then pulse between
+// 0 and -60 (JA_SE_OBJ_TOGETOGE_OUT, _MOVE); switch on: 10 frames later they sink to -150
+// (_IN). A 55 by 150 cylinder follows them unless fully down. Stage name Htoge1: 28 placed
+// (kaze 22, GanonC 6); only 2 have sounds on and none use 0xFF. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_toge.h"
