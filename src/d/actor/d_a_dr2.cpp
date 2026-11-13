@@ -2,6 +2,15 @@
  * d_a_dr2.cpp
  * NPC - Gohma fight - Valoo (body & tail) + lava pit & ceiling rock
  */
+// The tail, ceiling rock and floor of the Btd fight (Dr2). It makes a Kui (param 0x511) for the
+// tail and reads that Kui's health: 3 bends the tail toward Link's hand, 2 pulls him (sets his
+// angle and stretches the tail), 1 stops the sway. d_a_himo2 sets unk_4CA (90-frame shake) and
+// unk_50C (draws the dragon model, DR_BOSS_DEMO1). The rock (IWA00) shakes while pulled, then
+// drops onto the Btd's joint 3 (JA_SE_CM_BTD_ROCK_HIT, sets btd m02F6). It rides it until the
+// Btd clears m02F6, drips magma (GAN_MAGMA), rises back and reattaches. The Btd sets unk_4BA to
+// 10 to shatter it into six fragments, and unk_43C to swap floor MBYO1 for the broken MBYO2;
+// both floors have collision. With the stage boss beaten (and the stage name not starting with X,
+// not the demo build) it starts broken. Stage name Dr2: 2 placed, M_DragB and Xboss0. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_dr2.h"
@@ -242,6 +251,8 @@ void iwa_move(dr2_class* i_this) {
         i_this->unk_514 = (btd_class*)fpcM_Search(s_a_d_sub, &i_this->actor);
     }
     
+    // Crash risk: btd is never NULL-checked. Cases 1-3 read it, so a Dr2 without a Btd in the
+    // stage crashes once the rock falls. Both placements have one. [asm] [data]
     btd_class* btd = i_this->unk_514;
     if (i_this->unk_4CA != 0) {
         i_this->unk_4CA--;
@@ -412,6 +423,8 @@ void iwa_move(dr2_class* i_this) {
             break;
 
         case 2:
+            // NULL checks on unk_4D4 added after the demo build. getParticleList below stays
+            // unchecked; this state is only entered with an emitter set (case 1). [asm]
             if (i_this->unk_510 != 0) {
                 i_this->unk_510--;
                 if (i_this->unk_510 == 0 

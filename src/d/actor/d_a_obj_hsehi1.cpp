@@ -2,6 +2,15 @@
  * d_a_obj_hsehi1.cpp
  * Object - Tower of the Gods - Command Melody monument & blue monument next to Companion Statue
  */
+// Stone tablets with collision (Hsh: Hsehi1, argument 0; Hsh2: Hsehi2, argument 1). Params:
+// switch byte 0, message bytes 1-2. Hsh2 shows its param message when talked to within 250 and
+// 90 degrees. Hsh is not made once event bit UNK_2510 is set (JPN and demo: once the command
+// melody is known). It stays hidden with no collision until UNK_2B10, set by the Appear cut
+// (OTOMOSEKIHILIGHT particles, JA_SE_OBJ_ST_TAKT_GR_ON). Talking shows 0x1901 with Link hidden.
+// Using the Wind Waker on it plays hsehi1_tact (staff Hsh: cuts WAIT, Disp, MsgSet, Talk, Tact,
+// Judge, Appear, Delete). Message 0x5B3 sets the command melody, and playing the cut's melody
+// sets the switch. It shows on the map once UNK_2B10 is set. Stage names Hsh 1 (Siren, switch
+// 0x29), Hsh2 1 (Siren, message 0xEF3). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_hsehi1.h"
@@ -232,6 +241,8 @@ cPhs_State daObj_hsh_c::create() {
     if (st == cPhs_COMPLEATE_e) {
         fopAcM_ct_Demo(this, daObj_hsh_c);
         if (!fopAcM_entrySolidHeap(this, checkCreateHeap, a_heap_size_tbl)) {
+            // Added after the demo build: without it the destructor releases a dBgW from the
+            // failed heap. [asm]
 #if VERSION > VERSION_DEMO
             mpBgW = NULL;
 #endif

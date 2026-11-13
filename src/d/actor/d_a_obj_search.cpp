@@ -2,6 +2,16 @@
  * d_a_obj_search.cpp
  * Object - Searchlights - Forsaken Fortress
  */
+// A searchlight (Search) with two beams, each with collision. Params: switch byte 3, path byte 2,
+// type byte 1 (0xFF: 0), scale byte 0 (1: 1.27); home.angle.x byte 1 a second switch. It sweeps
+// along its path, and is dark between time 60 and 240 (and always for type 5). A beam finding Link
+// over 2000 away, unless he stands still under a barrel, sounds JA_SE_MAJUTOU_ALERM. It plays
+// Search_Light_Find (or _With_Barrel / _Wall) and sends him to majroom unless attr m43. Types
+// other than 0 also set event bit UNK_0340 when finding him. With the second switch set and an
+// Fganon present, a find sets that switch instead. A Bk whose ID it holds runs it. When that Bk is
+// gone the lights point up (Search_Light_Up, event bit 0x201, JA_SE_OBJ_SEARCH_LIGHT_UP) and it
+// sets the Bk's switch. Type 5 stays stopped; type 6 follows the Bdk around its fan. Stage name
+// Search: 21 placed (sea 9, M2ganon 3, M2tower 3, MajyuE 3, Mjtower 3). [asm] [data]
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_search.h"
@@ -1286,6 +1296,7 @@ bool daObj_Search::Act_c::_draw() {
         return true;
     }
 
+    // Always true (|| of two != tests), so the culling checks run in every mode. [asm]
     if (mMode != MODE_TO_STOP_e || mMode != MODE_FIND_e) {
         mDoLib_clipper::changeFar(1000000.0f);
         if (m_attr.m44 == 0) {

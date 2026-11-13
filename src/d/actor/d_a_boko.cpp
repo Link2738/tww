@@ -2,6 +2,16 @@
  * d_a_boko.cpp
  * Object - Enemy weapons
  */
+// A dropped or carried weapon. The param is the type: 0 Boko stick, 1 machete (Nata), 2 Stalfos
+// mace (Club), 3 Darknut sword (Tkwn), 4 Moblin spear (Spear, with a ten-strand tassel line), 5
+// Phantom Ganon sword (Pgsw, fades out by brk once event bit UNK_3A08). Type 7 is a lit stick
+// (type 0, burning for 900 frames). Enemies carry it, and Link can pick it up and throw it (speed
+// 70, AT capsule per type). Dropped, it bounces and rolls, and settles at the ground's slope. A
+// stick catches fire from fire hits and goes out in water or after 900 frames (not while an
+// enemy holds it). Lit, it is a torch: AK_JN_TORCH, heat haze, a point light and
+// JA_SE_OBJ_TORCH_BURNING, and it lights things through its sphere; in dark rooms it adds light
+// spheres. Never placed; made by d_a_bk, bo, bdk, fganon, mo2, st, tn, tsubo and the player
+// code. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_boko.h"
@@ -948,6 +958,8 @@ cPhs_State daBoko_c::create() {
         mFlameTimer = 900;
     }
 
+    // m_arc_name[type] is read here before the type >= Type_COUNT_e check below, and again in
+    // bokoDelete, so types 6 and 8 and up load and release a stray archive name. [asm]
     cPhs_State PVar5 = dComIfG_resLoad(&mPhase, m_arc_name[type]);
     if (PVar5 == cPhs_COMPLEATE_e) {
         if (type >= Type_COUNT_e) {

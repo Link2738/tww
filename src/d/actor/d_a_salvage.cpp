@@ -534,8 +534,9 @@ bool daSalvage_c::end_salvage() {
         break;
 
     case 6:
-        // m_savelabel has 16 entries and the save number is 8 bits; 16-255 would set a stray
-        // event bit. Placed SalvFM points use 3-15. [data]
+        // m_savelabel has 16 entries and the save number is 8 bits. 16-55 read daDai_c's
+        // m_savelabel next in .rodata (0xF8FF down to 0xD1FF), so the whole event byte is set
+        // to 0xFF; 56 and up read string bytes. Placed SalvFM points use 3-15. [data]
         dComIfGs_onEventBit(m_savelabel[uVar1]);
         break;
     }

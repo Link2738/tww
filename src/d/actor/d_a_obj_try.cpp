@@ -2,6 +2,20 @@
  * d_a_obj_try.cpp
  * Object - Tower of the Gods - Glowing blue/pink statue/pillar
  */
+// Liftable stone pieces (Hseki archive). Params: type bits 0-3, switch byte 1, dummy bit 31.
+// M_attr per type sets the model, the brk and these flags:
+// m70: show only when the switch matches the dummy bit.
+// m71: only one of its type at a time, and it reappears at home when lost.
+// m72: clear its switch once carried out of its home room.
+// m73, m74: d_a_obj_correct can snap it onto a target (to_correct_pos) in 90-degree steps.
+// m75: always run.
+// Types 0-1: plain. 2-4: m72. 5-6: m70, m71, m73, m74, m75; the brk blinks
+// (JA_SE_OBJ_RES_ST_BLINK) and tmp bit UNK_0108 (type 5) or UNK_0110 (type 6) is set while
+// carried; on target they show 0x818E/0x818F and play JA_SE_OBJ_KEY_STATUE_SET. 7-12: m72 and
+// m73. Thrown, it bounces and lands with a shock. Sunk or on ground code 4, it either restarts at
+// home (rising and turning over 110 frames) or deletes. Stage names Hseki1 (0) 2, Hseki6 (1) 5,
+// Hseki3-5 (2-4) 1 each, Hmon1/Hmon1d (5/6) 2/1, Hmon2/Hmon2d (7/8) 2/1, in Siren, I_SubAN,
+// K_Test5 and K_Test9; Hseki31-52 (9-14) have none. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_try.h"
@@ -184,6 +198,8 @@ bool daObjTry::Act_c::chk_appear() const {
 /* 00000528-000008D8       .text _create__Q28daObjTry5Act_cFv */
 cPhs_State daObjTry::Act_c::_create() {
     fopAcM_ct(this, daObjTry::Act_c);
+    // Crash risk: types 13-15 index past M_attr[13], and attr() is read from here on. Placed
+    // data uses 0-8. [data]
     mType = prm_get_type();
     mAppear = chk_appear();
     cPhs_State ret = cPhs_ERROR_e;

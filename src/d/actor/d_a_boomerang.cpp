@@ -2,6 +2,16 @@
  * d_a_boomerang.cpp
  * Item - Boomerang
  */
+// The boomerang (Link archive BOOMERANG). Link creates it; param Mode_Wait holds it in his left
+// hand, Mode_Throw launches it. Aiming (camera mode 0xB) runs a 3-radius capsule from the camera
+// eye to the aim line's tip; each actor it touches is locked, up to 5 (JA_SE_BOOM_LOCK_ON_1-5,
+// ROCK_MARK sight markers). Thrown at speed 60, it flies to each locked actor's eyePos in order,
+// its turn limit widening near the target. With no locks it flies out flyMax along Link's aim,
+// curved by 0x3000: 2500, or 5000 on the ship or in GanonK. A wall hit (AK_JN_NG,
+// JA_SE_LK_W_WEP_HIT), a shield hit, cancelling or the last target turns it back. Link catches it
+// through returnBoomerang, or it deletes. Its AT capsule (r30, AT_TYPE_BOOMERANG, Atp 1) runs
+// only outside events. It draws a two-strip blur trail and JA_SE_LK_BOOM_FLY each spin. Never
+// placed. [asm] [data]
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_boomerang.h"

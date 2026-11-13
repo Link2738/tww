@@ -1,3 +1,13 @@
+// A fire column from the floor (Yfire_00, btk and optional brk; M_attr_scl per type). Params:
+// schedule byte 0, Ki count bits 8-12, Ki cycle bits 13-14, switch byte 2, scale bits 24-25, type
+// bits 28-29, no-haze bit 31. Cycle: wait (120 frames, or until its schedule bit from
+// dKy_get_schbit fires), a 127-frame omen (sound 0x704E; skipped by type 1), 23 frames, rise 22,
+// up 90, fall 25, 20 more. A schedule start time sets the phase on create. While up an AT capsule
+// runs along it, and it lifts Magmarock rocks above it. Type 1 also lifts Mflft platforms, sets
+// daYkgr_c::m_aim_rate, and sets its switch while rising or up (clear otherwise). Each eruption
+// can spawn Ki count + 1 Ki (fpcNm_KI_e, 31: none). Without bit 31 it shows FIREHOLEKAGEROU heat
+// haze. Stage name Yfire00: 17 placed (M_NewD2 8, GanonB 5, I_SubAN 3, K_Test2); type 0 x11, 3
+// x4, 1 x2. [asm] [data]
 //
 // d_a_obj_flame.cpp
 // Object - Flame jet (Yfire_00)

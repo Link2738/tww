@@ -2,6 +2,19 @@
  * d_a_obj_warpt.cpp
  * Object - Warp pot
  */
+// A warp pot (ltubw): body with two collisions and an optional lid (ITUHU, with collision) that
+// burns away (YWPFM00 brk). Type is param bits 0-3. Normal pots (types 0, 1) take the exit scls
+// from bits 12-19, and home.angle.x gives the lid switch (byte 0) and the warp switch (byte 1).
+// Type 1 sets the lid switch at create, so it starts open. A bomb, the skull hammer or a Stalfos
+// mace breaks the lid (JA_SE_OBJ_COL_BRK_WRAILING). Fire burns it over 60 frames
+// (JA_SE_OBJ_WARP_POT_CV_BURN, WARPPOTFIRE). Opening sets the lid switch. Link stepping into an
+// open pot runs DEFAULT_WARP (staff Warpt, cut WARP), which warps him if the warp switch is set
+// and otherwise pops him back out. Sets of three (types 2-4) share event register m_event_reg[bits
+// 4-7], one bit per pot (1, 2, 4). Each pot warps to the next open one in the set (scls bytes 1-3)
+// and opens by setting its bit; JA_SE_READ_RIDDLE_1 plays when home.angle.z byte 0 is 0xFF. Smoke
+// colours come from the type. Stage names Warpt (type 0) 11, Warpnt (1) 8 in WarpD, GanonK and
+// K_Test2; Warpts1-3 (2-4) 5, 6, 5 in M_Dai, M_NewD2, kaze, kindan, Cave08 and K_Teste. [asm]
+// [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_warpt.h"
@@ -724,6 +737,8 @@ void daObj_Warpt_c::getArg() {
             m2C6 = true;
         }
     } else {
+        // No range check: m_event_reg has 6 entries, so 6-15 read the data after it as an
+        // event label and onWarpBit writes that stray register. Placed sets use 0-4. [data]
         m2B8 = (uVar4 >> 4) & 0xf;
         m2A0 = (uVar4 >> 8) & 0xff;
         m2A4 = (uVar4 >> 16) & 0xff;
@@ -765,6 +780,7 @@ void daObj_Warpt_c::getArg() {
 
 /* 00001F30-0000215C       .text createInit__13daObj_Warpt_cFv */
 void daObj_Warpt_c::createInit() {
+    // Types 5-15 read past both 5-entry colour tables (wrong smoke colours, no crash). [data]
     m86C = m_def_smoke_prm_color[m2B4];
     m870 = m_def_smoke_env_color[m2B4];
 

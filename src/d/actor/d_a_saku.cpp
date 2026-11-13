@@ -2,6 +2,17 @@
  * d_a_saku.cpp
  * Object - Brown wooden barricade
  */
+// A breakable fence (KsakuCo collision; Ksaku_00 for type 0, Knsak_00 for type 1). Params: low
+// nibble nonzero adds a second fence 200 above, type bits 4-7, switch byte 1 for the bottom half,
+// byte 2 for the top. A set switch starts that half broken. Type 0 breaks to the sword, bombs,
+// the machete, the skull hammer, a Darknut sword or a Moblin spear. Type 1 breaks to the machete,
+// bombs, AT_TYPE_UNK800 or a Darknut sword. Breaking swaps in the broken model and collision,
+// with IT_JN_SK_HAHEN_A and ELEMENTSMOKE01 dust and a shock (JA_SE_OBJ_COL_BRK_WRAILING or
+// _BRK_WRAIL_K); breaking the top also breaks an unbroken bottom. Fire burns both halves
+// (SK_FIRE_A, SK_SMOKE, JA_SE_OBJ_BURN_WRAILING), fades them out and adds a 90-frame fire
+// cylinder. Each half has its own solid heaps, rebuilt on each change. Stage names Ksaku (type 0)
+// 21 and Dsaku (type 1) 12 (M_NewD2 10, I_TestR 6, kindan 4, DmSpot0 3, sea 3, others).
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_saku.h"
@@ -317,6 +328,8 @@ BOOL daSaku_c::loadModel(int i_index, int i_heapId, int i_sakuId) {
         dRes_INDEX_KNSAK_00_BDL_KNSAK_04_e
     };
 
+    // Crash risk: types 2-15 match neither branch below, so modelData is read uninitialised.
+    // Placed fences use 0 and 1. [asm]
     if (i_sakuId == 1) {
         i_index += 3;
     }

@@ -2,6 +2,16 @@
  * d_a_obj_tribox.cpp
  * Object - Hyrule Castle - Pushable triangle blocks
  */
+// Triangular push blocks and their targets (MtryB). Params: switch byte 1, type bit 16 (0 block,
+// 1 target). With the switch set, a block is not made, and a target shows the sunk block 245
+// down; it is lit if event bit 0x3820 is set. Pushing or pulling a block face for 4 frames rolls
+// it 60 degrees about a corner over 20 frames (ELEMENTSMOKE00, JA_SE_LK_MOVE_ROCK), if
+// chk_wall finds room. A target counts a block within 15 of it. Once 3 targets are covered, the
+// first target made (the master) plays MtryB_sink and JA_SE_READ_RIDDLE_1, and 50 frames later
+// sets the switch and starts the sink. The blocks sink 245 with TRIFORCEBLOCKSMOKE00, a quake and
+// JA_SE_OBJ_TRIF_BL_GO_DOWN/_STOP, then light up (TRIFORCEBLOCKFLASH00, brk). The master and
+// the counts are static, shared by every instance. Stage names MtryB (block) 4 (Hyroom 3,
+// K_Testa), MtryBCr (target) 3 in Hyroom. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_tribox.h"

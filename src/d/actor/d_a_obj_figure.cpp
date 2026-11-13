@@ -2,6 +2,15 @@
  * d_a_obj_figure.cpp
  * Object - Nintendo Gallery figurines + stand
  */
+// A figurine on a pedestal (Figure, plus the figure archive picked from l_figure_dat_tbl or
+// dSnap_GetFigRoomId). Param byte 0 is the figure number (0xFF and out-of-range numbers: 0). It
+// shows if its bit is set in the l_figure_comp event regs. Figures 0x10 and 0x12 use the B model
+// once UNK_2D01 is set, 0x3D has a brk, and 0x40 adds the VF_064L model drawn in layers.
+// Without the figure, an empty pedestal shows, except for 0x40 and 0x32. Reading an owned one
+// within 150 and in front runs FIGURE_CHECK (staff Figure: MES_SET, ON_PLR, OFF_PLR). The stick
+// turns the view around it and the C-stick zooms; A shows message 0x37DD + number, B leaves. It
+// sets tmp bit UNK_0408 while Link is hidden. Stage name Figure: 135 placed in figureA-G and
+// K_Testb. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_figure.h"
@@ -1071,6 +1080,8 @@ void linkDraw(mDoExt_McaMorf* pMorf) {
     static mDoExt_onCupOffAupPacket l_onCupOffAupPacket1;
     static mDoExt_onCupOffAupPacket l_onCupOffAupPacket2;
 
+    // Crash risk: the loops below hide and show all 4 entries of each list, but the counts are
+    // only asserted <= 4. A model with fewer such materials leaves uninitialised pointers. [asm]
     J3DShape* ZOffBlendShape[4];
     J3DShape* ZOffNoneShape[4];
     J3DShape* ZOnShape[4];

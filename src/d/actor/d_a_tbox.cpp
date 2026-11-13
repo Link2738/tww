@@ -2,6 +2,20 @@
  * d_a_tbox.cpp
  * Treasure Chest / 宝箱 (Takarabako)
  */
+// A treasure chest (Dalways). Params: function type bits 0-6, chest number bits 7-11, switch bits
+// 12-19, shape bits 20-23 (4 and up: 0); home.angle.x low 6 bits the room, home.angle.z byte 0 a
+// switch set on opening and byte 1 the item. Shapes 0-2 are BOXA-C, with btk/brk for appearing;
+// shape 3 is BOXD without them. Shape 0 opens with DEFAULT_TREASURE_A, the others with
+// DEFAULT_TREASURE and JA_BGM_OPEN_BOX. Function types: 0 normal; 1 appears when the switch is
+// set; 2 appears 65 frames after the room has no enemies and sets the switch; 3 vines (KINB_00
+// collision) until the switch; 4 appears from transparent; 5 falls with gravity; 6 appears on a
+// Triforce platform (YTRIF00, WINDCHEST particles); 7 and 8 store the opened flag under
+// STAGE_SEA2 (8 also appears on the switch). Appearing plays DEFAULT_TREASURE_APPEAR (staff
+// TREASURE: WAIT, OPEN, APPEAR, OPEN_SHORT). Opening sets the chest flag, plays the open bck,
+// flash model, TAKARA particles, lights and darkening, and makes the item through
+// fopAcM_createItemForTrBoxDemo. Unopened chests show on the map. It only runs and draws while
+// its room is displayed. Stage names takara, takara2-8, takaraK/I/M, tkrASw, tkrAGc, tkrAKd,
+// tkrAIk, tkrBMs, tkrCTf, tkrAOc, tkrAOs: 235 placed. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_tbox.h"
@@ -509,6 +523,10 @@ void daTbox_c::CreateInit() {
                         mpAppearRegAnm->setFrame(30.0f);
                         break;
                     default:
+                        // Crash risk: no action is set here, so execute calls an unset action
+                        // function. Reached by an unopened shape 0-2 chest with function type
+                        // 9-127 whose switch is unset (or 0xC0 and up). Placed data has one:
+                        // takara3 in I_SubAN room 4 (FF20027E, type 0x7E, switch 0). [asm] [data]
                         JUT_ASSERT(0x328, FALSE);
                         break;
                 }

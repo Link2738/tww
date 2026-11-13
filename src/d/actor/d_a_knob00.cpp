@@ -2,6 +2,18 @@
  * d_a_knob00.cpp
  * Object - Regular doors (with knobs, not sliding)
  */
+// A swinging door (Knob): DOOR frame with collision, DoorDummy joint carrying the door model
+// DOOR_A-H by shape. Parameters follow dDoor_info_c; the shape is getSwbit2 (bits 20-27) and
+// param bits 28-31 = 1 makes it follow its position each frame. Linked to a Pirateship, it hides
+// while that ship's m2CC is 0. Door type (getType): 1 always shows a message (home.angle.z),
+// 2 at night, 3 by day, unless chkException matches home.angle.z 0x6A6-0x6AA against its flags.
+// Type 4 asks for a password until UNK_1910: the first try sets UNK_3B20 and a random 0-5 in
+// UNK_BA0F, and the input must match message 0x1B37 + that (case-insensitive outside JPN). With
+// UNK_1910 set and the bomb bag owned it stops working. Shape 4 type 1 makes a TAG_MK and waits
+// for UNK_2D80. Shape 6 is the Mt talk door until UNK_3401. Opening plays DOOROPENA/B, with
+// fades on cuts 12/13 and JA_SE_OBJ_DOOR_N_OPEN/CLOSE. Stage names KNOB00-03 and KNOB00D-03D: 116
+// placed (KNOB00 75, KNOB00D 30; sea, majroom, MajyuE, ma2room, ma3room, Ocmera, Ojhous and
+// more); no type 4 or shape 6 placements. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_knob00.h"

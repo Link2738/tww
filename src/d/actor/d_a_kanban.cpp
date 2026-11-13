@@ -2,6 +2,16 @@
  * d_a_kanban.cpp
  * Object - Cuttable sign
  */
+// A signpost (Kanban, 11 part models) that shows its param as a message when read. Params bits
+// 20-30 are a part mask: 0 is a whole sign, and children made by cutting carry the cut parts.
+// A sword cut maps the cut type to a cut direction (pl_cut_no_dt), and cut_parts_arg_data splits
+// off those parts as a child Kanban (JA_SE_OBJ_BREAK_BOARD, AK_JN_OK). Other hits cut from
+// direction 4. A skull hammer blow that is not a side swing drives the whole sign into the
+// ground. Pieces fly, bounce and lie flat. A bomb or hammer quake within 1000 tosses them
+// again. In water they float with ripples (AK_JN_HAMON00) and a splash. Playing the
+// WIND_GODS_ARIA melody sends every piece back to its spot, and the sign is whole again once all
+// 11 parts are back. Stage name Kanban: 34 placed (sea 23, DmSpot0 2, K_Test2 2, sea_E 2, sea_T
+// 2, A_mori, Omori, SubD42). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kanban.h"

@@ -1,3 +1,10 @@
+// The ship's sail cloth: 85 vertices (a 7 x 12 grid plus a top point) drawn directly with the
+// Ship archive's NEW_HO1 texture and the Cloth toon texture, front and back. d_a_ship creates it
+// (param 1) and sets field_0x2200 (how far the sail is furled) and the forced wind angle.
+// ho_move bends the grid each frame by the wind, the sail angle and that furl amount, with
+// per-row rate tables and a stiffness per vertex built at create. Alpha fades with camera
+// distance outside events. With scale.y under 0.06 it neither moves nor draws. Never placed (stage
+// name Grid has no placements). [asm] [data]
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_grid.h"
 #include "d/actor/d_a_ship.h"
@@ -390,6 +397,8 @@ void ho_move(daGrid_c* i_this) {
     i_this->field_0x1b4c = 7500;
     i_this->field_0x1b4e = 7200;
 
+    // Crash risk: l_ship (found by name at create) is never NULL-checked here or in _draw, so a
+    // Grid without a Ship crashes. Only d_a_ship creates it. [asm]
     s16 sail_angle = l_ship->getSailAngle();
 
     s16 windAngle = cM_atan2s(windVec->x, windVec->z);

@@ -2,6 +2,17 @@
  * d_a_obj_toripost.cpp
  * Object - Rito Postbox
  */
+// A postbox that holds and sends letters (Toripost VPOST; GET, PUTOUT and WAIT bcks). On create
+// it stocks letters from flags: LETTER_KOMALIS_FATHER (FARORE symbol), LETTER_BOMBS_AD (bomb bag),
+// LETTER_BAITO (LETTER_BAITOS_MOM delivered and the STAGE_ET boss beaten), LETTER_ORCA (UNK_1E80;
+// MASTER_SWORD_CUTSCENE in the demo build), LETTER_ROCK_SPIRE_SHOP_AD (wallet size 1 or 2).
+// Stocked letters are offered only once the DIN symbol is owned (always in the demo build).
+// Talking within 300 greets by day or night (0xCE5/0xCE6), counts the letters and sells each for
+// 10 rupees (201 for event reg 0xB203). DEFAULT_POST (staff Tpost: PRESENT, SET_ANM, DISP_LETTER)
+// hands it over and marks it read. Showing Maggie's letter or the note to mom offers to send it
+// for m_send_price (5, 10, 20, by sea room); paying sets UNK_1220 or sends LETTER_BAITOS_MOM.
+// Other items are spat back out (IT_SN_POST_TSUBA00). Stage name Tpost: 23 placed (sea 20 rooms,
+// DmSpot0, sea_E, sea_T). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_toripost.h"
@@ -338,6 +349,12 @@ u8 daObjTpost_c::checkSendPrice() {
         return 0;
     }
     else {
+        // pay_type is sized dIsleIdx_COUNT_e (49, isle order = room - 1) but indexed by the raw
+        // room number, so each sea room reads the next isle's entry and room 49 would read past
+        // the table (no postbox is placed there). [asm] Read as room - 1, the table is distance
+        // from Dragon Roost (room 13), matching messages 0xCEC/0xCEE. The +1 makes east-edge
+        // rooms wrap to the next row's 20-rupee entry: room 14, next to room 13, quotes 20 and
+        // "quite far". [data] Not tested in game.
         return pay_type[fopAcM_GetRoomNo(this)];
     }
 }

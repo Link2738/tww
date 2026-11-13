@@ -2,6 +2,16 @@
  * d_a_himo3.cpp
  * Object - Climbable Rope (Pirate Ship rope minigame, Forsaken Fortress, Puppet Ganon's room)
  */
+// A hanging rope (Himo3) drawn as a line of up to 200 segments, 20 apart. Params: type byte 0
+// (0xFF: 0), segment count byte 1 (over 200: not made), speed byte 2, path byte 3 (0xFF: none).
+// Type 0 ends in a lamp (SLAMP_00) with AK_JN_TORCH fire, heat haze, a point light, a glow
+// sphere, a shadow and a moth (H3_GA). Type 1 ends in Link's ROPEEND. Types 2-4 load SLAMP_00
+// without the lamp effects. Type 0xF is the Bgn string (made by d_a_bgn): 200 segments of 22, the
+// NOT_CUT1 texture and a 4000-high cylinder. Swinging Link's grip sets param 1 (in majroom,
+// Majroom or MajyuE it sets event bit UNK_0402); 2 hangs it from setActorHang's point; 3 lets go.
+// Wind and Link's wind hits push it, and spheres along it collide every 16 segments. With a path
+// it moves along it at the point's arg3 speed or the param speed. Stage name RopeR: 38 placed
+// (Asoko 20, I_TestR 6, Abship 4, M2ganon 4, majroom 4); type 0 36, type 1 2. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_himo3.h"
@@ -632,6 +642,8 @@ static cPhs_State useHeapInit(himo3_class* i_this) {
             modelData = (J3DModelData*)dComIfG_getObjectRes("Himo3", hook_bmd[i_this->m0298]);
         }
 
+        // Crash risk: types 5-14 and 16-254 leave modelData NULL (hook_bmd has 5 entries). The
+        // assert is gone in retail, so the model create below reads NULL. [asm]
         JUT_ASSERT(DEMO_SELECT(1250, 1284), modelData != NULL);
 
         i_this->mpModel = mDoExt_J3DModel__create(modelData, 0, 0x11020203);

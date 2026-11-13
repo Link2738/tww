@@ -2,6 +2,17 @@
  * d_a_obj_ikada.cpp
  * Object - Various Great Sea ships (Beedle, Submarines, Skull Platforms/Rafts, and Salvage Corp.)
  */
+// A boat (IkadaH archive) with moving collision. Kind is param bits 0-3: 0 Ikada raft, 1 ikada_h
+// lantern boat, 2 ikadaS, 3 ikada_u, 4 Svsp salvage ship. Kinds 1 and 3 take the room path from
+// home.angle.x byte 1, kind 4 from param byte 2; 0 and 2 never move. Kinds 0 and 4 carry a
+// Majuu_Flag; 1 and 3 have a torch with a point light at night, wake and track particles, the
+// cruise sound and melodies near Link. Kinds 1 and 3 follow their path and stop when Link comes
+// close (1: 3000 on the ship, else 1000; 3: 1000), resuming when he leaves; a bomb hit or Link's
+// hammer quake while riding rocks them, and a bomb leaves a smoke column for 230 frames. Kind 4
+// makes Sv0-Sv3 on deck, sails its path, and at points with arg3 not 0xFF turns its crane and
+// lowers a rope of up to 200 segments with a rope end. Sv's setStart halts it and reels the
+// rope in to 2; setStop lets it out to 15 and resumes. Stage names Ikada 23, ikada_h 26,
+// ikadaS 7, ikada_u 1, Svsp 5. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ikada.h"
@@ -1349,6 +1360,8 @@ void daObj_Ikada_c::createInit() {
     }
     mPathPosTarget = current.pos;
     if (mPathId != 0xFF && (mType == 4 || mType == 1 || mType == 3)) {
+        // Not NULL-checked: a path ID missing from the room leaves mpPath NULL for pathMove and
+        // _pathMove. [asm]
         mpPath = dPath_GetRoomPath(mPathId, current.roomNo);
         if (mType == 4) {
             modeProcInit(8);
@@ -1551,6 +1564,8 @@ cPhs_State daObj_Ikada_c::_create() {
     cPhs_State ret = dComIfG_resLoad(&mPhase, m_arc_name);
     if (ret == cPhs_COMPLEATE_e) {
         getArg();
+        // Kind is 4 bits but m_heapsize, bdl, dzb and the flag tables hold 5: kinds 5-15 read
+        // past them. [asm]
         if (!fopAcM_entrySolidHeap(this, createHeap_CB, m_heapsize[mType])) {
             return cPhs_ERROR_e;
         }
@@ -1571,6 +1586,8 @@ bool daObj_Ikada_c::_delete() {
     mFireParticle.remove();
     mBombSmokeEasterEgg.remove();
 
+    // Added after the demo build: stops sounds still tied to mSePos before the actor is freed.
+    // [asm]
 #if VERSION > VERSION_DEMO
     mDoAud_seDeleteObject(&mSePos);
 #endif
@@ -1579,6 +1596,8 @@ bool daObj_Ikada_c::_delete() {
         dKy_plight_cut(&mPLight);
     }
 
+    // Added after the demo build: heap != NULL skips mpBgW when creation ended before the
+    // solid heap was made. [asm]
 #if VERSION == VERSION_DEMO
     if (mpBgW != NULL) {
 #else

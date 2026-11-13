@@ -2,6 +2,19 @@
  * d_a_obj_bemos.cpp
  * Enemy - Beamos
  */
+// A beam statue (Hmos archive) that owns a Beam child. Params: kind bits 28-31 (0 blue Hmos1, 1
+// red Hmos2, 2 yellow Hmos3). Blue and red: range byte 0 (0xFF as 0, range 500 + 100 each);
+// home.angle.z bits 0-5 and 6-12 give the item table and item bit dropped when the eye breaks.
+// Blue fires straight ahead at Link within its range box; red turns at a speed from signed byte
+// 1 and fires within 0x1000 of its facing; after 30 frames of beam it holds fire until Link
+// moves 5 or leaves that angle. Both charge before firing (LASERROOT particle), and a hit on
+// the eye sphere breaks it (BMOSBREAK, item drop, beam deleted). Yellow: switch byte 0, mode
+// byte 1, path byte 2. With a path it stands at point 0 and makes a second yellow at point 1,
+// each with a beam toward the other; mode 1 stays off while the cattle statue is in another
+// room, mode 2 changes the beam colour and drops the guard cylinder. The switch stops the beam,
+// and the first time it plays hmos3cam and sets event bit 0x1010. A guard cylinder blocks Link
+// from passing through the beam. Stage names
+// Hmos1, Hmos2, Hmos3: 21 placed (Siren and K_Test5). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_bemos.h"
@@ -208,6 +221,8 @@ BOOL daBemos_c::CreateHeap2() {
     JUT_ASSERT(475, modelData != NULL);
 
     m2C0 = mDoExt_J3DModel__create(modelData, 0, 0x11020203);
+    // Checks m2BC again, not m2C0: a failed HMOS2T model is used as NULL by set_mtx and _draw.
+    // [asm]
     if (m2BC == NULL) {
         return FALSE;
     }
@@ -280,6 +295,8 @@ BOOL daBemos_c::CreateInit1() {
     m6A0 = dComIfG_Bgsp()->GroundCross(&mGndChk);
 
     cXyz pos(2.0f, 2.0f, 10.0f);
+    // parentActorID holds the Beam child's ID from here on; getBeamActor reads it. CreateInit2
+    // and CreateInit3 do the same (CreateInit3 reads the real parent ID first). [asm]
     parentActorID = fopAcM_createChild(fpcNm_Beam_e, fopAcM_GetID(this), 0x1000000, &m2A4, tevStr.mRoomNo, &current.angle, &pos);
 
     m6BF = shape_angle.z & 0x3f;
@@ -376,6 +393,8 @@ BOOL daBemos_c::CreateInit3() {
         m6BD = 1;
 
     } else if (parentActorID != -1) {
+        // Not NULL-checked: a child whose parent was deleted before this create ran reads
+        // through NULL. [asm]
         fopAc_ac_c* pfVar5 = fopAcM_SearchByID(parentActorID);
         shape_angle = csXyz::Zero;
         current.angle = shape_angle;
@@ -480,6 +499,8 @@ cPhs_State daBemos_c::_create() {
         fopAcM_ct_Demo(this, daBemos_c);
 
         static s32 SHeapSize[] = {0x1740, 0x1E00, 0xBA0};
+        // Kinds 3-15 read past SHeapSize[3]; CreateHeap then returns FALSE, so creation fails
+        // unless that size cannot be allocated, which fails it too. [asm]
         if (fopAcM_entrySolidHeap(this, CheckCreateHeap, SHeapSize[m6B8])) {
             ret = CreateInit();
         } else {
@@ -1211,6 +1232,8 @@ BOOL daBemos_c::yellow_eye_wait_init() {
 BOOL daBemos_c::yellow_eye_wait() {
     daBeam_c* beam = getBeamActor();
 
+    // beam == NULL enters this block and then reads beam->m5F4: a missing or deleted Beam
+    // child crashes here. [asm]
     if (beam == NULL || (m6A8 != 0xff && fopAcM_isSwitch(this, m6A8)) || (m6B9 == 1 && daNpc_Os_c::getCattleRoomNo() != fopAcM_GetRoomNo(this))) {
         if (beam->m5F4 != 0) {
             if (beam->beamCheck()) {

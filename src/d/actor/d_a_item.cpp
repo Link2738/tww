@@ -2,6 +2,19 @@
  * d_a_item.cpp
  * Item - Field Item
  */
+// A field item (rupee, heart, key, spoils, arrows, bombs, sword, shield...). Params: item number
+// byte 0, item bit byte 1 (bit 7 dropped; 0x7F none; set bits skip creation), spawn switch byte
+// 2, type bits 24-25, action bits 26-31; home.angle.z byte 0 is a switch that must be set before
+// it can be touched. Types 1 and 3 do not scale in or time out; type 1 only spins in place.
+// Action picks the launch: speed, direction and gravity from m_data, or the boss heart grow-in
+// (BOSS_DISAPPEAR, BOSS). Movement per item: hearts float down swaying, keys and rupees bounce
+// and tip, spoils skid, sword and shield jump on a quake and settle on their side, arrows and
+// bombs bounce with sounds. Water floats it with a ripple; lava deletes it. Link touching it, a
+// sword hit or carrying it by boomerang or hookshot collects it: rupees, hearts, magic and
+// ammo go straight in and the item rises over Link's head, while heart pieces and containers,
+// keys, Deku Leaf, sword, shield and first-time spoils and bait play DEFAULT_GETITEM. Sword and
+// shield collect each other. Timed items flash then delete. While a Bst exists, arrows glitter
+// and smoke on landing. Stage name item: 267 placed; itemFLY none. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/d_item.h"
@@ -340,6 +353,8 @@ void daItem_c::mode_proc_call() {
         }
     }
     
+    // Added after the demo build: a type 1 item never runs posMoveF, so one carried by hookshot
+    // or boomerang becomes type 3 to move. [asm]
 #if VERSION > VERSION_DEMO
     if (mType == daItemType_1_e && (fopAcM_checkHookCarryNow(this) || checkFlag(FLAG_BOOMERANG))) {
         mType = daItemType_3_e;
@@ -407,6 +422,8 @@ void daItem_c::execInitGetDemoDirection() {
     hide();
     mPtclFollowCb.remove();
     
+    // While the player actor is not Link, the item stays hidden in INIT_GET_DEMO and retries
+    // every frame. [asm]
     if (player == link) {
         fopAcM_orderItemEvent(this);
         eventInfo.onCondition(dEvtCnd_CANGETITEM_e);
@@ -668,6 +685,8 @@ void daItem_c::itemGetExecute() {
         mItemStatus = STATUS_INIT_GET_DEMO;
         break;
     case dItemNo_SWORD_e: {
+        // SearchByName returns the first item actor, which can be this one or any other item;
+        // the partner is only collected when it is the one found (same in the shield case). [asm]
         daItem_c* item = (daItem_c*)fopAcM_SearchByName(fpcNm_ITEM_e);
         if (item && item->m_itemNo == dItemNo_SHIELD_e) {
             item->itemGetExecute();
@@ -767,12 +786,16 @@ void daItem_c::itemGetExecute() {
             execItemGet(m_itemNo);
         }
         break;
+    // Any item number not listed (boss key, magic arrow...) still goes to INIT_NORMAL and
+    // rises over Link's head, but nothing gives it. [asm]
     }
     
     fopAcM_onItemForIb(mItemBitNo, m_itemNo, current.roomNo);
     
     clrFlag(FLAG_UNK04);
-    
+
+    // Added after the demo build: turns off the cylinder and clears pending hits, so a stale hit
+    // cannot run this again for get-demo items, whose status is not INIT_NORMAL. [inferred]
 #if VERSION > VERSION_DEMO
     mCyl.SetTgType(0);
     mCyl.OffCoSetBit();
@@ -1230,6 +1253,9 @@ void daItem_c::mode_water_init() {
             current.pos.y = seaH;
         }
     } else {
+        // No return after mode_wait_init: the height is still snapped to the water check and the
+        // ripple below is still made, in wait mode. mode_wait only calls this with water above
+        // the item, so it is not reached. [asm]
         if (!mAcch.ChkWaterHit() || mAcch.m_wtr.GetHeight() < current.pos.y) {
             mode_wait_init();
         }
@@ -1283,6 +1309,8 @@ void daItem_c::mode_wait() {
         break;
     case dItemNo_SMALL_MAGIC_e:
     case dItemNo_LARGE_MAGIC_e:
+    // Added after the demo build: Joy Pendant used the rupee action (bounce, tip and wall
+    // reflect) before. [asm]
 #if VERSION > VERSION_DEMO
     case dItemNo_JOY_PENDANT_e:
 #endif

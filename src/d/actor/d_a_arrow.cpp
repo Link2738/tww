@@ -2,6 +2,19 @@
  * d_a_arrow.cpp
  * Item - Arrow
  */
+// An arrow (Link archive ARROW, or ARROWGLITTER for light). Link creates it in hand (param 0);
+// param 1 fires it at 200 per frame. The type comes from m_keep_type: normal, fire, ice or light,
+// costing 0/1/1/2 magic. changeArrowType cycles it by magic and the bow owned. In minigame 8
+// arrows are normal. An arrow from a PZ actor (mbSetByZelda) is a light arrow held in the Pz
+// hand. Light arrows go through everything except Bgn/Bgn2/Bgn3, which they stop on when the hit
+// was blocked. Off GanonK they carry spl UNKB. Hits stick into actor joints (JntHit), bounce off
+// shields, or stick in the ground. Normal arrows rebound off stone, metal, ice, damage and freeze
+// floors. Fire, ice and light hits tint the environment (dKy_arrowcol_chg_on) unless fired over
+// 20000 away (not the demo build). Ice on group 0x200 floor makes a Magmarock, and ice in water
+// an Arrow_Iceeff. A stuck normal arrow can be picked back up for one arrow and vanishes after
+// 300 frames; only 5 fired arrows stay at once. Past 25000 it drops and deletes. A light arrow
+// reflected off Link's shield while locked on to Gnd sets its param to 0x23 (not the demo
+// build). Never placed. [asm] [data]
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_arrow.h"
@@ -525,6 +538,8 @@ void daArrow_c::setKeepMatrix() {
     // Transform the arrow onto its archer's hand.
     if (mbSetByZelda) {
         daPz_c* zelda;
+        // Crash risk: the search result is not checked, so zelda is used even if the Pz that
+        // fired this arrow is gone. [asm]
         fopAcM_SearchByID(fopAcM_GetLinkId(this), (fopAc_ac_c**)&zelda);
         
         mDoMtx_stack_c::transS(0.7f, -0.07f, -0.2f);

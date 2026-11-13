@@ -2,6 +2,17 @@
  * d_a_obj_ftree.cpp
  * Object - Forest Trees
  */
+// A forest tree to water (Vmr: a small model with bck/brk and a large one). Param bits 0-3
+// index ret_tree_no for a tree number 0-7 (index 0, 7 and 10 and up give 0xF). Nothing shows
+// until symbol 2 is owned. Small and unwatered, it can be watered with FOREST_WATER from the
+// front, within its radius + 20 (morinoki_camera1). It then grows (JA_SE_OBJ_DK_TREE_RECOVER,
+// HANASAKAFLASH) and sets its bit in event regs 0x9EFF and 0x9AFF. It wilts back when the
+// forest water timer runs out before all 8 are done. Watering the last tree plays
+// morinoki_camera2 and sets event bit 0x0102: every tree grows large, and the last fires a heart
+// piece out, storing its number in reg 0x9B07. Until event bit 0x2E20 (set once that heart piece
+// is gone) the piece is placed again at that tree. Watered trees wiggle when touched or in rain.
+// Talking shows 0x149F-0x14A1 by size. Stage name FTree: 11 placed (sea 9, K_Testd 2); sea rooms
+// 38 and 45 both use index 5 (tree 4). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ftree.h"
@@ -441,6 +452,8 @@ void daObjFtree::Act_c::set_tev_color(J3DModelData* modelData, u32 idx, s16 r, s
 /* 00001070-000010F0       .text is_broughtID__10daObjFtreeFi */
 static BOOL daObjFtree::is_broughtID(int treeNo) {
     bool ret = true;
+    // treeNo 0xF (no tree) masks to 7, so an unnumbered tree shares tree 7's bit here and in
+    // set/unset_broughtID. [asm]
     if (!(dComIfGs_getEventReg(0x9EFF) >> (treeNo & 7) & 1) && !dComIfGs_isEventBit(0x0102)) {
         ret = false;
     }

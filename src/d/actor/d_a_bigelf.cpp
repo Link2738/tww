@@ -2,6 +2,19 @@
  * d_a_bigelf.cpp
  * NPC - Great Fairy
  */
+// A large fairy NPC (bigelf archive). Params: type byte 0 (0-6), switch byte 1, switch2 byte 2.
+// Each type has its own event flag (UNK_3020, 3010, 3008, 3004, 3002, 3001; type 6 UNK_3180) and
+// brk/flower frame (types 0-1 frame 0, 2-3 frame 1, 4-5 frame 2, 6 frame 3). Types other than 6
+// make an NPC_FA1 (param 6), or ten Fa1 (param 4) once the flag is set; with that Fa1 alive and
+// Link within 900 it plays BIGELF_ARRIVAL. Type 6 waits for a Daiocta, follows its position, and
+// on its switch plays BIGELF_ARRIVAL2, then deletes the Daiocta and moves the ship 1570 ahead.
+// Staff BigElf cuts: WAIT, FA1, APPEAR, TALK, EXIT, FL_DEMO, FL_LINK, FL_DELETE, FL_DM_BF,
+// FL_DM_MD, FL_DM_AF. next_msgStatus gives MAX_RUPEE_UP1/2 for types 0-1, MAX_BOMB_UP1/2 for
+// 2-3, MAX_ARROW_UP1/2 for 4-5, otherwise RED_RUPEE. Talk 0x2EEA refills life and magic;
+// FL_DELETE on type 6 sets max magic to 32. Exit shrinks it with fog and makes the ten Fa1
+// (not type 6). Types 7 and up get event flag 0, which never reads as set, so they always make
+// the single Fa1. Stage name BigElf: 8 placed, types 0-5 once each in Fairy01-06 and type 6
+// twice in sea (00FF1006 and 00041206). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bigelf.h"
@@ -1071,6 +1084,7 @@ bool daBigelf_c::event0() {
         dComIfGs_onEventBit(getEventFlag());
         this->m3BD = 3;
         dComIfGp_event_onEventFlag(8);
+        // Added after the demo build: type 6 sets switch2 when its event ends. [asm]
         if(VERSION > VERSION_DEMO && getType() == BIGELF_TYPE_6 && getSwbit2() != 0xff){
             dComIfGs_onSwitch(getSwbit2(), fopAcM_GetRoomNo(this));
         }
@@ -1096,6 +1110,8 @@ BOOL daBigelf_c::wait_action(void*) {
         else {
             if(getType() == BIGELF_TYPE_6){
                 if(dComIfGs_isSwitch(getSwbit(), fopAcM_GetRoomNo(this))){
+                    // Added after the demo build, with the set in event0: covers a load where
+                    // the switch is set but event0 never reached its switch2 set. [asm]
                     if(VERSION > VERSION_DEMO && getSwbit2() != 0xff){
                         dComIfGs_onSwitch(getSwbit2(), fopAcM_GetRoomNo(this));
                     }
@@ -1248,6 +1264,8 @@ cPhs_State daBigelf_c::_create() {
         }
 
         if(!fopAcM_entrySolidHeap(this, CheckCreateHeap, 0xb7b0)){
+            // Added after the demo build: _delete would otherwise call stopZelAnime on a
+            // morf left in the freed heap. [asm]
             #if VERSION > VERSION_DEMO
                 this->mpBckAnimator = NULL;
             #endif

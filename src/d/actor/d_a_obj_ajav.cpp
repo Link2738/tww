@@ -2,6 +2,14 @@
  * d_a_obj_ajav.cpp
  * Object - Stone wall blocking the entrance to Jabun's cave
  */
+// A rock wall of six parts (Ajav) in three rows of two, with collision. It is made only after
+// event bit ENDLESS_NIGHT and while switch byte 0 is unset. M_status (0-3) is the current row.
+// A hit on the row's sphere, or three hits on its hint cylinders, plays ajav_destroy0,
+// ajav_destroy1 or ajav_uzu. That row's parts fall into the water: JA_SE_OBJ_JB_STONE_BRK,
+// JBROCKGATE particles, a splash, ripples and JA_SE_OBJ_JB_STONE_FALL. The next row shifts by
+// flaw_pos. A hit on the main cylinder only flashes the row and drops grit. After the last row it
+// releases the collision, sets the switch and plays JA_SE_READ_RIDDLE_1. Stage name Ajav: 2
+// placed at the same spot in sea room 44 (switch 0x1C). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ajav.h"

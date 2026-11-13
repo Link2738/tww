@@ -2,6 +2,15 @@
  * d_a_bomb2.cpp
  * Object - Bomb Flower - Bomb
  */
+// A bomb flower's bomb (Vbakh VBAKM, bck and brk swelling over 150 frames). Params: start bits
+// 0-1 (0 explode at once, 1 fuse lit, 2 carried), stick bit 8 (fixed in place, not carried).
+// The fuse burns 150 frames, cut to 30 when struck, landing hard or thrown. A bomb hit
+// explodes it at once. It explodes in lava, at speed in water, or when the timer runs out:
+// BMEX particles, JA_SE_OBJ_BOMB_EXPLODE, a 200 AT sphere (AT_TYPE_BOMB, Atp 4) for 4 frames, a
+// shock, a point light and the Env_c wind and ambient flash. Dropped slowly into water it sinks
+// with a splash. Wind blows it and its fuse smoke trails behind it. Never placed; made by
+// d_a_bflower, d_a_am, d_a_cc, d_a_kanban, d_a_nzg, d_a_obj_eskban and the player grab code.
+// [asm] [data]
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bomb2.h"
@@ -364,6 +373,7 @@ void Act_c::start_proc_call() {
         &Act_c::start_carry
     };
 
+    // Crash risk: start is 2 bits, so 3 indexes past start_proc[3]. [asm]
     int proc = prm_get_start();
     return (this->*start_proc[proc])();
 }

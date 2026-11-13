@@ -2,6 +2,17 @@
  * d_a_ks.cpp
  * Enemy - Morth
  */
+// A small black enemy (KS archive, body and blinking eye) with 1 health. Params: type byte 0
+// (0xFF as 0), count byte 1, range byte 2 (times 10). Types 0 and 1 only spawn count (1-21) of
+// type 3 or type 2, spread 40 sideways (or up to 120 up when angle.x is set), and fail
+// creation. Type 3 hops after Link while he moves fast or is heavy and leaps at him within 500;
+// type 2 waits in place. Touching Link sticks it to one of 20 joints; 5 stuck make him heavy,
+// and spin attacks, rolls and swimming shake them off. Any hit kills it except wind, which
+// blows it away; a hammer quake within 200 kills it too. Types 4 and 5 belong to a Gm and die
+// with it. Type 6 follows a Tsubo within 20 until the pot is gone or Link is within range, then
+// makes count type 3. Type 7 hops out and then acts as type 3. On GanonK a sword or hammer kill
+// drops a heart, magic or arrows by need (not the demo build). Stage names kuro_s 16, kuro_t
+// 27. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_ks.h"
@@ -69,6 +80,7 @@ void draw_SUB(ks_class* i_this) {
 static BOOL daKS_Draw(ks_class* i_this) {
     fopAc_ac_c* actor = &i_this->actor;
 
+    // Added after the demo build: skips drawing within 100 of the camera eye. [asm]
 #if VERSION > VERSION_DEMO
     cXyz local_24 = actor->current.pos - dComIfGp_getCamera(0)->view.mLookat.mEye;
     if (local_24.abs() < REG0_F(10) + 100.0f) {
@@ -822,6 +834,8 @@ void action_omoi(ks_class* i_this) {
             actor->gravity = 0.0f;
             actor->speed.setall(0.0f);
 
+            // Added after the demo build: refuses a 21st stick before a joint is picked; the demo
+            // build checked for a NULL joint matrix instead. [asm]
             if (GORON_COUNT != 0 || KUTTUKU_ALL_COUNT >= 0x14) {
                 i_this->m528 = 0;
 
@@ -861,6 +875,9 @@ void action_omoi(ks_class* i_this) {
                 actor->speed.setall(0.0f);
             }
         #else
+            // The 0x13 clamp is overwritten by the else below, so 20 or more would index past
+            // pl_harituki_joint_dt[20]; the early exit at the top of this case keeps the count
+            // under 20. [asm]
             if (KUTTUKU_ALL_COUNT >= 0x14) {
                 i_this->m300 = 0x13;
             }

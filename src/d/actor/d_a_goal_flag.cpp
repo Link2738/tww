@@ -2,6 +2,17 @@
  * d_a_goal_flag.cpp
  * Object - Big red finish line flag (Boating Course, Flight Control Platform)
  */
+// The boat-race goal flag (Gflag, or Tgflag for a param byte 0 other than 0/0xFF): a 9 x 5 cloth
+// drawn directly with the Cloth toon texture. Path byte 2 gives the finish line (points 0 and 1);
+// its next path and that path's chain (up to 4) are the buoy ropes. One Obj_Buoyrace child is
+// made per rope point, and the ropes are drawn as sagging lines. In stage Ocean entered at point 1
+// it runs the race: a timer of l_HIO.mTimeLimit (240) minus event reg UNK_AAFF x 10, the minigame
+// starter, and the Gflag staff cuts with race_start_cam and JA_BGM_SEA_GAME. Crossing the line
+// twice the right way finishes the race: rupees collected count as success, 150 as perfect.
+// Crossing it the wrong way or the timer running out fails. The result plays race_goal_cam or
+// race_fail_cam and JA_BGM_SEA_GOAL/FAIL, makes the minigame terminater and returns to sea point
+// 1. On delete it stores the result and rupees in daNpc_Sarace_c. Stage name Gflag: 4 placed
+// (Ocean, sea room 14 x2, sea room 48). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_goal_flag.h"
@@ -292,6 +303,8 @@ BOOL daGoal_Flag_c::getRacePath(u8 i_pathId) {
     u8 next_path_id = mpRopePaths[i]->m_nextID;
     for (i++; i < ARRAY_SSIZE(mpRopePaths) && next_path_id != 0xFFU; i++) {
         mpRopePaths[i] = dPath_GetRoomPath(next_path_id, fopAcM_GetRoomNo(this));
+        // Crash risk: only the first path is NULL-checked; a next ID with no path in the room
+        // is read here as NULL. [asm]
         mNumRopeBuoys[i] = mpRopePaths[i]->m_num;
         next_path_id = mpRopePaths[i]->m_nextID;
     }
@@ -713,6 +726,8 @@ BOOL daGoal_Flag_c::CreateHeap() {
 bool daGoal_Flag_c::_delete() {
     u8 prm = fopAcM_GetParam(this) & 0xFF;
     dComIfG_resDeleteDemo(&mClothPhs, arcname);
+    // _create maps 0xFF to Gflag and 2-254 to Tgflag, but this indexes the 2-entry table with
+    // the raw byte, so those values read past it. Placed flags use 0 and 1. [asm]
     dComIfG_resDeleteDemo(&mFlagPhs, sub_arcname_tbl[prm]);
 
     if (dComIfGp_getMiniGameType() == 1) {

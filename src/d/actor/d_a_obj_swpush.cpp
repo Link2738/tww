@@ -2,6 +2,17 @@
  * d_a_obj_swpush.cpp
  * Object - Yellow switch (activated by stepping on it)
  */
+// A floor button (Kbota_00). Its BG's four top vertices are moved to the button height every
+// frame. Params: event ID byte 0, switch byte 1, model bit 16, type bits 24-26, version bit 30
+// (1: home.angle.z low byte is a second switch). A rider with the fopAcStts_FREEZE_e status on
+// the top for 6 frames presses it. At the bottom it sets the switch (JA_SE_OBJ_FOOT_SW_ON, a
+// shock if Link rode it), and the param event plays when it exists. M_attr per type: 0 stays
+// down and follows the switch; 1 springs back when left, clearing the switch on the way up, and
+// a set second switch holds it down; 2 is inverted (down clears, up sets) and follows the
+// switch; 3 is unused: Hhbot model at 1.5 scale, pressed only by Link in the heavy boots. A first
+// step on types 0-2 bounces it with a 10-frame pause event. Stage names Kbota_A (type 0) 48,
+// Kbota_B (1) 35, KbotaC (2) 6, across KATA_RM, sea, Asoko, kaze, Cave01, M_Dai, M_NewD2 and
+// more. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_swpush.h"
@@ -204,6 +215,7 @@ cPhs_State daObjSwpush::Act_c::Mthd_Create() {
     fopAcM_ct(this, daObjSwpush::Act_c);
 
     prmZ_init();
+    // Crash risk: types 4-7 index past M_attr[4]. Placed data uses 0-2. [data]
     mType = prm_get_type();
 
     cPhs_State phase_state = create_res_load();

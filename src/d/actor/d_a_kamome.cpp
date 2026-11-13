@@ -2,6 +2,17 @@
  * d_a_kamome.cpp
  * NPC - Seagull
  */
+// A gull (Kamome archive). Params: type byte 0 (0xFF as 0), follower count byte 1, room path
+// byte 2 (missing path fails creation), switch byte 3 (hidden and idle until set, then flies
+// off). Default types wander within 1000 of home, land by Esa bait with a clear line to it,
+// walk up and eat it (deleting it), and take off when Link is within 400 or the ground drops
+// 200 away. With a path they fly its points instead: point arg3 1 lands there, 2 takes off, 3
+// waits, 6 deletes the gull. Type 4 lands near an NPC_LS1 unless Link is within 300 of it and
+// pecks around it with a CO sphere; type 5 stays on the ground pecking. Type 6 never draws: every
+// 128 frames while Link rides the ship it makes type 7 gulls 4000 above him, up to its count.
+// Type 7 moves to the stage layer, circles the ship while it is fast and a type 6 with a higher
+// count exists, else flies off, and hides above 3000. Both 6 and 7 also need time 90-270 and
+// rain under 10 (not the demo build). Stage name Kamome: 388 placed; 38 type 6. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kamome.h"
@@ -487,6 +498,8 @@ static void kamome_path_move(kamome_class* i_this) {
                 i_this->mCurPointIdx = i_this->mpPath->m_num - 2;
             }
 
+            // The path came from the room list, but the next ID is looked up in the stage list
+            // (here and in state 0x16), unchecked against its count or a NULL path info. [asm]
             nextID = i_this->mpPath->m_nextID;
             if (nextID != 0xFFFF) {
                 i_this->mpPath = dComIfGp_getStage().getPathInf()->m_path;
@@ -1170,6 +1183,8 @@ static void kamome_imouto_move(kamome_class* i_this) {
 
         if (i_this->mTimers[2] == 0) {
             i_this->mMoveState = 0x17;
+            // mpTargetActor is a pointer kept from search_imouto and never checked again; if
+            // the Ls1 is deleted while the gull is landed, this reads freed memory. [asm]
             i_this->mTargetPos.x = i_this->mpTargetActor->current.pos.x + cM_rndFX(REG0_F(8) + 150.0f);
             i_this->mTargetPos.z = i_this->mpTargetActor->current.pos.z + cM_rndFX(REG0_F(8) + 150.0f);
             anm_init(i_this, dRes_INDEX_KAMOME_BCK_KA_MOVE1_e, 3.0f, J3DFrameCtrl::EMode_LOOP, 1.0f, dRes_INDEX_KAMOME_BAS_KA_MOVE1_e);

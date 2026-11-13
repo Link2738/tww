@@ -2,6 +2,20 @@
  * d_a_obj_mknjd.cpp
  * Object - Earth God's Lyric/Wind God's Aria statues
  */
+// A statue that blocks a passage (MknjD; MKNJD model for type 0, MKNJK for type 1), with
+// collision. Params: switch byte 0 (set: not made), type bit 16. Type 0 uses the MKNJD_D_*
+// events, the EARTH_GODS_LYRIC melody and item and event bit UNK_2920. Type 1 uses MKNJD_K_*, the
+// WIND_GODS_ARIA melody and item and UNK_2910. Talking (MKNJD_D/K_TALK) shows a message with Link
+// hidden. Until the item is owned, the Wind Waker on it plays the lesson event (LESSON, TACT
+// cuts). Once it is owned, conducting within 800 on the far side (side not checked in the demo
+// build) hides the NPC_MD and NPC_CB1 actors and sets the melody. MKNJD_*_CHECK then plays
+// MKNJD_*_DEMO if the partner is also within 800 on the far side, setting the event bit;
+// otherwise MKNJD_*_ERROR.
+// Staff MknjD runs cuts SETGOAL, SETANGLE, WAIT, INPUT, BREAK, HIDE_LINK, DISP_LINK. BREAK plays
+// JA_SE_READ_RIDDLE_1, sets the switch and drops the collision. It then runs 255 frames: the
+// halves part (WGFLASH00, WGROCK00, WGSMOKE00, SAGE_GATE sounds), and from frame 160 the MKNJH
+// shards fall. BGM JABOO_CAVE in Ekaze/Edaichi, else D_WIND or D_EARTH. Stage name MknjD: 7
+// placed (M_Dai 2, kaze 2, Edaichi, Ekaze, K_Test9); type 1 x4. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_mknjd.h"
