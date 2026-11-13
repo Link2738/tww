@@ -2,6 +2,15 @@
  * d_a_mflft.cpp
  * Object - Dragon Roost Cavern - Flame lift (platform lifted up by lava plume)
  */
+// A platform with collision (Mflft) hanging over magma on three ropes. Params: size byte 0
+// (1-3: X/Z scale 0.9-0.7), switch byte 3. Each rope is a 10 by 1000 cylinder with 3 health. A
+// hit plays JA_SE_LK_HIT_SBRIDGE_ROPE with wood chips (any damage over 1 counts as 4), and at 0
+// it is cut (JA_SE_LK_CUT_SBRIDGE_ROPE). Cut ropes trail in the wind, and the platform tilts
+// toward them and sways. Event register 0xA507 gains 1, up to 6, 20 frames after each cut. With
+// all three cut it sets event bit UNK_2A10 and the switch, then drops to 80 above the magma with
+// AK_SN_MAGMALIFTSPLASH00 and JA_SE_OBJ_BAL_LIFT_LANDING. With the switch set it starts there.
+// d_a_obj_flame lifts it with setLiftUp, with a shock and AK_SN_MAGMAISLAND01. A rider tilts it.
+// Stage name Mflft: 1 placed, M_NewD2 (switch 0x0A). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_mflft.h"

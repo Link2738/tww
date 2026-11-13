@@ -2,6 +2,11 @@
  * d_a_kt.cpp
  * NPC - Unused - Small bird
  */
+// Small birds (KT_MODEL with KT_HANE wings). Param under 1000: this one becomes 1000 and spawns
+// that many more as 1001 and up; all start 2500 up. They roam around a point 3000 ahead of Link,
+// land and hop, and take off again when Link comes within 1500. The 1000 bird alone flies to
+// perch on Link's head on D-pad Left and leaves on the next press. Stage name kt: 2 placed, both
+// K_Test5 with param -1 (no extra birds). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kt.h"

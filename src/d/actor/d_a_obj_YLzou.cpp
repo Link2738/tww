@@ -2,6 +2,15 @@
  * d_a_obj_YLzou.cpp
  * Object - Hyrule Castle - Link Statue / 勇者像 (Yuusha Zou)
  */
+// A statue with collision (YLzou, or YLZOU2 once all 8 Triforce pieces are held) that slides
+// between Z 0 and -680. Its state comes from event bits at create. Before MASTER_SWORD_CUTSCENE
+// it waits for its switch (param byte 0), then plays move_YLzou: it shakes
+// (JA_SE_OBJ_H_STATUE_VIB, a quake) and slides back with smoke (_MOVE, _STOP). After that it
+// stands moved until MASTER_SWORD_SWINGING_CUTSCENE, and again from HYRULE_COURTYARD_CUTSCENE
+// until ZELDA_AWAKENED. Between those, or after with fewer than 8 pieces, a moved statue plays
+// go_up_stairs back to Z 0, else it stays there. With all 8 pieces, after event bit UNK_2C01 and
+// before UNK_3980, it plays go_up_stairs2 and sets UNK_3980. It writes MOVED_HYRULE_STATUE to
+// match. Stage name YLzou: 1 placed, Hyroom (switch 6). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_YLzou.h"

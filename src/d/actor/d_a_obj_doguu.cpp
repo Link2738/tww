@@ -2,6 +2,16 @@
  * d_a_obj_doguu.cpp
  * Object - Goddess Statues (Triangle Islands)
  */
+// A pearl statue (Doguu): main model with brk, head and body (bck, skin deform) and a crystal.
+// Index 0-2 (Din, Farore, Nayru) from param byte 0, or argument - 1 when placed as
+// MegamiD/F/N. It picks material tables and a point light colour by index. Touching its 200
+// cylinder once its pearl is owned plays DOGUU_DEMO1, then DOGUU_DEMO2 the first time and
+// DOGUU_DEMO3 (staff Doguu: cuts SETGOAL, SETBALL, SETANGLE, EYEFLASH, MESSAGE_KOKOE, MESSAGE_OITA,
+// QUAKE, JDEMO to ADMumi, SETLIGHT; messages 3821-3826). It sets its PLACED_*_PEARL bit. With
+// all three set it sets UNK_1E40 and plays MEGAMI_DEMO. A placed pearl lights the crystal and
+// pulses the eyes (JA_SE_OBJ_SDOLL_EYE_PULSE); all three show the body and head at their end
+// frames. The argument form follows the demo actor's shape, angle, position and frame. Stage
+// names Doguu 3 (sea rooms 18, 27, 32; params 0-2), MegamiD/F/N 1 each in ADMumi. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_doguu.h"
@@ -529,6 +539,8 @@ cPhs_State daObjDoguu_c::_create() {
     if(argument >= 1) {
         field_0x894 = argument - 1;
     } else {
+        // Crash risk: 3-255 index past every 3-entry table (materials, brk, bck, light_color).
+        // Placed data uses 0-2. [data]
         field_0x894 = fopAcM_GetParam(this) & 0xFF;
     }
     cPhs_State phase_state = dComIfG_resLoad(&mPhs,"Doguu");

@@ -2,6 +2,13 @@
  * d_a_obj_Vds.cpp
  * Object - Earth Temple - Face statue (lights up when eyes are hit with Mirror Shield)
  */
+// A two-part object with collision (Vds VDSWT0 and VDSWT1, each with a bck and a brk). It finds
+// two Obj_Swlight actors, ordered by angle, and puts a point light on each at 2200 x their
+// power. Each brk frame follows one light's power. Param byte 0 the switch: while it is off the
+// powers are read from the Swlight actors each frame; once set (or at create) both are 1 and the
+// bcks loop. process_off_main reads the Swlight actors without checking that they were found.
+// Event_exe waits on a state nothing sets, and the Vds event index is fetched and never used.
+// Stage name Vds: 2 placed, M_Dai (switches 0x76 and 0x13). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_Vds.h"
@@ -118,6 +125,12 @@ BOOL daObjVds::Act_c::process_off_init() {
 
 /* 000003C8-00000474       .text process_off_main__Q28daObjVds5Act_cFv */
 void daObjVds::Act_c::process_off_main() {
+    // No NULL check. process_common runs first each frame, and until it has found two
+    // Obj_Swlight actors it leaves mEyeID at -1. Then fopAcM_SearchByID returns NULL and
+    // get_power reads offset 0xF30 through it. A Vds with its switch off and fewer than two
+    // Swlights in the loaded rooms reads through a null pointer every frame. Once both are
+    // found, process_common stops searching, so a Swlight deleted later leaves a stale ID
+    // that also returns NULL here. [asm]
     for(int i = 0; i < 2; i++){
         daObjSwlight::Act_c* eye_actor = static_cast<daObjSwlight::Act_c*>(fopAcM_SearchByID(mEyeID[i]));
         mEyePower[i] = eye_actor->get_power();

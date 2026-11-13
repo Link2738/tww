@@ -2,6 +2,14 @@
  * d_a_obj_hcbh.cpp
  * Object - Tower of the Gods - Pillar with Companion Statue's face on it.
  */
+// A breakable pillar with collision (Hcbh: shaft HCBH2 and four base pieces HCBH1A-D). Params:
+// item bits 0-5, item save bit bits 6-12, switch bits 13-20 (set: not created). A bomb, Skull
+// Hammer or Darknut sword hit, a hit of type 8 from a Darknut (Tn), or an Armos touching it
+// breaks it, with SIRENBREAKSHAFT particles and JA_SE_OBJ_TN_COLUMN_BREAK. It topples away from
+// the attacker and the base pieces fall in turn. Its collision goes as it passes 45 degrees.
+// Landing gives a shock, JA_SE_OBJ_TN_COLUMN_SMASH, an item from the table and the switch, then
+// it deletes itself. Stage name Hcbh: 51 placed (GanonJ 11, Siren 10, TF_01 8, TF_02 8, KATA_RM
+// 6, Cave10 4, SirenMB 4). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_hcbh.h"

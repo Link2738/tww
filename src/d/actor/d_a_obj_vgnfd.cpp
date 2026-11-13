@@ -2,6 +2,16 @@
  * d_a_obj_vgnfd.cpp
  * Object - Ganon's Tower - Trials door
  */
+// A sealed door with collision (Vgnfd): a frame, four lamps with brks, and two door models. Not
+// created once all four TRIALS_DOOR_LIGHT bits are set. At create, the first trial whose CLEAR
+// bit is set but whose door-light bit is not plays 4_door_dn, _mr, _dc or _kz: as staff VgnFD,
+// WAIT0 sets that door-light bit and after its Timer lights the lamp (JA_SE_OBJ_B_BOSS_DR_LT_1,
+// not the demo build; JA_SE_READ_RIDDLE_1 when all four are lit). With all four lit it then plays
+// 4_door_fin: GANNON runs the frame's brk and the lamps back; VIB0 and VIB1 shake; BREAK
+// switches to the breaking model with BOSSDOORHAHEN and DOKURO particles and smoke; BURST hides
+// it, each with JA_SE_OBJ_B_BOSS_DR_BRK_1-3. The end sets event bit UNK_3204 and deletes it.
+// Only one lamp demo plays per load. Stage name VgnFD: 2 placed, GanonA and K_Teste.
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_vgnfd.h"

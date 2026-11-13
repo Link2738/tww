@@ -2,6 +2,16 @@
  * d_a_obj_leaves.cpp
  * Object - Pile of orange leaves (fades away when blown with Deku Leaf)
  */
+// A pile of fallen leaves (Vochi) with ride collision. Params: item bits 0-5, item save bits
+// 6-12, switch bits 13-20 (set: not made). Link running over it at speed 8 or more kicks up
+// AK_SN_FALLENLEAFRUN00. A 150 sphere (90 in the JPN and demo builds) takes hits: wind blows it
+// away (FALLENLEAFFAN00 and smoke along Link's direction), a bomb scatters it, fire burns it
+// (FALLENLEAFFIRE00/01, JA_SE_OBJ_OCHIBA_BURN). Blades, arrows, the hookshot and the like within
+// 110 only kick up leaves; the skull hammer scatters them without removing the pile. Removed, it
+// sets the switch, drops its BG, fades out and drops the item from the table once the alpha is
+// 200, then deletes. JPN and demo builds check hits each frame and add a fire cylinder while
+// burning; later builds use a hit callback. Stage name Vochi: 14 placed (kindan 8, sea 5,
+// K_Testc 1). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_leaves.h"

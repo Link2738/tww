@@ -2,6 +2,13 @@
  * d_a_ff.cpp
  * Object - Firefly (not collectable)
  */
+// Params: byte 0 how many more to spawn within 500 (they get byte 0 cleared), byte 1 non-zero
+// keeps the placed height instead of 12.5 above the ground. Each blinks on and off at random
+// (HO model and its HOP glow, brks). Link within 250 scatters it to random points within 750
+// for 1000-1100 frames, then it flies home; a wind hit on its sphere (60) lifts it for 30-50
+// frames. The glow fades while the frame buffer's depth (GXPeekZ, after GXDrawDone) shows it
+// hidden. ff_count is counted up, reset on any delete, and not read. Stage name ho: 28 placed
+// (TyuTyu 12, Omori 9, Abship 5, Otkura 2). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_ff.h"

@@ -2,6 +2,13 @@
  * d_a_kn.cpp
  * NPC - Crab
  */
+// A crab (KN; bcks WALK, WAIT01/02, PATA), scale 1.5 or at random 2.5, registered for the
+// picture box. It idles and wanders within 200 of its home. Link within 300 makes it run
+// away fast. A wall or leaving the 200 circle makes it burrow into the ground with smoke;
+// reaching water makes it dive with a splash. It sinks 7 (11 when large) and comes back up
+// 30-60 frames later once Link is more than 500 away. The demo build also reads param 1 (a
+// spawner making up to byte 1 crabs) and 2 (one climbing out of the ground); retail ignores
+// both. Stage name kani: 25 placed (sea 16, DmSpot0 5, sea_E 2, sea_T 2). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kn.h"

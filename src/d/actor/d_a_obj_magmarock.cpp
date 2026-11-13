@@ -2,6 +2,15 @@
  * d_a_obj_magmarock.cpp
  * Object - Dragon Roost Cavern - Lava slab
  */
+// A cooled rock platform on magma (Kyjim, bck and brk) with moving collision. It floats on the
+// magma surface, tilting to three points around it, and tips under a rider. Param byte 3
+// nonzero is a placed one: it waits until ridden, then (byte 0) x 15 + 30 frames later quakes
+// and sinks. Otherwise it was made by d_a_arrow from an Ice Arrow hitting magma. It then plays
+// JA_SE_MAGMA_TO_ISLE with a shock and steam (AK_SN_YOGANYUGE00/01), plays magma_cam once (event
+// bit 0x380), takes collision 20 frames in, and after 300 frames quakes (SE 0x380F) for 45 and
+// vanishes over 90. d_a_obj_flame lifts it while it waits (BeforeLiftRequest, LiftUpRequest),
+// with AK_SN_MAGMAISLAND00/01. Stage name Magrock: 8 placed (MiniKaz 6, GanonB 2), all placed
+// ones. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_magmarock.h"
@@ -310,6 +319,8 @@ int daObjMagmarock::Act_c::CreateHeap() {
     cBgD_t* bgd = (cBgD_t*)dComIfG_getObjectRes(M_arcname, dRes_INDEX_KYJIM_DZB_KYJIM_00_e);
     field_0x358 = dBgW_NewSet(bgd, cBgW::MOVE_BG_e, &field_0x328);
 
+    // SetCrrFunc is called before the NULL check below, so a failed dBgW_NewSet writes
+    // through a null pointer here. [asm]
     field_0x358->SetCrrFunc(dBgS_MoveBGProc_Typical);
     if (field_0x358 == NULL) {
         return 0;

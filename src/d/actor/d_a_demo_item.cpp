@@ -2,6 +2,14 @@
  * d_a_demo_item.cpp
  * Item - Cutscene Item
  */
+// The item shown during a get-item demo, created by fopAcM_createDemoItem (player and event
+// code). Params: item byte 0 (no model or archive: green rupee), flag byte 2. With no flag it
+// floats 130 above Link facing the camera, spinning, with the GETITEM flash, halo and star
+// particles chosen by m_effect_type (lower values add the later ones too). Flag 0x02 holds it
+// 90 up and 50 forward, 0x04 30/140/20 off Link, 0x08 at its home plus mOffsetPos; those three
+// face their own angle and skip the particles. Bottles animate only after 30 frames. Deleting
+// it calls execItemGet, unless flag 0x01. Bombs, the Bomb Bag, Skull Hammer and small keys get
+// a specular map. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_demo_item.h"

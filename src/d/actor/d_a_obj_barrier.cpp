@@ -2,6 +2,15 @@
  * d_a_obj_barrier.cpp
  * Object - Hyrule barrier
  */
+// A cylindrical barrier (Ycage YCAGE00, btk and brk) with collision, 1000 x scale X across and
+// 10000 x scale Y tall. Params: bit 8 the moya (no model, never breaks), bit 16 makes it
+// harmless. Its wall cylinder (AT_TYPE_UNK800, Atp 1) hurts Link. Hits from Link or
+// anything else spark a ripple model (YHRBR00, four at a time) and AK_SN_HIRALBARRIER00. The brk
+// brightens as Link nears the edge. Not created once event bit BARRIER_BREAK is set. A breakable
+// one, with event bit UNK_3980 set, Link 8800 or more from its centre, Master Sword 3 equipped
+// and a sword swing, sets BARRIER_BREAK and plays seal, then deletes itself. JPN needs only the
+// distance and loads Hyrule point 0xE9 layer 9. Stage name Ycage00: 3 placed (GTower 2, moya
+// and harmless; Hyrule 1). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_barrier.h"

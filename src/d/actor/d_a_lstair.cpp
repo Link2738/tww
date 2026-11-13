@@ -2,6 +2,12 @@
  * d_a_lstair.cpp
  * Object - Tower of the Gods - Glowing stairs
  */
+// Light stairs (GKAI00, bck, btk, two bpks, brk) with collision, sunk 300 while off. Param byte 0
+// the switch; 0xFF follows whether the room has no enemies (51 frames after the last one goes).
+// On: RSTAIRS_F00 and two RSTAIRS_S00, the stairs rise 40 frames later, and event STAIRAPPEAR
+// plays; JA_SE_OBJ_R_STAIR_APPEAR only where the stage's save table is 5. Off: the animations
+// play back with JA_SE_OBJ_L_BRIDGE_OFF and they sink. Stage name Gkai00: 3 placed (Siren 2,
+// both 0xFF; K_Testa). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_lstair.h"

@@ -2,6 +2,16 @@
  * d_a_kita.cpp
  * Object - Forbidden Woods - Hanging flower platform
  */
+// A hanging platform with collision (Kita VHLIF_00) on four ropes (Shand, params 0xFFFFFF35, at
+// the corners 130 out x scale). Param byte 0 the size (1: X/Z scale 1.25, 2: 1.5); byte 1 = 1
+// starts it fallen and floating 70 up, with no ropes. Create waits until all four ropes exist
+// (not the demo build). A rider tilts and sways it; the set of cut ropes indexes tables that
+// tilt and drop it. With all four cut it falls. Water above the ground below makes it float 40
+// over the surface on landing, with AK_SN_FFSPLASH00, IT_JN_WP_HAMON03, JA_SE_OBJ_P_FLOWER_LAND_W
+// and a shock; otherwise JA_SE_OBJ_KOKIRI_H_LANDING. Floating, a wind hit on its 400 sphere
+// pushes and spins it with JA_SE_LK_FLIFT_GO_WATER, along Link's facing if he rode it within 10
+// frames, else randomly. Stage name Kita: 2 placed, kindan room 12 and I_TestM (fallen).
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kita.h"

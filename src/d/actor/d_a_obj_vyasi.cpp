@@ -2,6 +2,12 @@
  * d_a_obj_vyasi.cpp
  * Object - Palm tree blowing in the wind (Gale Isle)
  */
+// A tree (Vyasi, one bck) whose 14 joints bend under joint callbacks, with a trunk cylinder, five
+// capsules and eight spheres; hits make wood chips, a hit sound and a noise of 4. Param byte 0
+// the switch. Unset, it waits for an Obj_Ekskz and then sags in its wind, harder the closer it is
+// (1000-2800), the leaves stretched and waving. Once the switch is set it springs back with a
+// wobble and then sways in the ordinary wind. Link rolling into it within 79 crashes. Stage name
+// Vyasi: 2 placed in sea, both on switch 0x38, the switch d_a_obj_ekskz sets. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_vyasi.h"

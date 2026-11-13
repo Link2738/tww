@@ -2,6 +2,11 @@
  * d_a_obj_mshokki.cpp
  * Object - Dishes and cutlery inside Forsaken Fortress
  */
+// Tableware (param bits 0-1: 0 POT, 1 OSARA, 2 KOPPU) with ground checks. Any non-wind hit
+// breaks it (BREAKMAJU particles, JA_SE_OBJ_COL_SWC_CHNS by floor material, a noise); wind
+// slides it. Link running into it at 6 or faster tips it so it wobbles with a swing sound; at 17
+// or faster and facing it, it is kicked into the air and breaks when it lands. Stage names MPot
+// 24, MOsara 40 and MKoppu 58 (majroom 38, ma3room 20, ma2room 20). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_mshokki.h"

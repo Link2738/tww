@@ -2,6 +2,15 @@
  * d_a_obj_hha.cpp
  * Object - Tower of the Gods - Entrance waterfall
  */
+// A water gate (Hha): two gate halves with collision, a water column (YSWTR00, two btks), a gush
+// (YGSTP00) and two splashes. Params: switch byte 0, byte 1 the start (0 open and flowing, 1
+// closed; 0xF: 0); a set switch at create flips it. Open, with the switch set, it plays
+// hha_close: JA_SE_READ_RIDDLE_1, the water shrinks over 90 frames and the halves close 65
+// frames in (55 frames, JA_SE_OBJ_F_WATERGATE_CL, a shock). A closed one opens when that event
+// starts: the halves part in 30 frames and the water flows. The splashes and gush follow
+// daTagWaterlevel. While flowing, JA_SE_ATM_WATER_GATE plays and a cylinder sits at the water
+// surface; a 220 sphere blocks the open gate until the switch is set (not the demo build).
+// Stage name Hha: 3 placed in Siren (switch 6). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_hha.h"

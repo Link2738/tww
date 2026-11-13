@@ -2,6 +2,14 @@
  * d_a_obj_swheavy.cpp
  * Object - Wind Temple - Iron Boots switch
  */
+// A floor switch (Hhbot, base HHBOT1 and top HHBOT2, both with collision, scaled 1.5 in X/Z).
+// Param bits 24-26 the type, bits 8-15 the switch. Types 2 and 3 need Iron Boots: any rider for
+// 4 frames dips it to 0.9, Iron Boots for 15 press it 35.5 down with JA_SE_OBJ_FOOT_SW_ON. Type 2
+// reverses the switch on each press and rises when let go. Type 3 sets it and stays down, starts
+// down if the switch is set, and rises if the switch is cleared. Types 0 and 1 have all-zero
+// attributes, so a press never completes. Stage names Hhbot1 (3 placed, type 2, K_Test2 and
+// K_Test9) and Hhbot1N (6 placed, type 3: Cave08 2, kaze 2, K_Test9, sea room 38).
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_swheavy.h"
@@ -108,6 +116,10 @@ cPhs_State daObjSwheavy::Act_c::_create() {
     
     cPhs_State phase_state = dComIfG_resLoad(&mPhs, M_arcname);
     if (phase_state == cPhs_COMPLEATE_e) {
+        // No range check. The type is 3 bits and M_attr has 4 entries, so types 4-7 read
+        // attributes from past the table (flags, spring and delays from stray data). Attr_c
+        // holds no pointers, so this misbehaves rather than crashes. Types 0 and 1 are in the
+        // table but all zero. Placements use 2 and 3. [asm] [data]
         mType = prm_get_type();
         bool up = cLib_checkBit<u32>(attr().mFlags, FLAG_IS_TOGGLE) || !is_switch();
         scale.z *= 1.5f;

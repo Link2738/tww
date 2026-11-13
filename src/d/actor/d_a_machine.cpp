@@ -2,6 +2,16 @@
  * d_a_machine.cpp
  * Enemy - Blade Trap (biting) (Wind Temple - giant fan room)
  */
+// A machine on a path (HKIKAI1 with one bck, scale 1.5). Param byte 0 the room path (0xFF or a
+// missing path: it stays put); it starts at point 0, heads for each point at speedF and takes
+// the next within 80, looping or reversing at the ends. speedF eases toward 5 times the first
+// Windmill's rotation speed over its maximum, and JA_SE_OBJ_JAMA_MECHA_MOVE plays while it is not
+// 0. It always faces the world origin. When a 90 sphere 60 above Link touches a capsule from 350
+// to 500 ahead (radius 200), it plays JA_SE_OBJ_JAMA_MECHA_OUT and runs the bck once; during
+// frames 5-25 a 150 attack sphere sits on joint3. Three 50 body spheres along its length, the
+// first also attacking at radius 100. A fourth sphere and an Acch are set up and never used.
+// Stage name Hkikai1: 5 placed, Cave08 room 2 (paths 0-2) and kaze room 2 (paths 0, 2).
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_machine.h"

@@ -2,6 +2,12 @@
  * d_a_obj_balancelift.cpp
  * Object - Tower of the Gods - Pair of scales
  */
+// Two balance pans (HTEN1) hung on chains. With a path in param byte 2, it sits on point 0 and
+// creates the second pan as a child on point 1; the pair share one weight count. Riders count 1
+// each (Link plus whatever he carries, nested; d_a_obj_try, d_a_am2, Medli and Makar): the
+// heavier side drops to 1800 below its hanger, the other rises to 1360, and level is 1580. Riders
+// push the pan on its pendulum; bombs, wind and sword hits knock it. Stage name Blift: 2 placed
+// (Siren, K_Test5). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_balancelift.h"
@@ -157,6 +163,8 @@ void daBalancelift_c::set_mtx() {
     pt[2] = current.pos;
 }
 
+// fabsf wraps the comparison, so JA_SE_OBJ_TENBIN_LIFT_MOVE plays only while mDepthSpd > 1, which
+// is one direction. [asm]
 /* 00000670-00000984       .text calc_weight__15daBalancelift_cFv */
 void daBalancelift_c::calc_weight() {
     f32 length;

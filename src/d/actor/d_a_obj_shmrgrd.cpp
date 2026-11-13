@@ -2,6 +2,14 @@
  * d_a_obj_shmrgrd.cpp
  * Object - Skull Hammer switch (spiked) 
  */
+// A spiked post with collision (Shmrgrd). Param byte 0 the switch. Up, it carries a 80 by 260
+// spike cylinder (AT_TYPE_SPIKE, Atp 1) and, for each other raised post within 165 in front of
+// it, a 70 by 260 spike cylinder at the midpoint. A Skull Hammer front swing or jump attack
+// from Link while facing it (within 45 degrees) squashes it with the HAMSW particles and smoke
+// and drives it 85 down with JA_SE_OBJ_HAMMER_SW_ON, setting the switch. A side swing wobbles it
+// (JA_SE_OBJ_HAMMER_SW_SWING). The switch being set lowers it too; once down it stays. All posts
+// share one linked list. Stage name Shmrgrd: 31 placed (ma2room 19, K_Testd 6, sea 6).
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_shmrgrd.h"

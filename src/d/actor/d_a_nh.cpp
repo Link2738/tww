@@ -2,6 +2,12 @@
  * d_a_nh.cpp
  * Item - Forest Firefly / 森のほたる (Mori no Hotaru)
  */
+// A Forest Firefly (Always NH at scale 2.5, looping brk, a glowing alpha sphere 140 up). It
+// hovers 50 above the ground and can be caught with a bottle (dItemNo_FIREFLY_BOTTLE_e). Param
+// byte 0: 1 is one let out of a bottle (d_a_player_bottle.inc). It flees at once, never settles,
+// and after 300 frames fades out and deletes. Others flee for 150 frames from Link closing in
+// within 600 faster than 5 a frame. They head home past 250, curving away from Link, and wait
+// within 50. Stage name Nh: 3 placed (Omori 2, K_Testc). [asm] [data]
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_nh.h"

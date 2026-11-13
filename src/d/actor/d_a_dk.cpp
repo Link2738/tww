@@ -2,6 +2,11 @@
  * d_a_dk.cpp
  * NPC - Helmaroc King (Forsaken Fortress 1 tower, Outset Island)
  */
+// A demo-only bird (DK with the DK_KAMEN mask on its head and four 9-segment DK_TAIL tails that
+// trail with physics). It draws only while the demo drives it, and each such frame it deletes any
+// "Bdk" actor. Param byte 0: under 2 also keeps ground contact for the tails; 1 stays hidden
+// until event bit UNK_0310 and the zelda_fly event start, and hides again once UNK_0001 is set.
+// Stage name Dk: 5 placed (sea room 44: 1, 1, 2; M2tower 2; Mjtower 0xFF). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_dk.h"

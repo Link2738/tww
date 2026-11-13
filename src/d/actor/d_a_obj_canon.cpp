@@ -2,6 +2,15 @@
  * d_a_obj_canon.cpp
  * Object - Great Sea enemy cannon
  */
+// A wall cannon (Wallbom). Params: size byte 0 (scale 1 + 0.1 each), appear switch byte 1,
+// area path byte 2 (0xFF fails create, not the demo build), death switch byte 3. With the death
+// switch set it starts broken. With the appear switch not yet set it waits sunk 120 into the
+// wall, then rises. While Link is inside the path area it aims at a point 150 short of him
+// (further short when he is far, swimming or on the ship without firing) and, 30 frames later,
+// fires a bomb that flies straight for 22 frames (speed 90, gravity -1.1) with
+// JA_SE_LK_SHIP_CANNON_FIRE. Two health: a bomb takes 2, a Boomerang 1 with a recoil. At 0 it
+// sets the death switch and breaks with the MJTAIHOU particles, hiding its barrel. Stage name
+// Ocanon: 139 placed (sea 138, K_Testd). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_canon.h"

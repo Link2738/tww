@@ -2,6 +2,19 @@
  * d_a_ep.cpp
  * Object - Torches
  */
+// A torch (Ep) with a point light and a glowing flame sphere. Params: type bits 0-5 (0x3F: 0),
+// moths bit 6, model bit 7 (OBM_SHOKUDAI1, else VKTSD), timer byte 1, hold switch byte 2, switch
+// byte 3. Types 0 and 3 have the stand model with collision (Link rolling into it within 35
+// crashes); 1 and 2 are a bare flame, 2 without the fire particles. With the switch unset it is
+// unlit until a fire hit on its 40 sphere (anything but wind) sets it. Except type 3 it then
+// plays SHOKUDAI_SWITCH when that event exists (staff SHOKUDAI, cut FIRE). Otherwise it plays
+// JA_SE_OBJ_TORCH_IGNITION. Lit: AK_JN_O_FIRE00, heat haze and JA_SE_OBJ_TORCH_BURNING, and the
+// sphere lights things (AT_TYPE_UNK20000). Wind blows the flame (AK_JN_TORCH, 40 frames) along
+// Link's or a Bdk's facing. A timer lit it for timer x 10 frames, unless the hold switch is set.
+// The switch being cleared puts it out (JA_SE_OBJ_TORCH_OFF). Under water it goes out (types 1
+// and 2 delete). Moths circle the flame, one drawn to a lit stick in Link's hand. Stage name
+// bonbori: 774 placed (kenroom 90, Abship 57, Cave11 48, sea 34, ...); types 0 234, 1 450, 2
+// 17, 3 73. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_ep.h"

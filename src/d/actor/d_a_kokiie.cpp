@@ -2,6 +2,16 @@
  * d_a_kokiie.cpp
  * Object - Forbidden Woods - Hanging flower house
  */
+// A hanging house with collision (Kokiie KOKI_00) on five ropes (Shand, params 0xFFFFFF01, 400
+// out and 170 down). Param byte 0 the size (1-3: X/Z scale 0.9-0.7, else 1); byte 3 a switch.
+// Create waits until all five ropes exist (not the demo build). The set of cut ropes indexes
+// tables that tilt and drop it, and it sways on sines. With all five cut and the Boomerang
+// obtained, it falls in a camera event. Frame 27 sets the switch with JA_SE_OBJ_KOKIRI_H_CRASH and
+// a shock; 64 places the KOKIRIHOUSE splash and ripple particles at Y 1170. It lands at Y 1380
+// with JA_SE_OBJ_KOKIRI_H_LANDING. 100 plays JA_SE_READ_RIDDLE_1; 150 ends the event. Each event
+// frame it prints "K SUB COUNT" through JUTReport. With the switch already set it makes no
+// ropes and starts at the bottom. Stage name Kokiie: 1 placed, kindan room 5, switch 0x1C.
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kokiie.h"

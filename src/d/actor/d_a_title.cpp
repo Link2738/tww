@@ -2,6 +2,16 @@
  * d_a_title.cpp
  * Title Screen manager & logo
  */
+// The title screen, created by d_stage when the scene is not the play scene. 3D: the ship (bck
+// and bpk), subtitle and sparkle models from Tlogo (TlogoE in USA, TlogoE<language> in PAL, the
+// name written into the string literal with sprintf). 2D: title_logo.blo panes. After 120
+// frames (JA_SE_TITLE_WIND) the logo fades in over frames 30-80, plus the second logo pane in
+// JPN over 75-130. At 80 the subtitle runs with AK_S2_TITLEKIRAKIRA00 and JA_SE_TITLE_KIRA, the
+// sound only once per boot. The Nintendo pane fades in over 150-170 and Press Start over
+// 160-180, then blinks. The ship slides in on a parabola with title smoke and wind particles.
+// A, B or Start shows everything at once. Pressed again it plays JA_SE_OP_ENTER_GAME and changes
+// to the name scene. With no press, once the next stage is enabled, it changes to OPEN2 (from
+// the opening scene) or the title scene. [asm]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_title.h"

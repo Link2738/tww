@@ -84,6 +84,10 @@ BOOL daHys_c::CreateHeap() {
 cPhs_State daHys_c::_create() {
     fopAcM_ct(this, daHys_c);
 
+    // No range check. mType is param byte 1 and every per-type table has 2 entries, so type
+    // 2-0xFF reads past them. m_arcname is an array of pointers: the stray word is passed as
+    // the archive name to dComIfG_resLoad, which can read through a wild pointer and crash.
+    // All 8 placements use types 0 and 1. [asm] [data]
     mType = fopAcM_GetParam(this) >> 8;
     cPhs_State res = dComIfG_resLoad(&mPhs, m_arcname[mType]);
     if (res == cPhs_COMPLEATE_e) {

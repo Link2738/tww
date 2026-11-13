@@ -2,6 +2,16 @@
  * d_a_obj_vtil.cpp
  * Object - Tingle statues
  */
+// A statue Link can carry and throw (Vtil, five models), with a point light. Param bits 0-3 the
+// type (0xF: 0). It exists only once treasure bit 15 is set in its type's stage save slot,
+// l_daObjVtil_scene_no_table: 3, 4, 5, 7, 6. That table is written with the bdl index enums,
+// whose values happen to match. Thrown, it flies at 36 forward and 27 up, losing speed on each
+// hit while still falling fast. Landing plays JA_SE_OBJ_PUT_STONE with a land effect and a
+// shock (stronger within 190 of Link). It slows in water. Sinking 70 under the sea surface
+// makes a water pillar and JA_SE_OBJ_FALL_WATER_S. At 210 under it calls
+// daAgbsw0_c::incTclDispose and deletes itself.
+// Hits play a hit sound and sparks and call daAgbsw0_c::incTclBeat. Stage names Vtil1-Vtil5
+// (types 0-4): 1 each, sea room 17. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_vtil.h"
@@ -93,6 +103,8 @@ cPhs_State daObjVtil_c::_create() {
     if (m60C == 0xF || m60C == -1) {
         m60C = 0;
     }
+    // Only 0xF is mapped back. Both tables have 5 entries, so types 5-14 read a stray stage
+    // number and a stray model index past them. Placements use 0-4. [asm] [data]
 
     if (check_ev_bit()) {
         state = dComIfG_resLoad(&mPhs, M_arcname);

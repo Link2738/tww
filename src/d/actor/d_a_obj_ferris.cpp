@@ -2,6 +2,14 @@
  * d_a_obj_ferris.cpp
  * Object - Windfall Island - Ferris wheel
  */
+// A Ferris wheel (Skanran: wheel SKANRAN and five gondolas SGONDOR, all with collision). Param
+// byte 0 the switch. Set at create, it is already turning. Otherwise, when the switch is set,
+// wind blowing toward angle 0x8000 plays kanran_start with JA_SE_READ_RIDDLE_1 and it spins up
+// (to 67 during the event, 45 after) and sets event bit UNK_2104. Any other wind plays
+// kanran_vive: three jolts and a roll back to rest, clearing the switch. Gondolas sway and lean
+// with a rider. JA_SE_OBJ_FER_WHEEL_ROUND scales with the speed. Their hit cylinders and
+// spheres are only entered while below world Y 1820. Stage name Skanran: 1 placed, sea room
+// 11 (Y 2800), switch 0x22. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ferris.h"

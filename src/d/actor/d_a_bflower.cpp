@@ -2,6 +2,15 @@
  * d_a_bflower.cpp
  * Object - Bomb Flower - Flower
  */
+// A Bomb Flower (VbakH: plant VBAKH and bomb VBAKM, each with a bck and brk). Params: kind bits
+// 4-7 (0 grown, 1 withered), switch byte 1 (set: grown). Withered, it sways now and then and
+// water on its cylinder regrows it with JA_SE_OBJ_W_BOMB_F_RECOVER, setting the switch. Grown:
+// a bomb hit on its sphere makes an exploding Bomb2; most other hits a fused one. Picking it up
+// creates a carried Bomb2 handed to Link. Once that bomb is gone the bomb model grows back with
+// JA_SE_OBJ_BAKURETU_RECOVER. One with a nonzero X angle cannot be picked up. Link walking past
+// or dropping something near it plays the sway bck. Stage names BFlower (105 placed, all grown:
+// sea 45, Cave10 14, Cave09 9, M_NewD2 8, Abship 7, TF_02 4, kindan 4, Adanmae 3, test maps)
+// and VbakH (6, withered: Adanmae 5 on switches 0x1A-0x1D and 0x1F, K_Testc). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_bflower.h"

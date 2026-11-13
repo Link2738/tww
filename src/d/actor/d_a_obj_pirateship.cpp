@@ -2,6 +2,15 @@
  * d_a_obj_pirateship.cpp
  * Object - Pirate Ship
  */
+// The pirate ship (Kaizokusen OBA_KAIZOKU_A), a moving collision (ROOM1B in sea, else ROOM1A).
+// It makes the sail (Psail), flag (d_a_pirate_flag) and a door knob (KNOB00, params from dr_prm
+// by byte 1), plus a catapult (Obj_Tousekiki) and helm (Kaji) unless byte 3 is 3. Params: bits
+// 0-3 sail sound, byte 1 door, byte 2 path (bobbing along it at up to 5), byte 3 the mode, which
+// picks the crew made with fopAcM_createChildFromOffset. 0 first island: hidden until event bit
+// UNK_0310 (with a wake and splash, not JPN), crew once UNK_0001. 1 umikz crew; 2 arriveMj crew
+// when the start point is 0x12; 3 nothing; 4 Yuukaigo crew. JA_SE_OBJ_PIRATE_CRUISE plays in
+// A_umikz. It sets its room from the ground below. Stage name Pirates: 12 placed (sea rooms 11
+// and 44 6, A_umikz, DmSpot0, E3ROOP, ENDumi, MajyuE, sea_E). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_pirateship.h"
@@ -238,6 +247,9 @@ void daObjPirateship::Act_c::partsCreate() {
 
     cXyz sp18 = current.pos;
     csXyz sp10(0xFFF, current.angle.y - -0x8000, 0);
+    // No range check. dr_prm has 2 entries and byte 1 can be up to 0xFF, so 2-0xFF give the
+    // knob a stray params word. Placements use 0 and 1, except E3ROOP and sea_E, whose params
+    // 0xFFFFFFFF read entry 0xFF. [asm] [data]
     s32 uVar3 = (fopAcM_GetParam(this) >> 8) & 0xff;
 
     s16 sVar6 = 0;
@@ -466,6 +478,8 @@ cPhs_State daObjPirateship::Act_c::_create() {
         if (strcmp(dComIfGp_getStartStageName(), "sea") == 0) {
             dzbFileIndex = dRes_INDEX_KAIZOKUSEN_DZB_ROOM1B_e;
         }
+        // MoveBGCreate's result is not checked before mpBgW is used. If it fails, mpBgW can be
+        // NULL and SetRideCallback writes through it. [asm]
         PVar1 = MoveBGCreate(mArcname, dzbFileIndex, dBgS_MoveBGProc_TypicalRotY, 0x7500);
         mpBgW->SetRideCallback(ride_call_back);
         if (fopAcM_GetParam(this) & 0xF) {

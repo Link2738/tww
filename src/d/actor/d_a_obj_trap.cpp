@@ -2,6 +2,14 @@
  * d_a_obj_trap.cpp
  * Object - Wind Temple - Spiked trap that slides along a path
  */
+// A sliding block with collision (Trap HTORA1, btk) that runs between points 0 and 1 of a room
+// path (param byte 0; 0xFF or a missing path fails create). Param bits 8-11 pick speed 50/80/100
+// and a wait of 30/10/0 frames (0xF: the first). It moves with JA_SE_OBJ_WDUN_TRAP_MOVE. If Link
+// comes within 400 (XZ) ahead of it, it speeds up toward 100 a frame. It stops at the far point,
+// at a wall hit by three lines 150 ahead, or at a Movebox walking into its lane. Stopping: sparks,
+// JA_SE_OBJ_WDUN_TRAP_STOP, a shake and a bounce back, and the btk shine. Then it waits and heads
+// for the other point. A 155 by 100 spike cylinder (Atp 1) hurts Link. Stage name Trap: 9 placed
+// (kaze 6, GanonC 2, Cave08 1). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_trap.h"
@@ -89,6 +97,10 @@ cPhs_State daObjTrap_c::_create() {
             if (mPathId != 0xFF) {
                 mpPath = dPath_GetRoomPath(mPathId, current.roomNo);
                 if (mpPath != NULL && mpPath->m_points != NULL) {
+                    // Only 0xF is mapped back to 0. M_speed_table and M_wait_f_table have 3
+                    // entries, so indexes 3-14 read past them: a stray float for the speed and
+                    // a stray s16 for the wait. No crash, but the block can move at any speed
+                    // or not at all. Placed values are 0, 1, 2 and 0xF. [asm] [data]
                     mSpeedIdx = (fopAcM_GetParam(this) >> 8) & 0xF;
                     if (mSpeedIdx == 0xF) {
                         mSpeedIdx = 0;

@@ -2,6 +2,15 @@
  * d_a_obj_volcano.cpp
  * Object - Fire Mountain Exterior - Lava
  */
+// A volcano (Ykzyg: QKZYG with a btk, and a lava column YMNKZ00 with a btk and brk) with
+// collision only while erupting. Param byte 1 the switch. Unset: erupting, the lava 2000 above
+// home, AK_SN_O_FIRESHAFT head/body/foot and seven MINIKAZANSTEAM particles tinted from BG2,
+// JA_SE_OBJ_VOLCANO_ERUPTION and JA_SE_ATM_VOLCANO_MAGMA. An Ice Arrow on the 300 by 3000
+// cylinder at the lava plays FREEZE_VOLCANO: it sets the switch, stops the fire, adds
+// MINIKAZANICE00, SMOKE00 and KIRA00, plays JA_SE_OBJ_VOLCANO_CHILL at frame 10 and _ICE_BRK
+// with JA_SE_READ_RIDDLE_1 at 150, and hides the lava. Frozen, the switch being cleared plays
+// FIRE_VOLCANO, the lava rising 100 a frame to 2300 up. The YG and AA joints fade with the
+// heat. Stage name Ykzyg: 1 placed, sea room 20, switch 0x18. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_volcano.h"
@@ -171,6 +180,9 @@ BOOL daObjVolcano::Act_c::Create() {
         field_0x4B8.y = home.pos.y - 2000.0f;
         StopFire();
         field_0x4F8 = 0.0f;
+        // Restarting here (start point 2) with the switch set uses states 6 and 7: the switch
+        // being cleared re-erupts it with no event, and state 7 has no way back to state 0, so
+        // Ice Arrows do nothing until the room reloads. [asm]
         if (dComIfGs_getStartPoint() == 2 
 #if VERSION > VERSION_DEMO
             && current.roomNo == dComIfGs_getRestartRoomNo()

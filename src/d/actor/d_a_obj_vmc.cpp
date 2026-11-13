@@ -2,6 +2,12 @@
  * d_a_obj_vmc.cpp
  * Object - Mound of soft soil + Makar tree
  */
+// A soil mound with collision (VMCBS) and a tree (VMCWD, grow and shake bcks). Param byte 1 the
+// switch: set means the tree is already grown. d_a_npc_cb1 calls daObjVmc_ChangeGrow (event
+// cb_sow while Makar is controlled within 100): MACORETREESMOKE00, JA_SE_OBJ_CB_SEED_GERMIN and
+// _GROW, the tree grows at 0.75 and gets collision, and the switch is set. Touching the grown
+// tree shakes it; a Hookshot hit sets event bit UNK_3420. Retail also limits the range check to
+// 490 in height. Stage name VmcBS: 25 placed (kaze 14, Cave08 9). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_vmc.h"

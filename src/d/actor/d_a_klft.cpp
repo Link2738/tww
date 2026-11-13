@@ -2,6 +2,16 @@
  * d_a_klft.cpp
  * Object - Forbidden Woods - Lift (moving wooden platform)
  */
+// A rope lift (Klft LIFT_00 with collision) running between points 0 and 1 of a room path, with
+// two pulleys (VPBOT_00) at points 2 and 3 and a sagging rope drawn to them. Params: size byte
+// 0 (1-3: X/Z scale 0.9-0.7), path byte 2 (0xFF or missing fails create); switch in Z angle
+// byte 0. It stays between 20% and 80% of the span. Wind on its 250 sphere pushes it along
+// Link's facing (half, and reversed, unless he rode it within 10 frames). Wind on a pulley's 130
+// sphere pulls it toward that end, with JA_SE_OBJ_KASSHA_LIFT_SWING. Moving plays
+// JA_SE_OBJ_KASSHA_LIFT_MOVE and JA_SE_OBJ_KM_WINDMILL at the pulleys. A rider sinks it 50 and
+// tilts it. With a switch it starts at 80% if set, else 20%, and on delete sets the switch at
+// 50% or more, else clears it. Stage name Klft: 6 placed (kindan rooms 2, 3, 8, 14; GanonD).
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_klft.h"
@@ -477,6 +487,8 @@ static cPhs_State daKlft_Create(fopAc_ac_c* a_this) {
         }
         dPath* path = dPath_GetRoomPath(path_no, fopAcM_GetRoomNo(i_this));
         if (path != NULL) {
+            // Points 0-3 are read without checking m_num. A path with fewer than 4 points
+            // reads past the point array for the pulley positions. [asm]
             dPnt* pnt = path->m_points;
             i_this->mPathPos[0] = pnt[0].m_position;
             i_this->mPathPos[1] = pnt[1].m_position;

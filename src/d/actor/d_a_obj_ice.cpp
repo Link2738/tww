@@ -2,6 +2,13 @@
  * d_a_obj_ice.cpp
  * Object - Block of ice (blocks treasure chests, enemies, rupees, etc.)
  */
+// A block of ice with collision (Ikori VICE). Param byte 0 the switch (set: not created). Hits
+// count only inside one of three stacked ellipses (40/120, 65/90, 75/60, scaled). A fire or
+// Fire Arrow hit melts it with JA_SE_OBJ_ICE_ROCK_MELT. Other hits except bombs shave 0.0009
+// off its size with AK_JN_ICEHAHEN00 chips, and below 0.1 it melts silently. Melting plays
+// AK_JN_ICETHAW00 and fades it over 90 frames; below 0.4 the collision goes and the switch is
+// set. It has a specular effect matrix. Stage name Ikori: 21 placed (sea 7, ITest62 6, K_Testd
+// 7, MiniHyo). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_ice.h"

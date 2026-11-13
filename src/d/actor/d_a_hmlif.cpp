@@ -2,6 +2,16 @@
  * d_a_hmlif.cpp
  * Object - Tower of the Gods - Glowing platform 
  */
+// A path lift with collision. Params: switch byte 0, path byte 1, speed bits 16-19 (1.67-15 in
+// steps of 1.67, capped at index 8), direction bits 20-21 (0 forward, 1 back, 2 random), start
+// point bits 22-26, type bits 27-30, smooth bit 31; second switch in Z angle byte 0. Types: 0
+// Hmlif (brk), 1 Hyuf1 and 2 Hyuf2 (btp, and an arrow target 240 above or 250 below that sets
+// the second switch with JA_SE_OBJ_ARROW_SW_ON and steps the btp). It follows the path, looping
+// or reversing, with JA_SE_OBJ_FLOAT_LIFT_MOVE while it moves. Smooth lifts steer toward each
+// point; others ease in and out. With a switch, reaching the path's mArg0 point while the
+// switch is set moves it onto the next room path, and back when it is clear. Stage names Hmlif
+// (20: Siren 16, SirenMB 2, I_SubAN, K_Test5), Hyuf1 (3: Siren 2, K_Testa) and Hyuf2 (5: TF_03
+// 4, K_Testa). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_hmlif.h"
@@ -186,6 +196,8 @@ BOOL daHmlif_c::Create() {
     u8 uVar4 = daHmlif_prm::getStart(this);
     dPnt* pdVar7 = ppd->m_points;
 
+    // getStart is 5 bits, so it can never be 0xFF and the random start below never runs.
+    // [asm]
     if (uVar4 == 0xff) {
         uVar4 = cM_rndF(ppd->m_num - 1);
     }
@@ -248,6 +260,9 @@ BOOL daHmlif_c::Create() {
 /* 000007C8-00000930       .text daHmlifCreate__9daHmlif_cFv */
 cPhs_State daHmlif_c::daHmlifCreate() {
     fopAcM_ct(this, daHmlif_c);
+    // No range check. The type is 4 bits and the per-type tables have 3 entries, so types
+    // 3-15 read past them; the stray m_arcname word goes to dComIfG_resLoad as an archive
+    // name pointer and can crash. Placements use 0-2. [asm] [data]
     m489 = daHmlif_prm::getType(this);
     cPhs_State PVar2 = dComIfG_resLoad(&mPhase, m_arcname[m489]);
     if (PVar2 == cPhs_COMPLEATE_e) {

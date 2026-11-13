@@ -2,6 +2,14 @@
  * d_a_obj_drift.cpp
  * Object - Floating tree platform
  */
+// A floating log with collision (Kryu RYU_00). It bobs toward its home height on a spring and a
+// sine and rocks on two more sines. Link riding it sinks it 20; standing off the middle (past
+// 360, or past 220 when 400 up) he also tips it toward him. A wind hit on its 300 by 600
+// cylinder, with Link more than 550 away (XZ), turns it 180 degrees about Y with
+// JA_SE_OBJ_RYUBOKU_MOVE and tips it along the hit. Param bits 0-2: 0 carries a Jbo, 1 a Bo, at
+// (-489.35, 600, 0) on the log; other values carry nothing.
+// field_0x4D0 (set every 10 frames of the turn) and field_0x4C8/4CC are written and never read.
+// Stage name Kryu00: 10 placed, Cave03 7 (type 7) and K_Test5 3 (types 0, 1, 7). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_drift.h"

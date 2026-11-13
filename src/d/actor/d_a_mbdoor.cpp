@@ -2,6 +2,15 @@
  * d_a_mbdoor.cpp
  * Object - Double doors (Forsaken Fortress tower & Puppet Ganon boss rooms)
  */
+// A double door with a bar and collision (Mbdoor S_MBD, or Gbdoor V_GBD for shape bits 8-11 =
+// 1). Param byte 0 the switch; type in Z angle bits 0-5. Type 0 stays barred until the switch
+// is set (0xFF: never barred). Type 1 is barred until the room has had no enemies for 30
+// frames, then sets the switch. Both then play MBDOOR_STOP_OPEN, the bar lifting with
+// JA_SE_OBJ_MJ_GATE_BAR_OPEN and _STOP. Type 2 stays barred for good; other types start open.
+// Open, Link within 200 to the side, 160 in front and facing it gets MBDOOR_OPEN: the half on
+// his side swings with JA_SE_OBJ_MJ_GATE_OPEN, moving him with it, and its collision is
+// removed. A demo can drive the door and bar angles. Stage names SMBdor (21: sea 6, MajyuE 4,
+// ma2room/ma3room/majroom 3 each, M2tower, Mjtower) and KGBdor (1, GanonL). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_mbdoor.h"

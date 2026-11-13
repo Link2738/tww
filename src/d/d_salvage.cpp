@@ -59,6 +59,9 @@ void dSalvage_control_c::entry(fopAc_ac_c* pact, JPABaseEmitter* emtr) {
         cmapNo = roomNoPrm;
     }
 
+    // Off by one: > lets mRoomNum reach MAX_ROOM, so a 33rd room point writes mInfo[160], past
+    // the array, and a 129th stage point takes room slot 128. Placed data peaks at 25 in a
+    // room. [asm] [data]
     if (roomNo != 0) {
         if (mRoomNum > MAX_ROOM)
             invalid = true;

@@ -2,6 +2,16 @@
  * d_a_obj_mkie.cpp
  * Elephant statue in Earth Temple, that dissolves when hit with light.
  */
+// A statue with collision (MkieB; type bit 8: 0 scale 1, 1 scale 3) that light breaks. Params:
+// event bits 0-7, correct bit 12, bit 13 clears its map status, switch bits 16-23 (set: not
+// created). Its eight light-receiving triangles or the light detector at its eye (130 x scale
+// up), lit for more than 20 frames, order event MkieB_die or MkieBAB_die when it exists. Without
+// the correct bit that plays JA_SE_READ_RIDDLE_1. Ten frames later: AK_SN_VANISHFIGURE00,
+// JA_SE_OBJ_L_OBJ_BRK_TAME and the switch. The vanish model's brk then runs; at its end
+// JA_SE_OBJ_L_STATUE_BREAK (or _L_BREAK for type 1) and a shock, and it deletes after the event.
+// d_a_obj_movebox makes one (prm_make: correct and bit 13 set) 150 above a MkieBB box and moves
+// it with setup(). Stage names MkieBA (type 0, 7 placed: M_Dai 6, K_Test9) and MkieBAB (type 1,
+// 9 placed: M_Dai 7, Cave09, K_Testc). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_mkie.h"

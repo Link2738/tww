@@ -2,6 +2,17 @@
  * d_a_kui.cpp
  * Object - Hookable posts for the Grappling Hook
  */
+// A grapple post with collision (Kui; params 0xFFFFFFFF fail create). Params: type bits 0-3,
+// tail flag bits 4-7, size byte 1, switch byte 3. The rope (d_a_himo2) sets health to 3 while
+// wrapped round it. Type 0 a plain post (OBI_ROPETAG), 1 the same but not drawn. 2 and 4 sit in
+// a holder (MROPESW): 30 frames after the rope wraps, 4 sets the switch with
+// JA_SE_OBJ_ROPE_SW_ON, and 2 plays a camera event that sinks the post 70 and sets the switch
+// (printing "K SUB COUNT" through JUTReport). Both sit 70 down once the switch is set. 3 is a
+// bell (HKANE1/HKANE2) that swings toward Link's hand; hitting the swing limit plays
+// JA_SE_OBJ_ST_CHIME with a shock and, as the shake ends with the rope on, sets the switch. A
+// tail flag pins it to d_a_dr2's tail point (d_a_dr2 makes one with 0x511), hidden at Y -10000
+// unless the tail and d_a_btd allow it. Stage name Kui: 84 placed; types 0 (36), 1 (42), 2 (2:
+// M_NewD2, K_Testa), 3 (3: ADMumi, Siren, sea) and 4 (1, Abesso). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kui.h"

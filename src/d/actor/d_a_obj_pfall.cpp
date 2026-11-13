@@ -2,6 +2,13 @@
  * d_a_obj_pfall.cpp
  * NPC - Rat (crawlspaces) (opens trap doors)
  */
+// A trap floor (Pfall): two door halves with collision (AOTSI), an Nz model (scale 0.5, 130
+// back) and its string (PSUZU). Link standing still within 100 of it orders event NZFALL. As
+// staff Nzfall: WAIT counts the Timer integer then plays JA_SE_CV_NZ_LAUGH once; OPEN swings the
+// halves open through seven angles with JA_SE_OBJ_TC_JAIL_FLR_BRK; HIKU plays the HIKU bck, the
+// string tugging with JA_SE_OBJ_TC_JAIL_STRING at frame 6. When the event ends it loads sea
+// point 15 in room 11 (an HIO flag instead waits again). Stage name Nzfall: 4 placed, Pnezumi
+// room 0. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_pfall.h"

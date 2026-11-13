@@ -2,6 +2,15 @@
  * d_a_obj_jump.cpp
  * Object - Wind Temple - Iron Boots springboard
  */
+// A spring pad with collision (Hjump). Param bit 0: 0 a floor spring (HJUMP2, simple shadow), 1
+// the spring on a Movebox (HJUMP1, made by d_a_obj_movebox through prm_make_b). A damped spring
+// value scales the spring joint and the collision's height. Small kicks on the 4th frame of any
+// ride, the 4th frame after leaving, the 6th frame of Link hanging on it and the 4th of Iron
+// Boots; Link moving faster than 2 on it keeps pushing it. Iron Boots on it for 16 frames close
+// it to 0.1 with JA_SE_OBJ_JUMP_SPR_CLOSE. Six frames off them open it to 1.2 with
+// JA_SE_OBJ_JUMP_SPR_OPEN; a riding Link gets onForceVomitJump. It holds 5 frames and settles.
+// Stage name Hjump2: 12 placed (kaze 6, Cave08 2, GanonC 2, K_Testa, K_Testc), all type 0.
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_jump.h"

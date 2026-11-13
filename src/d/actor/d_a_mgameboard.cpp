@@ -2,6 +2,14 @@
  * d_a_mgameboard.cpp
  * Squid-Hunt/"Sploosh Kaboom" Minigame
  */
+// The sea-battle minigame board (GBoard, archive Kaisen_e copied into m_arcname). An 8 x 8
+// cursor moves with the stick (JA_SE_PLAYSPOT_CURSOR) and A fires dSeaFightGame_info_c::attack:
+// a hit plays JA_SE_PLAYSPOT_RIGHT and a shock (JA_SE_PLAYSPOT_DESTROY when a ship sinks), a miss
+// JA_SE_PLAYSPOT_WRONG. There are 24 bullets and 3 ships. With no ships or no bullets left, 30
+// frames later it plays JA_SE_PLAYSPOT_END_S or _END_F at the Kg1 NPC's position and draws the
+// ship models. Event reg 0xBEFF is shown as the best record (mpNumber0), the shot count as
+// mpNumber1. The demo build prints NEAR ENEMY through JUTReport. Stage name GBoard: 1 placed,
+// Kaisen (params FFFFFFFF). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_mgameboard.h"
@@ -582,6 +590,8 @@ BOOL daMgBoard_c::MinigameMain() {
             mpSquidIcon[dead + -1]->offBeforeTex();
         }
         if (score > 0) {
+            // Indexes past mpSquidIcon[3] on purpose: score + 2 lands on mpBombIcons[score - 1],
+            // one bomb icon per shot. Score tops out at 24, so it stays inside mpBombIcons. [asm]
             mpSquidIcon[score + 2]->offBeforeTex();
         }
     }

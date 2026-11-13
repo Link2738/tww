@@ -2,6 +2,15 @@
  * d_a_hookshot.cpp
  * Item - Hookshot
  */
+// Link's Hookshot. The player sets the mode in its param (Wait, Shot, Return, Pull). Waiting at
+// the hookshot root, it casts a 1500 sight capsule; a hit on an actor with status 0x80000 or
+// 0x200000 (USA also 0x10000000) sets the hook flag. Shot: it travels 105 a frame up to 1500.
+// Hookable ground pulls Link to it (JA_SE_LK_HS_SPIKE and a shock). An actor with status 0x80000
+// is hooked and dragged back; one with 0x200000 pulls Link along it, following its turning.
+// Shields rebound with JA_SE_LK_HS_REBOUND. Other ground rebounds with AK_JN_NG, or sand in
+// kazeB. Return and Pull wind the chain in 63 a frame (JA_SE_LK_HS_WIND_UP), keeping a carried
+// actor above ground; pulling to the ship flags the ship ride. The chain draws one link every
+// 7, each spun on Z. [asm]
 
 #include "d/dolzel.h" // IWYU pragma: keep
 #include "d/actor/d_a_hookshot.h"

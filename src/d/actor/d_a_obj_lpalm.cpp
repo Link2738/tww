@@ -41,7 +41,9 @@ static BOOL nodeCallBack(J3DNode* joint, int calcTiming) {
     return TRUE;
 }
 
-// modelData is used for the joint callbacks before the NULL check below. [asm]
+// modelData is used for the joint callbacks before the NULL check below. If the Oyashi archive
+// lacks the bdl, getJointNum reads through a null pointer before the check can return FALSE.
+// [asm]
 /* 00000164-00000268       .text CreateHeap__12daObjLpalm_cFv */
 BOOL daObjLpalm_c::CreateHeap() {
     J3DModelData* modelData = (J3DModelData*)dComIfG_getObjectRes(M_arcname, dRes_INDEX_OYASHI_BDL_OYASHI_e);

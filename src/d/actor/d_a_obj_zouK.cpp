@@ -2,6 +2,13 @@
  * d_a_obj_zouK.cpp
  * Object - Hyrule Castle - Knight statues (Master Sword chamber)
  */
+// A statue (VZOUK, one bck held on frame 0, or on its last frame once collect bit (0, 1) is set;
+// dComIfGs_setSelectEquip sets that bit for dItemNo_MASTER_SWORD_1_e),
+// driven by the demo when it has a demo actor. Param bits 0-3: 0 also owns the room collision,
+// MAEKISI before the collect bit and ATOKISI after (retail switches back to MAEKISI while any
+// event runs). Link rolling into it within 288 crashes. Specular map from the light, simple
+// shadow. Its three cylinders are set up and never entered for collision. Stage names zouK (0)
+// and zouK1-4 (1-4): kenroom 5, K_Test2. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_zouK.h"

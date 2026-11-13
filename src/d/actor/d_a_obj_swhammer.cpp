@@ -2,6 +2,15 @@
  * d_a_obj_swhammer.cpp
  * Object - Skull Hammer switch (normal) 
  */
+// A hammer switch with collision (MhmrSW). Params: switch bits 8-15, second switch bits 0-7. A
+// Skull Hammer front swing or jump attack from Link squashes the top (Y scale 0.2, springing
+// back) with IT_SN_HAMSW_STAR00, IT_SN_HAMSW_SYOUGEKI00 and smoke, and drives it 60 down with
+// JA_SE_OBJ_HAMMER_SW_ON. At the bottom it sets the switch and clears the second switch. A side
+// swing wobbles it with JA_SE_OBJ_HAMMER_SW_SWING; any hit plays a hit sound and sparks. The
+// switch being set from elsewhere also lowers it, without clearing the second switch. When it is
+// cleared, it rises with JA_SE_OBJ_HAMMER_SW_OFF. It can be locked on only while up. Stage name
+// MhmrSW0: 26 placed (TF_05 9, sea 6, TF_04 4, M_Dai 2, Cave10, kazeMB and three test maps).
+// [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_swhammer.h"

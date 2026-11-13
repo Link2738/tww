@@ -2,6 +2,18 @@
  * d_a_lod_bg.cpp
  * Background island LOD model actor
  */
+// A distant model of one sea room. The param is the room number; scale X times 20000 is the load
+// range and that plus 20000 the unload range. All instances share a 0x20000 heap. Once Link is
+// within the load range (XZ) it mounts /res/Stage/sea/LODALL.arc to ARAM and loads
+// /lodNN/bdl/model.bdl. Windfall also loads two /lod11/bdl/shikari.bdl models at a fixed point,
+// turned with daObjLight's light angle and drawn while that angle is renewed. Forsaken Fortress
+// also loads /lod01/bdl/model1.bdl until event bit UNK_1820 (not JPN). TEV K colour 3 alpha eases
+// 16 a frame to 255 while within the load range and the room has not reached status flag 1
+// without flag 4, else to 0. Past 150000 the model sinks by a tenth of the excess. Beyond the
+// unload range it frees everything and waits again. Tower of the Gods' model is not drawn before
+// event bit UNK_1E40. PAL measures from the camera eye plus 700. In the demo build the mounted
+// archive is never taken, so no model is built. Stage names LOD01-LOD49: 50 placed in sea, LOD45
+// twice. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_lod_bg.h"

@@ -2,6 +2,14 @@
  * d_a_obj_swflat.cpp
  * Object - Tower of the Gods - Floor switch (requires statues to stay active)
  */
+// A floor switch (Hfbot, brk). Params: type bits 0-1, switch bits 8-15, second switch bits
+// 16-23. An actor with fopAcStts_FREEZE_e touching its small cylinder presses it: the brk runs
+// forward, JA_SE_OBJ_FLAT_SW_ON on the press, then JA_SE_OBJ_FLAT_SW_LIGHT each frame, and
+// AK_SN_SIRENBUTTONOFF fades into AK_SN_SIRENBUTTONON. Type 0 stays pressed and settles 30 frames
+// later; type 1 lets go when nothing is on it, clearing the switch; type 2 acts as type 1 until
+// the second switch is set, then as type 0. Another actor sets the switch at once; Link's first
+// press orders an event and sets the switch 29 frames after it starts, the press state held.
+// Stage names Hfbot1A-1C (types 0-2): 22 placed, Siren 17, K_Test9 4, KATA_RM 1. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_swflat.h"

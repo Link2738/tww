@@ -2,6 +2,14 @@
  * d_a_canon.cpp
  * Cannon Minigame
  */
+// The cannon game cannon (Bomber VCANK, with a ball model AISI and the 2D counters). As staff
+// Canon in the Canon_game cut it places five Obj_Barrel2 targets on an 8 by 8 grid ahead
+// (10500-21000 out), puts Link behind it and starts mini game 3 with 10 shots. The stick aims it
+// (JA_SE_LK_SHIP_CANNON_MOVE) and A fires (JA_SE_LK_SHIP_CANNON_FIRE): the ball arcs to a range
+// set by the elevation. A hit target explodes and counts; a miss makes a water pillar. The
+// result is 1 with all five hit, else 2, passed to d_a_npc_kg2 with its sounds. 30 frames
+// before the end the remaining targets explode as bombs. Stage name Canon: 2 placed (sea,
+// E3ROOP). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_canon.h"
@@ -533,6 +541,9 @@ BOOL daCanon_c::CreateHeap() {
     ResTIMG* pRVar6 = (ResTIMG*)dComIfG_getObjectRes("Bomber", dRes_INDEX_BOMBER_BTI_GAME_HUNE_DAMAGE_e);
 
     // Bug: m5AC only has 5 elements, copy-paste mistake.
+    // The loop runs 10 times, so entries 5-9 write past m5AC into m5C0 and the first 16 bytes
+    // of m5C4, and allocate five unused 2D objects. Both fields are written again below and
+    // in _create, so nothing reads the stray pointers. [asm]
     for (s32 i = 0; i < ARRAY_SSIZE(m584); i++) {
         m5AC[i] = new dDlst_2DObject_c();
         if (m5AC[i] == NULL) {

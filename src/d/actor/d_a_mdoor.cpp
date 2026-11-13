@@ -2,6 +2,16 @@
  * d_a_mdoor.cpp
  * Object - Wooden/Metal bars (Forbidden Woods, Cabana Maze, Dragon Roost Cavern, Earth Temple, etc.)
  */
+// A cage door with collision (Mdoor, MORI1, or MORI2 for shape byte 3 = 1, which skips the
+// AK_SN_WOODCAGE00 particle). It is open when raised 280. Param byte 1 the type. 0: before event
+// bit UNK_1101 it starts open and MORI1_EVENT (staff Mori1) closes it with JA_SE_OBJ_CAGE_CLOSE
+// and smoke; after the bit it starts closed. 1: after UNK_1101 it starts open; before, it clears
+// UNK_1140, and once the room has no enemies stops the sub BGM and plays DEFAULT_STOP_OPEN (staff
+// SHUTTER_DOOR), setting UNK_1140. 2: open if switch byte 0 is 0xFF or set; else it waits for
+// the switch and plays DEFAULT_STOP_OPEN, with tool ID byte 2 (not 0xFF: it rises by itself 20
+// frames in). Other types stay closed. Opening plays JA_SE_OBJ_CAGE_OPEN. The ready actions read
+// the switch and drop the result. Stage name Mori1: 10 placed; M_Dra09 room 9 types 0 and 1, type
+// 2 in M_Dai, TF_04 (4), kinMB and kindan, type 3 in K_Testc. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_mdoor.h"

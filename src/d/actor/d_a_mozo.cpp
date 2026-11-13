@@ -2,6 +2,15 @@
  * d_a_mozo.cpp
  * Enemy - Moblin Statue / モ石像 (Mo Sekizou)
  */
+// A wall statue (Mozo, bck, brk, btk) that opens when Link is below it (280 or more) within
+// 1000, inside 45 degrees of its facing and over 200 in front, and not flying. It keeps aiming
+// while he stays within 1200 and 56 degrees. Param byte 0 the type (0xFF: 0; 0-2). Type 0 makes
+// two Beam children and points them at Link. Type 1 breathes fire: a capsule (AT_TYPE_FIRE, Atp
+// 1) growing to 600 long and 80 wide over 60 frames, with AK_SN_MOZFIRE00/01 and
+// JA_SE_OBJ_MO_STATUE_FIRE. Type 2 aims like type 0 but has no beams. JA_SE_OBJ_MO_STATUE_MOVE,
+// _OPEN and _CLOSE play as it turns and opens. The first time it sees Link it plays MOZO_CAM.
+// Stage name moZOU: 14 placed (Cave10 room 19 6, type 1; ma2room, ma3room, majroom, sea, I_SubAN,
+// test maps). [asm] [data]
 
 #define NO_DOLZEL_REL_MCH
 #define NO_BSS_3569

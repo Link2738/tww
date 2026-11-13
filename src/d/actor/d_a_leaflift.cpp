@@ -2,6 +2,12 @@
  * d_a_leaflift.cpp
  * Object - Forest Haven - Lilypad lift
  */
+// A lift (OLIFT, j_happa joint) with collision; stage name Olift, 3 placed (Omori 2, K_Test9).
+// Param bits 0-3: 1 starts raised. It never rises on its own: MoveUpLift (in
+// d_a_leaflift_static.cpp) raises it 560 at 5-10 a frame with JA_SE_OBJ_LOTUS_LIFT_UP and
+// DEKLIFT effects, and d_a_npc_de1 calls it. The leaf tips toward Link while he rides, wobbling
+// while it rises. Once Link is off and over 270 away it sinks back with JA_SE_OBJ_LOTUS_LIFT_DOWN
+// and the ripple restarts. [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_leaflift.h"

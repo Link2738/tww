@@ -2,6 +2,14 @@
  * d_a_obj_hlift.cpp
  * Object - Wooden platforms (Pirate ship rope minigame 1)
  */
+// A lift with collision (HLIFT, or HLIFTB for size bit 4) on a fixed base (HLIFTC). Params: bits
+// 0-2 the height (125 to 1000 in steps of 125), byte 1 the switch, byte 2 an event number. Switch
+// on: it rises, turning once per 250 up; switch off: it lowers. Each lift waits 0, 2, 10, 8 or 7
+// frames, taken in turn from a shared counter, then eases in and out at 2-10 a frame with
+// JA_SE_OBJ_PRT_LIFT_UD, _STOP and a bounce at each end. It orders event Hlift_up but moves the
+// next frame either way. The first lift created plays JA_SE_OBJ_PRT_LIFT_WORK while any move.
+// Stage names Hlift 8 and Hliftb 2, all Asoko, height 500, switch 0xC0 (also the Asoko
+// d_a_obj_ashut bars' switch). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_hlift.h"

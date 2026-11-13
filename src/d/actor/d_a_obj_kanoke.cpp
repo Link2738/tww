@@ -2,6 +2,16 @@
  * d_a_obj_kanoke.cpp
  * Object - Earth Temple - Coffin
  */
+// A coffin with collision (Mkanoke: body MOKE1 and lid MOKE2). Params: type bit 0 (0 lying, the
+// lid sliding off sideways; 1 standing 200 up, the lid falling forward), search bits 1-5, shake
+// bit 6, switch byte 1; byte 2 is read into mSwitchNo2 and never used. It opens when the switch
+// is set, when light holds on it (the light detector or its body capsule) for 20 frames, or when
+// Link comes within 100 x search. Opening sets the switch. A shake first rattles it
+// (JA_SE_OBJ_KANOKE_Y_GATA or _T_GATA), then JA_SE_OBJ_KANOKE_Y_OPEN or _T_OPEN. A falling lid
+// hits with three capsules (AT_TYPE_UNK800, Atp 1) and lands with a shock, rock particles and
+// smoke. With the switch already set it starts open. Stage names MKanoke (type 0, 8 placed:
+// M_DaiMB 3, M_Dai 2, KATA_RM, test maps) and MKanok2 (type 1, 93: GanonE 36, M_Dai 22, SubD45
+// 14, SubD71 10, PShip2 4, PShip3 4, KATA_RM, test maps). [asm] [data]
 
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_obj_kanoke.h"

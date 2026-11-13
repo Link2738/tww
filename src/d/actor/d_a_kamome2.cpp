@@ -1,3 +1,8 @@
+// A seagull the player flies (KA, with a second model copying its pose for the real shadow). Its
+// profile is only in the demo build's list, so retail never creates it. Param 0: the stick
+// steers and climbs, A flaps, X slows; it starts an event after 30 frames and drives the camera
+// from behind (HIO distance -2500). Param 3 uses a larger wall circle; other values do not steer.
+// [asm]
 #include "d/dolzel_rel.h" // IWYU pragma: keep
 #include "d/actor/d_a_kamome2.h"
 #include "res/Object/Kamome.h"
